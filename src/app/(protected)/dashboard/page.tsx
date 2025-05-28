@@ -2,8 +2,21 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import VantaWaves from "@/components/effects/VantaWaves";
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { LogOut } from 'lucide-react';
 
 export default function DashboardHome() {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // Redirect will be handled by the protected layout due to auth state change
+    } catch (error) {
+      console.error("Error signing out: ", error);
+      // Optionally, show an error message to the user
+    }
+  };
+
   return (
     <>
       <VantaWaves />
@@ -45,6 +58,12 @@ export default function DashboardHome() {
               Settings
             </Button>
           </Link>
+        </div>
+        <div 
+          className="absolute bottom-4 right-4 cursor-pointer text-white hover:text-red-500 transition-colors duration-200"
+          onClick={handleLogout}
+        >
+          <LogOut size={32} />
         </div>
       </div>
     </>
