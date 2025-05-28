@@ -5,6 +5,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { LogOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import DashboardCard from "@/components/dashboard/DashboardCard";
 
 export default function DashboardHome() {
   const handleLogout = async () => {
@@ -97,50 +98,32 @@ export default function DashboardHome() {
       />
 
       <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
-        <h1 className="text-2xl font-bold mb-6 text-white">Dashboard</h1>
-        <div className="grid grid-cols-2 gap-4 w-[600px]">
-          <Link href="/dashboard/staff">
-            <Button 
-              className="w-full h-12 text-lg cursor-pointer hover:animate-none transition-all duration-300 hover:scale-105"
-            >
-              Staff
-            </Button>
-          </Link>
-          <Link href="/dashboard/report">
-            <Button 
-              className="w-full h-12 text-lg cursor-pointer hover:animate-none transition-all duration-300 hover:scale-105"
-            >
-              Report
-            </Button>
-          </Link>
-          <Link href="/dashboard/water-board">
-            <Button 
-              className="w-full h-12 text-lg cursor-pointer hover:animate-none transition-all duration-300 hover:scale-105"
-            >
-              Water Board
-            </Button>
-          </Link>
-          <Link href="/dashboard/live-location">
-            <Button 
-              className="w-full h-12 text-lg cursor-pointer hover:animate-none transition-all duration-300 hover:scale-105"
-            >
-              Live Location
-            </Button>
-          </Link>
+        <h1 className="text-4xl font-bold mb-6 text-white">Welcome</h1>
+        <div className="grid grid-cols-2 gap-4 w-[600px]"> 
+
+
+          <DashboardCard href="/dashboard/staff" title="Staff" />
+          <DashboardCard href="/dashboard/report" title="Report" />
+          <DashboardCard href="/dashboard/water-board" title="Water Board" />
+          <DashboardCard href="/dashboard/live-location" title="Live Location" /> 
+
+
+        </div> 
+        <div 
+          className="absolute flex justify-center items-center gap-4 top-4 right-4 cursor-pointer text-white transition-colors duration-200"
+          onClick={handleLogout}
+        >
           <Link href="/dashboard/settings" className="col-span-2">
             <Button 
-              className="w-full h-12 text-lg cursor-pointer hover:animate-none transition-all duration-300 hover:scale-105"
+              className="w-full bg-transparent h-10 text-lg cursor-pointer hover:bg-cyan-200 hover:animate-none transition-all duration-300 hover:scale-105"
             >
               Settings
             </Button>
           </Link>
+          <LogOut className="h-10 p-2 rounded-xl hover:bg-cyan-200" size={36} />
         </div>
-        <div 
-          className="absolute bottom-4 right-4 cursor-pointer text-white hover:text-red-500 transition-colors duration-200"
-          onClick={handleLogout}
-        >
-          <LogOut size={32} />
-        </div>
+
+        
       </div>
     </div>
   );
