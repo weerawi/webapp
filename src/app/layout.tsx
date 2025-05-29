@@ -1,12 +1,16 @@
 "use client"
 
 import './globals.css';
-import { Button } from '@/components/ui/button'
+import { Providers } from '@/components/providers/Providers';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 } 

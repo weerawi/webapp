@@ -6,15 +6,27 @@ import { auth } from '@/lib/firebase/config';
 import { LogOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import DashboardCard from "@/components/dashboard/DashboardCard";
+import { useAuthStore } from '@/lib/store/authStore';
 
 export default function DashboardHome() {
+  const { logout,user, isAuthenticated  } = useAuthStore();
+
+   // 🔍 Log store state changes
+   useEffect(() => {
+    console.log('🔄 Auth state changed:', {
+      user: user ? { uid: user.uid, email: user.email } : null,
+      isAuthenticated,
+      timestamp: new Date().toISOString()
+    });
+  }, [user, isAuthenticated]);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      // Redirect will be handled by the protected layout due to auth state change
+      logout();
+      console.log('🔐 Logout successful');
     } catch (error) {
-      console.error("Error signing out: ", error);
-      // Optionally, show an error message to the user
+      console.error('Logout failed:', error);
     }
   };
 
@@ -100,14 +112,10 @@ export default function DashboardHome() {
       <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
         <h1 className="text-4xl font-bold mb-6 text-white">Welcome</h1>
         <div className="grid grid-cols-2 gap-4 w-[600px]"> 
-
-
           <DashboardCard href="/dashboard/staff" title="Staff" />
           <DashboardCard href="/dashboard/report" title="Report" />
           <DashboardCard href="/dashboard/water-board" title="Water Board" />
           <DashboardCard href="/dashboard/live-location" title="Live Location" /> 
-
-
         </div> 
         <div 
           className="absolute flex justify-center items-center gap-4 top-4 right-4 cursor-pointer text-white transition-colors duration-200"
@@ -122,8 +130,6 @@ export default function DashboardHome() {
           </Link>
           <LogOut className="h-10 p-2 rounded-xl hover:bg-cyan-200" size={36} />
         </div>
-
-        
       </div>
     </div>
   );

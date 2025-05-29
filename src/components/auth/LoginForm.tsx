@@ -12,6 +12,10 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase/config"
 import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from "lucide-react"
 import { GRADIENTS } from "@/lib/constant/colors"
+import { useAuthStore } from '@/lib/store/authStore'; 
+
+
+
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -21,13 +25,21 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
+  const setAuthUser = useAuthStore((state) => state.setUser); // ✅ Zustand updater
+  const logout = useAuthStore((state) => state.logout);  
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const userCredential =await signInWithEmailAndPassword(auth, email, password)
+      const firebaseUser = userCredential.user;
+
+      // ✅ Sync Zustand store with logged in user
+      setAuthUser(firebaseUser); 
       router.push("/dashboard")
     } catch (err) {
       setError("Invalid credentials. Please check your email and password.")
