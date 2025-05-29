@@ -58,18 +58,18 @@ export default function ReportPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
             {/* Filters Sidebar */}
             <div className="lg:col-span-1">
-              <Card className="p-6">
+              <Card className="px-4 py-2">
                 <ReportFilters />
               </Card>
             </div>
 
             {/* Main Content */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="lg:col-span-5 ">
               {/* Stats Overview */}
-              <ReportStats />
+              {/* <ReportStats /> */}
 
               {/* Report View */}
               <ReportView />

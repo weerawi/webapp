@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { DisconnectionRecord, DisconnectionFilters } from "@/types/disconnection"
+import { mockDisconnectionRecords } from "@/lib/mock/disconnection-data"
 
 interface DisconnectionState {
   // Data
@@ -186,9 +187,8 @@ export const useDisconnectionStore = create<DisconnectionState>((set, get) => ({
       set({ records, filteredRecords: records, isLoading: false })
       */
 
-      // For now, just use the mock data
-      const mockData = get().records
-      set({ records: mockData, filteredRecords: mockData, isLoading: false })
+      // Use mock data
+      set({ records: mockDisconnectionRecords, filteredRecords: mockDisconnectionRecords, isLoading: false })
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false })
     }

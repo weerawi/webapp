@@ -32,98 +32,90 @@ export function ReportFilters() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2 max-w-xs">
       <div className="flex items-center gap-2">
         <FilterIcon className="h-5 w-5" />
         <h3 className="text-lg font-semibold">Filters</h3>
       </div>
 
       {/* Date Range Filter */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="date-range">Date Range</Label>
         <DatePickerWithRange value={dateRange} onChange={handleDateRangeChange} className="w-full" />
       </div>
 
-      <Separator />
+      {/* <Separator /> */}
 
       {/* Area Filter */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="area">Area</Label>
-        <Select value={filters.area} onValueChange={(value) => setFilters({ area: value })}>
+        <Select className="w-full" value={filters.area} onValueChange={(value) => setFilters({ area: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select area" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Areas</SelectItem>
             {areas.map((area) => (
-              <SelectItem key={area} value={area}>
-                {area}
-              </SelectItem>
+              <SelectItem key={area} value={area}>{area}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Supervisor Filter */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="supervisor">Supervisor</Label>
-        <Select value={filters.supervisor} onValueChange={(value) => setFilters({ supervisor: value })}>
+        <Select  className="w-full" value={filters.supervisor} onValueChange={(value) => setFilters({ supervisor: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select supervisor" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Supervisors</SelectItem>
             {supervisors.map((supervisor) => (
-              <SelectItem key={supervisor} value={supervisor}>
-                {supervisor}
-              </SelectItem>
+              <SelectItem key={supervisor} value={supervisor}>{supervisor}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Team Number Filter */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="teamNo">Team Number</Label>
-        <Select value={filters.teamNo} onValueChange={(value) => setFilters({ teamNo: value })}>
+        <Select className="w-full" value={filters.teamNo} onValueChange={(value) => setFilters({ teamNo: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select team number" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Teams</SelectItem>
             {teamNumbers.map((teamNo) => (
-              <SelectItem key={teamNo} value={teamNo}>
-                {teamNo}
-              </SelectItem>
+              <SelectItem key={teamNo} value={teamNo}>{teamNo}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Helper Filter */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="helper">Helper</Label>
-        <Select value={filters.helper} onValueChange={(value) => setFilters({ helper: value })}>
+        <Select className="w-full" value={filters.helper} onValueChange={(value) => setFilters({ helper: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select helper" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Helpers</SelectItem>
             {helpers.map((helper) => (
-              <SelectItem key={helper} value={helper}>
-                {helper}
-              </SelectItem>
+              <SelectItem key={helper} value={helper}>{helper}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <Separator />
+      {/* <Separator /> */}
 
       {/* Payment Status Filter */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="paymentStatus">Payment Status</Label>
-        <Select value={filters.paymentStatus} onValueChange={(value) => setFilters({ paymentStatus: value })}>
+        <Select className="w-full" value={filters.paymentStatus} onValueChange={(value) => setFilters({ paymentStatus: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select payment status" />
           </SelectTrigger>
@@ -138,9 +130,10 @@ export function ReportFilters() {
       </div>
 
       {/* Disconnection Status Filter */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="disconnectionStatus">Disconnection Status</Label>
         <Select
+          className="w-full"
           value={filters.disconnectionStatus}
           onValueChange={(value) => setFilters({ disconnectionStatus: value })}
         >
@@ -174,7 +167,7 @@ export function ReportFilters() {
         filters.disconnectionStatus !== "all" ||
         filters.dateFrom ||
         filters.dateTo) && (
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label>Active Filters</Label>
           <div className="flex flex-wrap gap-1">
             {filters.area !== "all" && <Badge variant="secondary">Area: {filters.area}</Badge>}

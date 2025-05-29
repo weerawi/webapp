@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -16,6 +16,11 @@ export function ReportView() {
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null)
 
   const filteredRecords = useDisconnectionStore((state) => state.filteredRecords)
+  const fetchRecords = useDisconnectionStore((state) => state.fetchRecords)
+
+  useEffect(() => {
+    fetchRecords()
+  }, [fetchRecords])
 
   const handleViewPhoto = (photoUrl: string) => {
     setSelectedPhoto(photoUrl)
@@ -38,7 +43,7 @@ export function ReportView() {
 
   return (
     <>
-      <Card>
+      <Card className="gap-0 pt-1 ">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -53,8 +58,8 @@ export function ReportView() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="table" className="space-y-4">
+        <CardContent >
+          <Tabs defaultValue="table" className="space-y-2">
             <TabsList>
               <TabsTrigger value="table">
                 <FileText className="h-4 w-4 mr-1" />
@@ -67,9 +72,10 @@ export function ReportView() {
             </TabsList>
 
             <TabsContent value="table" className="space-y-4">
-              <ScrollArea className="h-[600px]">
+              <Table>
+                <ScrollArea className="h-[450px]">
                 <div className="rounded-md border">
-                  <Table>
+                  
                     <TableHeader className="sticky top-0 bg-background">
                       <TableRow>
                         <TableHead className="w-24">Date</TableHead>
@@ -91,7 +97,7 @@ export function ReportView() {
                         <TableHead className="w-24 text-center">Already Disconnected</TableHead>
                         <TableHead className="w-24 text-center">Wrong Meter</TableHead>
                         <TableHead className="w-24 text-center">Billing Error</TableHead>
-                        <TableHead className="w-20 text-center">Can't Find</TableHead>
+                        <TableHead className="w-20 text-center">Can&apos;t Find</TableHead>
                         <TableHead className="w-20 text-center">Objections</TableHead>
                         <TableHead className="w-24 text-center">Stopped By NWSDB</TableHead>
                         <TableHead className="w-16 text-center">Photo</TableHead>
@@ -132,9 +138,11 @@ export function ReportView() {
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
+                  
                 </div>
               </ScrollArea>
+              </Table>
+              
             </TabsContent>
 
             <TabsContent value="summary" className="space-y-4">
@@ -232,7 +240,7 @@ export function ReportView() {
                         <span>{filteredRecords.filter((r) => r.billingError).length}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Can't Find</span>
+                        <span>Can&apos;t Find</span>
                         <span>{filteredRecords.filter((r) => r.cantFind).length}</span>
                       </div>
                       <div className="flex justify-between">
