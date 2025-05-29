@@ -119,7 +119,7 @@ export default function DashboardHome() {
         </div> 
         <div 
           className="absolute flex justify-center items-center gap-4 top-4 right-4 cursor-pointer text-white transition-colors duration-200"
-          onClick={handleLogout}
+          
         >
           <Link href="/dashboard/settings" className="col-span-2">
             <Button 
@@ -128,7 +128,7 @@ export default function DashboardHome() {
               Settings
             </Button>
           </Link>
-          <LogOut className="h-10 p-2 rounded-xl hover:bg-cyan-200" size={36} />
+          <LogOut onClick={handleLogout} className="h-10 p-2 rounded-xl hover:bg-cyan-200" size={36} />
         </div>
       </div>
     </div>
