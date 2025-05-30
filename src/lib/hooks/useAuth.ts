@@ -26,14 +26,17 @@ import { useState, useEffect } from 'react';
 import { User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { sessionManager } from '@/lib/auth/sessionManager';
+import { useAuthStore } from '@/lib/store/authStore';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { logout  } = useAuthStore();
 
   const handleLogout = async () => {
     try {
-      await signOut(auth); // This will trigger onAuthStateChanged
+      await signOut(auth); 
+      logout();
       sessionManager.clearSession();
       setUser(null);
       console.log('User logged out');
