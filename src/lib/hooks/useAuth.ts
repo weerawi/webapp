@@ -1,44 +1,22 @@
-// "use client"
-
-// import { useState, useEffect } from 'react';
-// import { User, onAuthStateChanged } from 'firebase/auth';
-// import { auth } from '@/lib/firebase/config';
-
-// export function useAuth() {
-//   const [user, setUser] = useState<User | null>(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, (user) => {
-//       setUser(user);
-//       setLoading(false);
-//     });
-//     return () => unsubscribe();
-//   }, []);
-
-//   return { user, loading };
-// } 
-
-// hooks/useAuth.ts
-"use client"
+"use client";
 
 import { useState, useEffect } from 'react';
 import { User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { sessionManager } from '@/lib/auth/sessionManager';
-import { useAuthStore } from '@/lib/store/authStore';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/lib/store/store';
+import { loginSuccess, logout } from '@/lib/store/slices/authSlice';
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { logout  } = useAuthStore();
-
+  const dispatch = useDispatch<AppDispatch>();
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+  
   const handleLogout = async () => {
     try {
-      await signOut(auth); 
-      logout();
+      await signOut(auth);
+      dispatch(logout());
       sessionManager.clearSession();
-      setUser(null);
       console.log('User logged out');
     } catch (error) {
       console.error('Logout error:', error);
@@ -48,34 +26,29 @@ export function useAuth() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Store token in session when user logs in
         const token = await firebaseUser.getIdToken();
         sessionManager.setSession(token);
-        setUser(firebaseUser);
+        dispatch(loginSuccess(firebaseUser));
         console.log('User logged in');
       } else {
-        // Clear session when user logs out
         sessionManager.clearSession();
-        setUser(null);
+        dispatch(logout());
         console.log('User state cleared');
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [dispatch]);
 
-  // Check session validity periodically
+  // Session validity check
   useEffect(() => {
     if (!user) return;
 
     const interval = setInterval(() => {
-      console.log('Checking session validity...');
       if (!sessionManager.isSessionValid()) {
-        console.log('Session invalid, logging out...');
-        handleLogout(); // Use proper logout instead of just setting user to null
+        handleLogout();
       }
-    }, 3600000); // Check every 10 seconds for testing (change back to 60000 later)
+    }, 3600000);
 
     return () => clearInterval(interval);
   }, [user]);

@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,10 +10,8 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase/config"
 import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from "lucide-react"
 import { GRADIENTS } from "@/lib/constant/colors"
-import { useAuthStore } from '@/lib/store/authStore'; 
-
-
-
+import { useDispatch } from 'react-redux'
+import { loginSuccess } from '@/lib/store/slices/authSlice'
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -24,10 +20,7 @@ export default function LoginForm() {
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
-
-  const setAuthUser = useAuthStore((state) => state.setUser); // ✅ Zustand updater
-  const logout = useAuthStore((state) => state.logout);  
-
+  const dispatch = useDispatch()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,11 +28,19 @@ export default function LoginForm() {
     setError("")
 
     try {
-      const userCredential =await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const firebaseUser = userCredential.user;
 
-      // ✅ Sync Zustand store with logged in user
-      setAuthUser(firebaseUser); 
+      // Dispatch Redux action with user data
+      dispatch(loginSuccess({
+        user: {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          // Add any other user properties you need
+        },
+        token: await firebaseUser.getIdToken()
+      }));
+      
       router.push("/dashboard")
     } catch (err) {
       setError("Invalid credentials. Please check your email and password.")
@@ -49,9 +50,9 @@ export default function LoginForm() {
   }
 
   return (
-    <div className={`  min-h-screen flex items-center justify-center p-4 `}> 
-      <div className="w-full max-w-sm ">
-        <Card className={`shadow-xl border-0 ${GRADIENTS.card} backdrop-blur-sm w-[350px] `}>
+    <div className={`min-h-screen flex items-center justify-center p-4`}> 
+      <div className="w-full max-w-sm">
+        <Card className={`shadow-xl border-0 ${GRADIENTS.card} backdrop-blur-sm w-[350px]`}>
           <CardHeader className="text-center pb-6">
             <div
               className={`inline-flex items-center justify-center w-14 h-14 rounded-full ${GRADIENTS.primary} mx-auto mb-4`}

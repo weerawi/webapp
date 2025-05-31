@@ -6,13 +6,17 @@ import { auth } from '@/lib/firebase/config';
 import { LogOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import DashboardCard from "@/components/dashboard/DashboardCard";
-import { useAuthStore } from '@/lib/store/authStore';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/lib/store/store';
+import { logout } from '@/lib/store/slices/authSlice';
 
 export default function DashboardHome() {
-  const { logout,user, isAuthenticated  } = useAuthStore();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const isAuthenticated = !!user;
 
-   // 🔍 Log store state changes
-   useEffect(() => {
+  // 🔍 Log store state changes
+  useEffect(() => {
     console.log('🔄 Auth state changed:', {
       user: user ? { uid: user.uid, email: user.email } : null,
       isAuthenticated,
@@ -23,7 +27,7 @@ export default function DashboardHome() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      logout();
+      dispatch(logout());
       console.log('🔐 Logout successful');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -100,8 +104,6 @@ export default function DashboardHome() {
     };
   }, [vantaEffect]);
 
-  // vantajs end
-
   return (
     <div className="relative min-h-screen"> 
       <div 
@@ -119,7 +121,6 @@ export default function DashboardHome() {
         </div> 
         <div 
           className="absolute flex justify-center items-center gap-4 top-4 right-4 cursor-pointer text-white transition-colors duration-200"
-          
         >
           <Link href="/dashboard/settings" className="col-span-2">
             <Button 
