@@ -1,0 +1,124 @@
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { mockDisconnectionData } from "@/lib/mock-data";
+import { DisconnectionRecord } from "@/types/disconnection";
+
+interface ReportState {
+  records: DisconnectionRecord[];
+  filteredRecords: DisconnectionRecord[];
+  filters: {
+    area: string;
+    supervisor: string;
+    teamNo: string;
+    helper: string;
+    paymentStatus: string;
+    disconnectionStatus: string;
+    dateFrom: string | null;
+    dateTo: string | null;
+  };
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: ReportState = {
+  records: mockDisconnectionData,
+  filteredRecords: mockDisconnectionData,
+  filters: {
+    area: "all",
+    supervisor: "all",
+    teamNo: "all",
+    helper: "all",
+    paymentStatus: "all",
+    disconnectionStatus: "all",
+    dateFrom: null,
+    dateTo: null,
+  },
+  loading: false,
+  error: null,
+};
+
+const reportSlice = createSlice({
+  name: "report",
+  initialState,
+  reducers: {
+    fetchReportsStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchReportsSuccess: (state, action: PayloadAction<DisconnectionRecord[]>) => {
+      state.records = action.payload;
+      state.filteredRecords = action.payload; // reset filters to full set
+      state.loading = false;
+    },
+    fetchReportsFailure: (state, action: PayloadAction<string>) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    setFilters: (state, action: PayloadAction<Partial<ReportState["filters"]>>) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    applyFilters: (state) => {
+      const {
+        area,
+        supervisor,
+        teamNo,
+        helper,
+        paymentStatus,
+        disconnectionStatus,
+        dateFrom,
+        dateTo,
+      } = state.filters;
+
+      state.filteredRecords = state.records.filter((record) => {
+        const matchesArea = area === "all" || record.area === area;
+        const matchesSupervisor = supervisor === "all" || record.supervisor === supervisor;
+        const matchesTeam = teamNo === "all" || record.teamNo === teamNo;
+        const matchesHelper = helper === "all" || record.helper === helper;
+        const matchesPayment =
+          paymentStatus === "all" ||
+          (paymentStatus === "paid" && record.alreadyPaid) ||
+          record[`payment${paymentStatus}` as keyof typeof record];
+        const matchesStatus =
+          disconnectionStatus === "all" ||
+          record[disconnectionStatus as keyof typeof record] === true;
+
+        
+          
+        const recordDate = new Date(record.date);
+        recordDate.setHours(0, 0, 0, 0);
+
+        const from = dateFrom ? new Date(dateFrom) : null;
+        const to = dateTo ? new Date(dateTo) : null;
+        if (from) from.setHours(0, 0, 0, 0);
+        if (to) to.setHours(23, 59, 59, 999); 
+        const withinDateRange =
+          (!dateFrom || new Date(dateFrom) <= recordDate) &&
+          (!dateTo || recordDate <= new Date(dateTo));
+
+        return (
+          matchesArea &&
+          matchesSupervisor &&
+          matchesTeam &&
+          matchesHelper &&
+          matchesPayment &&
+          matchesStatus &&
+          withinDateRange
+        );
+      });
+    },
+    resetFilters: (state) => {
+      state.filters = initialState.filters;
+      state.filteredRecords = state.records;
+    },
+  },
+});
+
+export const {
+  fetchReportsStart,
+  fetchReportsSuccess,
+  fetchReportsFailure,
+  setFilters,
+  applyFilters,
+  resetFilters,
+} = reportSlice.actions;
+
+export default reportSlice.reducer;

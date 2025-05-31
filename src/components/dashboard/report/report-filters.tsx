@@ -1,35 +1,65 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { FilterIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DatePickerWithRange } from "@/components/ui/date-range-picker"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { useDisconnectionStore } from "@/lib/store/disconnection"
-import { areas, supervisors, teamNumbers, helpers } from "@/lib/mock-data"
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/lib/store";
+import {
+  setFilters,
+  applyFilters,
+  resetFilters,
+} from "@/lib/store/slices/reportSlice";
+import { FilterIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  areas,
+  supervisors,
+  teamNumbers,
+  helpers,
+} from "@/lib/mock-data";
 
 export function ReportFilters() {
-  const [dateRange, setDateRange] = useState<any>(null)
+  const dispatch = useDispatch();
+  const filters = useSelector((state: RootState) => state.report.filters);
 
-  const filters = useDisconnectionStore((state) => state.filters)
-  const setFilters = useDisconnectionStore((state) => state.setFilters)
-  const applyFilters = useDisconnectionStore((state) => state.applyFilters)
-  const resetFilters = useDisconnectionStore((state) => state.resetFilters)
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
+    from: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
+    to: filters.dateTo ? new Date(filters.dateTo) : undefined,
+  });
+  
 
-  const handleDateRangeChange = (range: any) => {
-    setDateRange(range)
-    setFilters({
-      dateFrom: range?.from || null,
-      dateTo: range?.to || null,
-    })
-  }
+  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
+    setDateRange(range);
+    dispatch(
+      setFilters({
+        dateFrom: range?.from ? range.from.toISOString() : null,
+        dateTo: range?.to ? range.to.toISOString() : null,
+      })
+    );
+  };
+  
 
   const handleApplyFilters = () => {
-    applyFilters()
-  }
+    dispatch(applyFilters());
+  };
+
+  const handleReset = () => {
+    setDateRange(null);
+    dispatch(resetFilters());
+  };
 
   return (
     <div className="space-y-2 max-w-xs">
@@ -38,84 +68,107 @@ export function ReportFilters() {
         <h3 className="text-lg font-semibold">Filters</h3>
       </div>
 
-      {/* Date Range Filter */}
+      {/* Date Range */}
       <div className="space-y-1">
-        <Label htmlFor="date-range">Date Range</Label>
-        <DatePickerWithRange value={dateRange} onChange={handleDateRangeChange} className="w-full" />
+        <Label>Date Range</Label>
+        <DatePickerWithRange
+          value={dateRange}
+          onChange={handleDateRangeChange}
+          className="w-full"
+        />
       </div>
 
-      {/* <Separator /> */}
-
-      {/* Area Filter */}
+      {/* Area */}
       <div className="space-y-1">
-        <Label htmlFor="area">Area</Label>
-        <Select className="w-full" value={filters.area} onValueChange={(value) => setFilters({ area: value })}>
+        <Label>Area</Label>
+        <Select
+          value={filters.area}
+          onValueChange={(val) => dispatch(setFilters({ area: val }))}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select area" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Areas</SelectItem>
             {areas.map((area) => (
-              <SelectItem key={area} value={area}>{area}</SelectItem>
+              <SelectItem key={area} value={area}>
+                {area}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Supervisor Filter */}
+      {/* Supervisor */}
       <div className="space-y-1">
-        <Label htmlFor="supervisor">Supervisor</Label>
-        <Select  className="w-full" value={filters.supervisor} onValueChange={(value) => setFilters({ supervisor: value })}>
+        <Label>Supervisor</Label>
+        <Select
+          value={filters.supervisor}
+          onValueChange={(val) => dispatch(setFilters({ supervisor: val }))}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select supervisor" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Supervisors</SelectItem>
-            {supervisors.map((supervisor) => (
-              <SelectItem key={supervisor} value={supervisor}>{supervisor}</SelectItem>
+            {supervisors.map((s) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Team Number Filter */}
+      {/* Team Number */}
       <div className="space-y-1">
-        <Label htmlFor="teamNo">Team Number</Label>
-        <Select className="w-full" value={filters.teamNo} onValueChange={(value) => setFilters({ teamNo: value })}>
+        <Label>Team Number</Label>
+        <Select
+          value={filters.teamNo}
+          onValueChange={(val) => dispatch(setFilters({ teamNo: val }))}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select team number" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Teams</SelectItem>
-            {teamNumbers.map((teamNo) => (
-              <SelectItem key={teamNo} value={teamNo}>{teamNo}</SelectItem>
+            {teamNumbers.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Helper Filter */}
+      {/* Helper */}
       <div className="space-y-1">
-        <Label htmlFor="helper">Helper</Label>
-        <Select className="w-full" value={filters.helper} onValueChange={(value) => setFilters({ helper: value })}>
+        <Label>Helper</Label>
+        <Select
+          value={filters.helper}
+          onValueChange={(val) => dispatch(setFilters({ helper: val }))}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select helper" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Helpers</SelectItem>
-            {helpers.map((helper) => (
-              <SelectItem key={helper} value={helper}>{helper}</SelectItem>
+            {helpers.map((h) => (
+              <SelectItem key={h} value={h}>
+                {h}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* <Separator /> */}
-
-      {/* Payment Status Filter */}
+      {/* Payment Status */}
       <div className="space-y-1">
-        <Label htmlFor="paymentStatus">Payment Status</Label>
-        <Select className="w-full" value={filters.paymentStatus} onValueChange={(value) => setFilters({ paymentStatus: value })}>
+        <Label>Payment Status</Label>
+        <Select
+          value={filters.paymentStatus}
+          onValueChange={(val) => dispatch(setFilters({ paymentStatus: val }))}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select payment status" />
           </SelectTrigger>
@@ -129,13 +182,14 @@ export function ReportFilters() {
         </Select>
       </div>
 
-      {/* Disconnection Status Filter */}
+      {/* Disconnection Status */}
       <div className="space-y-1">
-        <Label htmlFor="disconnectionStatus">Disconnection Status</Label>
+        <Label>Disconnection Status</Label>
         <Select
-          className="w-full"
           value={filters.disconnectionStatus}
-          onValueChange={(value) => setFilters({ disconnectionStatus: value })}
+          onValueChange={(val) =>
+            dispatch(setFilters({ disconnectionStatus: val }))
+          }
         >
           <SelectTrigger>
             <SelectValue placeholder="Select disconnection status" />
@@ -158,7 +212,7 @@ export function ReportFilters() {
 
       <Separator />
 
-      {/* Active Filters */}
+      {/* Active Filters Badges */}
       {(filters.area !== "all" ||
         filters.supervisor !== "all" ||
         filters.teamNo !== "all" ||
@@ -188,10 +242,10 @@ export function ReportFilters() {
         <Button onClick={handleApplyFilters} className="w-full">
           Apply Filters
         </Button>
-        <Button onClick={resetFilters} variant="outline" className="w-full">
+        <Button onClick={handleReset} variant="outline" className="w-full">
           Clear All
         </Button>
       </div>
     </div>
-  )
+  );
 }
