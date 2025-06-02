@@ -9,11 +9,14 @@ import DashboardCard from "@/components/dashboard/DashboardCard";
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/lib/store/store';
 import { logout } from '@/lib/store/slices/authSlice';
+import { showLoader,hideLoader } from "@/lib/store/slices/loaderSlice";
+import { useRouter } from "next/navigation";
 
 export default function DashboardHome() {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const isAuthenticated = !!user;
+  const router = useRouter();
 
   // 🔍 Log store state changes
   useEffect(() => {
@@ -25,14 +28,16 @@ export default function DashboardHome() {
   }, [user, isAuthenticated]);
 
   const handleLogout = async () => {
+    dispatch(showLoader("Logging out..."));
     try {
-      await signOut(auth);
+      await signOut(auth); 
       dispatch(logout());
-      console.log('🔐 Logout successful');
+      console.log('🔐 Logout successful');  
     } catch (error) {
       console.error('Logout failed:', error);
-    }
-  };
+      dispatch(hideLoader());
+    }  
+  }; 
 
   // vantajs wave adding start
   const vantaRef = useRef<HTMLDivElement>(null);
@@ -122,13 +127,17 @@ export default function DashboardHome() {
         <div 
           className="absolute flex justify-center items-center gap-4 top-4 right-4 cursor-pointer text-white transition-colors duration-200"
         >
-          <Link href="/dashboard/settings" className="col-span-2">
+          <div  className="col-span-2">
             <Button 
+              onClick={() => {
+                dispatch(showLoader(`Loading settings page..`));
+                router.push("/dashboard/settings")
+              }}
               className="w-full bg-transparent h-10 text-lg cursor-pointer hover:bg-cyan-200 hover:animate-none transition-all duration-300 hover:scale-105"
             >
               Settings
             </Button>
-          </Link>
+          </div>
           <LogOut onClick={handleLogout} className="h-10 p-2 rounded-xl hover:bg-cyan-200" size={36} />
         </div>
       </div>

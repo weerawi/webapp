@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +11,8 @@ import { auth } from "@/lib/firebase/config"
 import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from "lucide-react"
 import { GRADIENTS } from "@/lib/constant/colors"
 import { useDispatch } from 'react-redux'
-import { loginSuccess } from '@/lib/store/slices/authSlice'
+import { loginSuccess } from '@/lib/store/slices/authSlice' 
+import { showLoader, hideLoader } from "@/lib/store/slices/loaderSlice"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -21,6 +22,10 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(hideLoader())
+  }, [dispatch])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,8 +45,9 @@ export default function LoginForm() {
         },
         token: await firebaseUser.getIdToken()
       }));
-      
+      dispatch(showLoader("Signing in..."));
       router.push("/dashboard")
+      setTimeout(() => dispatch(hideLoader()), 1000);
     } catch (err) {
       setError("Invalid credentials. Please check your email and password.")
     } finally {

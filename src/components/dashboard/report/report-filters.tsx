@@ -19,15 +19,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { X } from "lucide-react";
 
 export function ReportFilters() {
   const dispatch = useDispatch();
   const filters = useSelector((state: RootState) => state.report.filters);
   const areas = useSelector((state: RootState) => state.report.areas);
-  const supervisors = useSelector((state: RootState) => state.report.supervisors);
-  const teamNumbers = useSelector((state: RootState) => state.report.teamNumbers);
+  const supervisors = useSelector(
+    (state: RootState) => state.report.supervisors
+  );
+  const teamNumbers = useSelector(
+    (state: RootState) => state.report.teamNumbers
+  );
   const helpers = useSelector((state: RootState) => state.report.helpers);
 
   const [dateRange, setDateRange] = useState<{
@@ -37,9 +41,11 @@ export function ReportFilters() {
     from: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
     to: filters.dateTo ? new Date(filters.dateTo) : undefined,
   });
-  
 
-  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
+  const handleDateRangeChange = (range: {
+    from: Date | undefined;
+    to: Date | undefined;
+  }) => {
     setDateRange(range);
     dispatch(
       setFilters({
@@ -48,7 +54,6 @@ export function ReportFilters() {
       })
     );
   };
-  
 
   const handleApplyFilters = () => {
     dispatch(applyFilters());
@@ -57,6 +62,16 @@ export function ReportFilters() {
   const handleReset = () => {
     setDateRange({ from: undefined, to: undefined });
     dispatch(resetFilters());
+  };
+
+  const handleRemoveFilter = (key: keyof typeof filters) => {
+    dispatch(
+      setFilters({
+        [key]: key === "dateFrom" || key === "dateTo" ? null : "all",
+      })
+    );
+    if (key === "dateFrom" || key === "dateTo")
+      setDateRange({ from: undefined, to: undefined });
   };
 
   return (
@@ -83,7 +98,7 @@ export function ReportFilters() {
           value={filters.area}
           onValueChange={(val) => dispatch(setFilters({ area: val }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue placeholder="Select area" />
           </SelectTrigger>
           <SelectContent>
@@ -104,7 +119,7 @@ export function ReportFilters() {
           value={filters.supervisor}
           onValueChange={(val) => dispatch(setFilters({ supervisor: val }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue placeholder="Select supervisor" />
           </SelectTrigger>
           <SelectContent>
@@ -125,7 +140,7 @@ export function ReportFilters() {
           value={filters.teamNo}
           onValueChange={(val) => dispatch(setFilters({ teamNo: val }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue placeholder="Select team number" />
           </SelectTrigger>
           <SelectContent>
@@ -146,7 +161,7 @@ export function ReportFilters() {
           value={filters.helper}
           onValueChange={(val) => dispatch(setFilters({ helper: val }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue placeholder="Select helper" />
           </SelectTrigger>
           <SelectContent>
@@ -167,7 +182,7 @@ export function ReportFilters() {
           value={filters.paymentStatus}
           onValueChange={(val) => dispatch(setFilters({ paymentStatus: val }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue placeholder="Select payment status" />
           </SelectTrigger>
           <SelectContent>
@@ -189,7 +204,7 @@ export function ReportFilters() {
             dispatch(setFilters({ disconnectionStatus: val }))
           }
         >
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue placeholder="Select disconnection status" />
           </SelectTrigger>
           <SelectContent>
@@ -198,7 +213,9 @@ export function ReportFilters() {
             <SelectItem value="rc">RC</SelectItem>
             <SelectItem value="gateClosed">Gate Closed</SelectItem>
             <SelectItem value="meterRemoved">Meter Removed</SelectItem>
-            <SelectItem value="alreadyDisconnected">Already Disconnected</SelectItem>
+            <SelectItem value="alreadyDisconnected">
+              Already Disconnected
+            </SelectItem>
             <SelectItem value="wrongMeter">Wrong Meter</SelectItem>
             <SelectItem value="billingError">Billing Error</SelectItem>
             <SelectItem value="cantFind">Can&apos;t Find</SelectItem>
@@ -211,36 +228,112 @@ export function ReportFilters() {
       <Separator />
 
       {/* Active Filters Badges */}
-      {(filters.area !== "all" ||
-        filters.supervisor !== "all" ||
-        filters.teamNo !== "all" ||
-        filters.helper !== "all" ||
-        filters.paymentStatus !== "all" ||
-        filters.disconnectionStatus !== "all" ||
-        filters.dateFrom ||
-        filters.dateTo) && (
-        <div className="space-y-1">
-          <Label>Active Filters</Label>
-          <div className="flex flex-wrap gap-1">
-            {filters.area !== "all" && <Badge variant="secondary">Area: {filters.area}</Badge>}
-            {filters.supervisor !== "all" && <Badge variant="secondary">Supervisor: {filters.supervisor}</Badge>}
-            {filters.teamNo !== "all" && <Badge variant="secondary">Team: {filters.teamNo}</Badge>}
-            {filters.helper !== "all" && <Badge variant="secondary">Helper: {filters.helper}</Badge>}
-            {filters.paymentStatus !== "all" && <Badge variant="secondary">Payment: {filters.paymentStatus}</Badge>}
-            {filters.disconnectionStatus !== "all" && (
-              <Badge variant="secondary">Status: {filters.disconnectionStatus}</Badge>
-            )}
-            {(filters.dateFrom || filters.dateTo) && <Badge variant="secondary">Date Range Selected</Badge>}
-          </div>
+      <div className="space-y-1">
+        <Label>Active Filters</Label>
+        <div className="flex flex-wrap gap-2">
+          {filters.area !== "all" && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Area: {filters.area}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => handleRemoveFilter("area")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          {filters.supervisor !== "all" && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Supervisor: {filters.supervisor}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => handleRemoveFilter("supervisor")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          {filters.teamNo !== "all" && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Team: {filters.teamNo}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => handleRemoveFilter("teamNo")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          {filters.helper !== "all" && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Helper: {filters.helper}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => handleRemoveFilter("helper")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          {filters.paymentStatus !== "all" && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Payment: {filters.paymentStatus}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => handleRemoveFilter("paymentStatus")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          {filters.disconnectionStatus !== "all" && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Status: {filters.disconnectionStatus}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => handleRemoveFilter("disconnectionStatus")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          {(filters.dateFrom || filters.dateTo) && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Date Range
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => {
+                  handleRemoveFilter("dateFrom");
+                  handleRemoveFilter("dateTo");
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Action Buttons */}
       <div className="space-y-2">
-        <Button onClick={handleApplyFilters} className="w-full">
+        <Button onClick={handleApplyFilters} className="w-full cursor-pointer">
           Apply Filters
         </Button>
-        <Button onClick={handleReset} variant="outline" className="w-full">
+        <Button onClick={handleReset}  className="w-full cursor-pointer">
           Clear All
         </Button>
       </div>

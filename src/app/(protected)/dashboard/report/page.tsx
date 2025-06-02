@@ -8,12 +8,14 @@ import { Card, CardHeader } from "@/components/ui/card";
 import Breadcrumb from "@/components/navigation/Breadcrumb";
 import { ReportView } from "@/components/dashboard/report/report-view";
 import { ReportFilters } from "@/components/dashboard/report/report-filters";
+import { hideLoader } from "@/lib/store/slices/loaderSlice";
 
 export default function ReportPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     fetchAndStoreReports(dispatch);
+    dispatch(hideLoader());
   }, [dispatch]);
 
   return (
