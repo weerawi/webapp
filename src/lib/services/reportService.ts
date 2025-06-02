@@ -5,7 +5,7 @@ import {
   fetchReportsSuccess,
   fetchReportsFailure
 } from "../store/slices/reportSlice";
-import { mockDisconnectionRecords } from "@/lib/mock/disconnection-data";
+import { mockDisconnectionData } from "@/lib/mock-data";
 
 
 // Call this function in ReportPage
@@ -15,7 +15,7 @@ export async function fetchAndStoreReports(dispatch: AppDispatch) {
 
     // Mocking delay and data
     await new Promise((res) => setTimeout(res, 500));
-    dispatch(fetchReportsSuccess(mockDisconnectionRecords));
+    dispatch(fetchReportsSuccess(mockDisconnectionData));
 
     // 🔒 Future Firebase (commented for now)
     /*
@@ -27,7 +27,13 @@ export async function fetchAndStoreReports(dispatch: AppDispatch) {
     })) as DisconnectionRecord[];
     dispatch(fetchReportsSuccess(reports));
     */
-  } catch (err: any) {
-    dispatch(fetchReportsFailure(err.message || "Failed to load reports"));
+  } catch (err: unknown) {
+    let errorMessage = "Failed to load reports";
+    if (err instanceof Error) {
+      errorMessage = err.message;
+    } else if (typeof err === "string") {
+      errorMessage = err;
+    }
+    dispatch(fetchReportsFailure(errorMessage));
   }
 }

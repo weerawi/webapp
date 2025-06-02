@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/lib/store";
+import { RootState } from "@/lib/store/store";
 import {
   setFilters,
   applyFilters,
@@ -21,16 +21,14 @@ import {
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  areas,
-  supervisors,
-  teamNumbers,
-  helpers,
-} from "@/lib/mock-data";
 
 export function ReportFilters() {
   const dispatch = useDispatch();
   const filters = useSelector((state: RootState) => state.report.filters);
+  const areas = useSelector((state: RootState) => state.report.areas);
+  const supervisors = useSelector((state: RootState) => state.report.supervisors);
+  const teamNumbers = useSelector((state: RootState) => state.report.teamNumbers);
+  const helpers = useSelector((state: RootState) => state.report.helpers);
 
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined;
@@ -57,7 +55,7 @@ export function ReportFilters() {
   };
 
   const handleReset = () => {
-    setDateRange(null);
+    setDateRange({ from: undefined, to: undefined });
     dispatch(resetFilters());
   };
 
@@ -90,7 +88,7 @@ export function ReportFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Areas</SelectItem>
-            {areas.map((area) => (
+            {(areas || []).map((area: string) => (
               <SelectItem key={area} value={area}>
                 {area}
               </SelectItem>
@@ -111,7 +109,7 @@ export function ReportFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Supervisors</SelectItem>
-            {supervisors.map((s) => (
+            {(supervisors || []).map((s: string) => (
               <SelectItem key={s} value={s}>
                 {s}
               </SelectItem>
@@ -132,7 +130,7 @@ export function ReportFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Teams</SelectItem>
-            {teamNumbers.map((t) => (
+            {(teamNumbers || []).map((t: string) => (
               <SelectItem key={t} value={t}>
                 {t}
               </SelectItem>
@@ -153,7 +151,7 @@ export function ReportFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Helpers</SelectItem>
-            {helpers.map((h) => (
+            {(helpers || []).map((h: string) => (
               <SelectItem key={h} value={h}>
                 {h}
               </SelectItem>
@@ -203,7 +201,7 @@ export function ReportFilters() {
             <SelectItem value="alreadyDisconnected">Already Disconnected</SelectItem>
             <SelectItem value="wrongMeter">Wrong Meter</SelectItem>
             <SelectItem value="billingError">Billing Error</SelectItem>
-            <SelectItem value="cantFind">Can't Find</SelectItem>
+            <SelectItem value="cantFind">Can&apos;t Find</SelectItem>
             <SelectItem value="objections">Objections</SelectItem>
             <SelectItem value="stoppedByNWSDB">Stopped By NWSDB</SelectItem>
           </SelectContent>

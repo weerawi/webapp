@@ -1,5 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { mockDisconnectionData } from "@/lib/mock-data";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit"; 
 import { DisconnectionRecord } from "@/types/disconnection";
 
 interface ReportState {
@@ -17,11 +16,15 @@ interface ReportState {
   };
   loading: boolean;
   error: string | null;
+  areas: string[],
+  supervisors: string[],
+  teamNumbers: string[],
+  helpers: string[],
 }
 
 const initialState: ReportState = {
-  records: mockDisconnectionData,
-  filteredRecords: mockDisconnectionData,
+  records: [],
+  filteredRecords: [],
   filters: {
     area: "all",
     supervisor: "all",
@@ -34,7 +37,12 @@ const initialState: ReportState = {
   },
   loading: false,
   error: null,
+  areas: [],
+  supervisors: [],
+  teamNumbers: [],
+  helpers: [],
 };
+
 
 const reportSlice = createSlice({
   name: "report",
@@ -45,10 +53,22 @@ const reportSlice = createSlice({
       state.error = null;
     },
     fetchReportsSuccess: (state, action: PayloadAction<DisconnectionRecord[]>) => {
-      state.records = action.payload;
-      state.filteredRecords = action.payload; // reset filters to full set
+      const records = action.payload;
+    
+      // Set records
+      state.records = records;
+      state.filteredRecords = records;
       state.loading = false;
-    },
+    
+      // Dynamically extract unique values
+      const unique = <K extends keyof DisconnectionRecord>(key: K) =>
+        [...new Set(records.map((r) => r[key]))].filter(Boolean) as string[];
+    
+      state.areas = unique("area");
+      state.supervisors = unique("supervisor");
+      state.teamNumbers = unique("teamNo");
+      state.helpers = unique("helper");
+    },    
     fetchReportsFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
       state.error = action.payload;

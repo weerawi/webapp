@@ -22,6 +22,9 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false,
     }),
+    devTools: {
+      name: "Hegra webapp",  
+    },
 });
 
 export const persistor = persistStore(store);

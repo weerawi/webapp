@@ -369,7 +369,7 @@ export const mockDisconnectionData: DisconnectionRecord[] = [
 ]
 
 // Mock data for filters
-export const areas = ["Kalaniya", "Colombo", "Gampaha", "Kandy"]
-export const supervisors = ["A", "B", "C", "D"]
-export const teamNumbers = ["1", "2", "3", "4"]
-export const helpers = ["A", "B", "C", "D", "E"]
+// export const areas = ["Kalaniya", "Colombo", "Gampaha", "Kandy"]
+// export const supervisors = ["A", "B", "C", "D"]
+// export const teamNumbers = ["1", "2", "3", "4"]
+// export const helpers = ["A", "B", "C", "D", "E"]
