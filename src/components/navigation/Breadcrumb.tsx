@@ -1,20 +1,27 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Fragment } from 'react';
+import { showLoader } from '@/lib/store/slices/loaderSlice';
+import { useDispatch } from 'react-redux';
+import router from 'next/router';
 
 export default function Breadcrumb() {
   const pathname = usePathname();
   const pathSegments = pathname.split('/').filter(segment => segment !== '');
-
+  const dispatch = useDispatch();
+const router = useRouter();
   return (
     <nav className="text-gray-600 py-3 px-6">
       <ul className="flex items-center space-x-2">
         <li>
-          <Link href="/dashboard" className="hover:underline">
+          <div onClick={() => {
+                dispatch(showLoader(`Loading Dashboard..`));
+                router.push("/dashboard")
+              }}  className="hover:underline cursor-pointer">
             Dashboard
-          </Link>
+          </div>
         </li>
         {pathSegments.map((segment, index) => {
           const href = '/' + pathSegments.slice(0, index + 1).join('/');

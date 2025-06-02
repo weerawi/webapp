@@ -24,7 +24,7 @@ export default function DashboardCard({ title, href, children }: DashboardCardPr
   }
 
   return ( 
-      <div onClick={handleClick} className="bg-gray-800 rounded-lg shadow-lg p-6 text-white hover:bg-gray-700 transition-all duration-200 hover:scale-105">
+      <div onClick={handleClick} className="bg-gray-800 rounded-lg shadow-lg p-6 cursor-pointer text-white hover:bg-gray-700 transition-all duration-200 hover:scale-105">
         <h2 className="text-xl font-semibold mb-2 text-center">{title}</h2>
         {children}
       </div> 

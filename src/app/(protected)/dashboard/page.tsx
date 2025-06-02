@@ -18,6 +18,10 @@ export default function DashboardHome() {
   const isAuthenticated = !!user;
   const router = useRouter();
 
+  useEffect(() => {
+    dispatch(hideLoader()); 
+  },[dispatch])
+
   // 🔍 Log store state changes
   useEffect(() => {
     console.log('🔄 Auth state changed:', {

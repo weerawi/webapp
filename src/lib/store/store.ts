@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";  
 import reportReducer from "./slices/reportSlice";
 import loaderReducer from "./slices/loaderSlice";
+import userLocationReducer from "./slices/userLocationsSlice";
 
 const persistConfig = {
   key: "root",
@@ -14,6 +15,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   report: reportReducer,
   loader: loaderReducer,
+  userLocations: userLocationReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
