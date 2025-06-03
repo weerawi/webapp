@@ -1,5 +1,4 @@
-// lib/services/staffService.ts
-import { collection, addDoc, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Staff } from "../store/slices/staffSlice";
 import { AppDispatch } from "../store/store";
@@ -11,26 +10,34 @@ export const saveStaffToFirestore = async (staff: Omit<Staff, "id">) => {
   return docRef.id;
 };
 
-// Update staff in Firestore
-export const updateStaffInFirestore = async (id: string, updates: Partial<Staff>) => {
-  const staffRef = doc(db, "staff", id);
-  await updateDoc(staffRef, updates);
+// Fetch and sync all staff
+export const fetchStaffFromFirestore = async (dispatch: AppDispatch) => {
+  const snapshot = await getDocs(collection(db, "staff"));
+  const staffList = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    linkedStaffId: doc.data().linkedStaffId || "",
+  })) as Staff[];
+  dispatch(setStaff(staffList));
 };
 
-export const deleteStaffFromFirestore = async (id: string) => {
-    const staffRef = doc(db, "staff", id);
-    await deleteDoc(staffRef);
-  };
-  
-// Fetch all staff from Firestore and dispatch to Redux
-// Update fetchStaffFromFirestore function
-export const fetchStaffFromFirestore = async (dispatch: AppDispatch) => {
-    const snapshot = await getDocs(collection(db, "staff"));
-    const staffList = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      // Normalize linkedStaffId to handle empty strings
-      linkedStaffId: doc.data().linkedStaffId || "",
-    })) as Staff[];
-    dispatch(setStaff(staffList));
-  };
+// ✅ Update staff and dispatch to Redux
+export const updateStaffAndSync = async (
+  dispatch: AppDispatch,
+  id: string,
+  updates: Partial<Staff>
+) => {
+  const staffRef = doc(db, "staff", id);
+  await updateDoc(staffRef, updates);
+  dispatch(updateStaff({ id, updates }));
+};
+
+// ✅ Delete staff and dispatch to Redux
+export const deleteStaffAndSync = async (
+  dispatch: AppDispatch,
+  id: string
+) => {
+  const staffRef = doc(db, "staff", id);
+  await deleteDoc(staffRef);
+  dispatch(deleteStaff(id));
+};

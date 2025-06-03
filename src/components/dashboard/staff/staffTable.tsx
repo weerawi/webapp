@@ -1,10 +1,9 @@
 // components/staff/StaffTable.tsx
 "use client";
-import { useSelector, useDispatch } from "react-redux"; // Add useDispatch
-import { RootState, AppDispatch } from "@/lib/store/store"; // Add AppDispatch
-import { deleteStaff } from "@/lib/store/slices/staffSlice"; // Add this import
-import { deleteStaffFromFirestore } from "@/lib/services/staffService"; // Add this import
-import { toast } from "sonner"; // Already imported
+import { useSelector, useDispatch } from "react-redux";  
+import { RootState, AppDispatch } from "@/lib/store/store"; 
+import { deleteStaffAndSync  } from "@/lib/services/staffService";  
+import { toast } from "sonner";  
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,8 +49,7 @@ export default function StaffTable() {
     if (!deletingStaff) return;
 
     try {
-      await deleteStaffFromFirestore(deletingStaff.id);
-      dispatch(deleteStaff(deletingStaff.id));
+      await deleteStaffAndSync(dispatch, deletingStaff.id);
       toast.success(`${deletingStaff.username} has been deleted successfully`);
       setDeletingStaff(null);
     } catch (error) {
@@ -206,45 +204,48 @@ export default function StaffTable() {
             </div>
           </div>
 
-          {filteredStaff.length === 0 ? (
-            <div className="text-center py-12">
-              <User className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">
-                No staff members found
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {searchQuery
-                  ? "Try adjusting your search"
-                  : "Add your first staff member"}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-lg border min-h-[380px] max-h-screen">
-              <table className="w-full">
-                <thead className="bg-muted/50">
+          <div className="overflow-hidden rounded-lg border min-h-[380px] max-h-screen">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground w-[200px]">
+                    Staff
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground w-[250px]">
+                    Contact
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground w-[160px]">
+                    Password
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground w-[120px]">
+                    Role
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground w-[200px]">
+                    Assigned
+                  </th>
+                  <th className="px-4 py-2 text-center text-sm font-medium text-muted-foreground w-[100px]">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y">
+                {filteredStaff.length === 0 ? (
                   <tr>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
-                      Staff
-                    </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
-                      Contact
-                    </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
-                      Password
-                    </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
-                      Role
-                    </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
-                      Assigned
-                    </th>
-                    <th className="px-4 py-2 text-center text-sm font-medium text-muted-foreground w-20">
-                      Actions
-                    </th>
+                    <td colSpan={6} className="py-12 text-center">
+                      <User className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">
+                        No staff members found
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {searchQuery
+                          ? "Try adjusting your search"
+                          : "Add your first staff member"}
+                      </p>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredStaff.map((staff) => (
+                ) : (
+                  filteredStaff.map((staff) => (
                     <tr
                       key={staff.id}
                       className="hover:bg-muted/30 transition-colors"
@@ -337,7 +338,10 @@ export default function StaffTable() {
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => setDeletingStaff(staff)} // ✅ Fix here
+                            >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
@@ -345,11 +349,11 @@ export default function StaffTable() {
                         </DropdownMenu>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </Card>
 

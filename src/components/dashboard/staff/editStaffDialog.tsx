@@ -2,9 +2,8 @@
 "use client";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/lib/store/store";
-import { updateStaff } from "@/lib/store/slices/staffSlice";
-import { updateStaffInFirestore } from "@/lib/services/staffService";
+import { AppDispatch, RootState } from "@/lib/store/store"; 
+import { updateStaffAndSync } from "@/lib/services/staffService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,8 +60,7 @@ export default function EditStaffDialog({
         ...form,
         linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
       };
-      await updateStaffInFirestore(staff.id, updateData);
-      dispatch(updateStaff({ id: staff.id, updates: updateData }));
+      await updateStaffAndSync(dispatch, staff.id, updateData); 
       toast.success("Staff member updated successfully");
       onOpenChange(false);
     } catch (error) {
