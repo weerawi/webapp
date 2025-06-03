@@ -5,6 +5,7 @@ import authReducer from "./slices/authSlice";
 import reportReducer from "./slices/reportSlice";
 import loaderReducer from "./slices/loaderSlice";
 import userLocationReducer from "./slices/userLocationsSlice";
+import staffReducer from "./slices/staffSlice";
 
 const persistConfig = {
   key: "root",
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   report: reportReducer,
   loader: loaderReducer,
   userLocations: userLocationReducer,
+  staff:staffReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
