@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/lib/store/store";
 import {
@@ -41,6 +41,12 @@ export function ReportFilters() {
     from: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
     to: filters.dateTo ? new Date(filters.dateTo) : undefined,
   });
+
+  useEffect(() => {
+    setDateRange({ from: undefined, to: undefined });
+    dispatch(resetFilters());
+  },[]);
+
 
   const handleDateRangeChange = (range: {
     from: Date | undefined;
