@@ -7,12 +7,34 @@ import { addStaff } from "@/lib/store/slices/staffSlice";
 import { saveStaffToFirestore } from "@/lib/services/staffService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Mail, Phone, Lock, User, Shield, Users } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  UserPlus,
+  Mail,
+  Phone,
+  Lock,
+  User,
+  Shield,
+  Users,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export default function AddStaffForm() {
@@ -20,13 +42,14 @@ export default function AddStaffForm() {
   const staffList = useSelector((state: RootState) => state.staff.staffList);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     username: "",
     email: "",
     phone: "",
     password: "",
     userType: "Helper" as "Helper" | "Supervisor",
-    linkedStaffId: "",
+    linkedStaffId: "none", // Changed from empty string to "none"
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,20 +60,26 @@ export default function AddStaffForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      const id = await saveStaffToFirestore(form);
-      dispatch(addStaff({ id, ...form }));
-      toast({
-        title: "Success",
-        description: "Staff member added successfully",
+      const staffData = {
+        ...form,
+        linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+        createdAt: new Date().toISOString(),
+      };
+      const id = await saveStaffToFirestore(staffData);
+      dispatch(addStaff({ id, ...staffData }));
+      toast.success("Staff member added successfully");
+      setForm({
+        username: "",
+        email: "",
+        phone: "",
+        password: "",
+        userType: "Helper",
+        linkedStaffId: "none",
       });
-      setForm({ username: "", email: "", phone: "", password: "", userType: "Helper", linkedStaffId: "" });
       setOpen(false);
+      setShowPassword(false);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add staff member",
-        variant: "destructive",
-      });
+      toast.error("Failed to add staff member");
     } finally {
       setLoading(false);
     }
@@ -64,7 +93,7 @@ export default function AddStaffForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2 cursor-pointer">
+        <Button size="lg" className="gap-2">
           <UserPlus className="h-4 w-4" />
           Add Staff Member
         </Button>
@@ -83,61 +112,77 @@ export default function AddStaffForm() {
                 <User className="h-4 w-4 text-muted-foreground" />
                 Username
               </Label>
-              <Input 
+              <Input
                 id="username"
-                name="username" 
-                value={form.username} 
+                name="username"
+                value={form.username}
                 onChange={handleChange}
                 placeholder="Enter username"
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 Email
               </Label>
-              <Input 
+              <Input
                 id="email"
-                name="email" 
+                name="email"
                 type="email"
-                value={form.email} 
+                value={form.email}
                 onChange={handleChange}
                 placeholder="email@example.com"
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="phone" className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 Phone Number
               </Label>
-              <Input 
+              <Input
                 id="phone"
-                name="phone" 
-                value={form.phone} 
+                name="phone"
+                value={form.phone}
                 onChange={handleChange}
                 placeholder="+94 71 234 5678"
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password" className="flex items-center gap-2">
                 <Lock className="h-4 w-4 text-muted-foreground" />
                 Password
               </Label>
-              <Input 
-                id="password"
-                type="password" 
-                name="password" 
-                value={form.password} 
-                onChange={handleChange}
-                placeholder="••••••••"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -147,7 +192,16 @@ export default function AddStaffForm() {
                 <Shield className="h-4 w-4 text-muted-foreground" />
                 User Type
               </Label>
-              <Select value={form.userType} onValueChange={(val) => setForm({ ...form, userType: val as any, linkedStaffId: "" })}>
+              <Select
+                value={form.userType}
+                onValueChange={(val) =>
+                  setForm({
+                    ...form,
+                    userType: val as any,
+                    linkedStaffId: "none",
+                  })
+                }
+              >
                 <SelectTrigger id="userType">
                   <SelectValue placeholder="Select user type" />
                 </SelectTrigger>
@@ -170,21 +224,29 @@ export default function AddStaffForm() {
 
             {linkedOptions.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="linkedStaff" className="flex items-center gap-2">
+                <Label
+                  htmlFor="linkedStaff"
+                  className="flex items-center gap-2"
+                >
                   <Users className="h-4 w-4 text-muted-foreground" />
-                  {form.userType === "Helper" ? "Assign to Supervisor" : "Assign Helpers"}
+                  {form.userType === "Helper"
+                    ? "Assign to Supervisor"
+                    : "Assign Helpers"}
                 </Label>
                 <Select
-                  value={form.linkedStaffId}
-                  onValueChange={(val) => setForm({ ...form, linkedStaffId: val })}
+                  value={form.linkedStaffId || "none"}
+                  onValueChange={(val) =>
+                    setForm({ ...form, linkedStaffId: val })
+                  }
                 >
                   <SelectTrigger id="linkedStaff">
-                    <SelectValue placeholder={`Select ${form.userType === "Helper" ? "supervisor" : "helper"}`} />
+                    <SelectValue placeholder="Select supervisor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {linkedOptions.map((staff) => (
-                      <SelectItem key={staff.id} value={staff.id}>
-                        {staff.username} - {staff.email}
+                    <SelectItem value="none">None</SelectItem>
+                    {linkedOptions.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.username} - {s.email}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -194,7 +256,11 @@ export default function AddStaffForm() {
           </div>
 
           <div className="mt-6 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>

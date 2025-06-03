@@ -126,7 +126,7 @@ export function ReportFilters() {
           onValueChange={(val) => dispatch(setFilters({ supervisor: val }))}
         >
           <SelectTrigger className="cursor-pointer">
-            <SelectValue placeholder="Select supervisor" />
+            <SelectValue placeholder="Select supervisor"  defaultValue="none"  />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Supervisors</SelectItem>
@@ -168,7 +168,7 @@ export function ReportFilters() {
           onValueChange={(val) => dispatch(setFilters({ helper: val }))}
         >
           <SelectTrigger className="cursor-pointer">
-            <SelectValue placeholder="Select helper" />
+            <SelectValue placeholder="Select helper"  defaultValue="none"  />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Helpers</SelectItem>

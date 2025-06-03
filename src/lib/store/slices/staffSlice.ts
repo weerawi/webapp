@@ -9,6 +9,7 @@ export interface Staff {
   password: string;
   userType: "Helper" | "Supervisor";
   linkedStaffId: string;
+  createdAt?: string; // Add timestamp for trend calculation
 }
 
 interface StaffState {
@@ -29,8 +30,17 @@ const staffSlice = createSlice({
     addStaff(state, action: PayloadAction<Staff>) {
       state.staffList.push(action.payload);
     },
+    updateStaff(state, action: PayloadAction<{ id: string; updates: Partial<Staff> }>) {
+      const index = state.staffList.findIndex(staff => staff.id === action.payload.id);
+      if (index !== -1) {
+        state.staffList[index] = { ...state.staffList[index], ...action.payload.updates };
+      }
+    },
+    deleteStaff(state, action: PayloadAction<string>) {
+        state.staffList = state.staffList.filter(staff => staff.id !== action.payload);
+      },
   },
 });
 
-export const { setStaff, addStaff } = staffSlice.actions;
+export const { setStaff, addStaff, updateStaff,deleteStaff } = staffSlice.actions;
 export default staffSlice.reducer;

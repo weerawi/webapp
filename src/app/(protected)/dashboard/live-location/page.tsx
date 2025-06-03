@@ -7,12 +7,15 @@ import { useEffect } from "react";
 import UserMap from "@/components/dashboard/liveLocation/UserMap";
 import { fetchAndStoreUserLocations } from "@/lib/services/userLocationService";
 import UserSidebar from "@/components/dashboard/liveLocation/userSidebar";
+import { setResetLocations } from "@/lib/store/slices/userLocationsSlice";
 
 export default function LiveLocationPage() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(hideLoader());
     fetchAndStoreUserLocations(dispatch);
+    
+    dispatch(setResetLocations())
   }, [dispatch]);
 
   return (

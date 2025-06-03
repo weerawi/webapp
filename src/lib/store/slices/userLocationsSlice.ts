@@ -50,7 +50,7 @@ interface UserLocation {
   
   interface LocationState {
     users: UserLocation[];
-    selectedUserId: string | null; // Changed from number to string
+    selectedUserId: string | null;  
     searchTerm: string;
   }
   
@@ -73,8 +73,12 @@ interface UserLocation {
       setSearchTerm(state, action: PayloadAction<string>) {
         state.searchTerm = action.payload;
       },
+      setResetLocations(state){
+        state.selectedUserId =  initialState.selectedUserId;
+        state.searchTerm = initialState.searchTerm;
+      }
     },
   });
 
-export const { setLocations, setSelectedUserId, setSearchTerm } = userLocationSlice.actions;
+export const { setLocations, setSelectedUserId, setSearchTerm ,setResetLocations} = userLocationSlice.actions;
 export default userLocationSlice.reducer;
