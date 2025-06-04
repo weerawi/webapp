@@ -11,28 +11,47 @@ import {
   Tabs, TabsContent, TabsList, TabsTrigger
 } from "@/components/ui/tabs";
 import {
-  Download, FileText, BarChart3, Camera
+  Download, FileText, BarChart3, Camera ,FileSpreadsheet,  Eye 
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; 
+import { PDFPreviewDialog } from "./pdf-preview-dialog";
+import { generatePDFContent } from "@/lib/utils/pdf-generator";
+import { generateExcel } from "@/lib/utils/excel-generator";
 
 export function ReportView() {
   const { filteredRecords = [] } = useReports(); // ✅ default to empty array to prevent crash
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const handleViewPhoto = (photoUrl: string) => {
     setSelectedPhoto(photoUrl);
     setPhotoDialogOpen(true);
   };
 
-  const handleDownloadReport = () => {
-    console.log("Downloading report");
-    // TODO: implement CSV/Excel export
+  const handlePreviewPDF = () => {
+    setPdfPreviewOpen(true);
   };
+  
+  const handleDownloadPDF = () => {
+    const doc = generatePDFContent(filteredRecords);
+    const currentDate = new Date().toISOString().split("T")[0];
+    doc.save(`Disconnection_Report_${currentDate}.pdf`);
+  };
+  
+  const handleDownloadExcel = () => {
+    generateExcel(filteredRecords);
+  };
+  ;
 
   const renderCheckmark = (value: boolean) => (
     value ? (
@@ -52,10 +71,32 @@ export function ReportView() {
               Disconnection Report ({filteredRecords.length} records)
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleDownloadReport}>
+              {/* <Button variant="outline" size="sm" onClick={handleDownloadReport}>
                 <Download className="h-4 w-4 mr-1" />
                 Export
-              </Button>
+              </Button> */}
+              <DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm">
+      <Download className="h-4 w-4 mr-1" />
+      Export
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuItem onClick={() => handlePreviewPDF()}>
+      <Eye className="h-4 w-4 mr-2" />
+      Preview PDF
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => handleDownloadPDF()}>
+      <FileText className="h-4 w-4 mr-2" />
+      Download PDF
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => handleDownloadExcel()}>
+      <FileSpreadsheet className="h-4 w-4 mr-2" />
+      Download Excel
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -181,6 +222,16 @@ export function ReportView() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PDFPreviewDialog
+  open={pdfPreviewOpen}
+  onOpenChange={setPdfPreviewOpen}
+  records={filteredRecords}
+  onDownload={() => {
+    handleDownloadPDF();
+    setPdfPreviewOpen(false);
+  }}
+/>
     </>
   );
 }
