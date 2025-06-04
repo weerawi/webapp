@@ -6,6 +6,8 @@ import reportReducer from "./slices/reportSlice";
 import loaderReducer from "./slices/loaderSlice";
 import userLocationReducer from "./slices/userLocationsSlice";
 import staffReducer from "./slices/staffSlice";
+import staffAdminReducer from "./slices/staffAdminSlice";
+import adminReducer from "./slices/adminSlice";
 
 const persistConfig = {
   key: "root",
@@ -18,6 +20,8 @@ const rootReducer = combineReducers({
   loader: loaderReducer,
   userLocations: userLocationReducer,
   staff:staffReducer,
+  staffAdmin: staffAdminReducer,
+  admin: adminReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
