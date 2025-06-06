@@ -27,7 +27,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import { RootState, AppDispatch } from "@/lib/store/store";
 import { Admin, addAdmin, updateAdmin, deleteAdmin } from "@/lib/store/slices/adminSlice";
 import {
@@ -40,7 +40,7 @@ import {
   fetchWaterboardOptions,
   saveArea,
   fetchAreas,
-  deleteAreaByUserId, 
+  deleteAreaByUserId,
   createAuthUser,
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
@@ -54,6 +54,7 @@ export default function AdminManagement() {
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
   const [waterboardOptions, setWaterboardOptions] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false); // Add this state
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -122,7 +123,7 @@ export default function AdminManagement() {
           return;
         }
       }
-  
+
       const adminData = {
         username: formData.username,
         email: formData.email,
@@ -137,7 +138,7 @@ export default function AdminManagement() {
           options: formData.options,
         }),
       };
-  
+
       if (editingAdmin) {
         // For editing, we don't update Firebase Auth password
         const updateData = { ...adminData };
@@ -165,7 +166,7 @@ export default function AdminManagement() {
           toast.error(error.message || "Failed to create user authentication");
           return;
         }
-  
+
         // Then save to Firestore with the UID
         const id = await saveAdminToFirestore(adminData, uid);
         dispatch(addAdmin({ id, ...adminData, uid }));
@@ -184,7 +185,7 @@ export default function AdminManagement() {
         
         toast.success("User added successfully");
       }
-  
+
       resetForm();
       setOpen(false);
       await loadWaterboardData();
@@ -192,7 +193,7 @@ export default function AdminManagement() {
       toast.error(error.message || (editingAdmin ? "Failed to update user" : "Failed to add user"));
     }
   };
-  
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
     
@@ -217,7 +218,7 @@ export default function AdminManagement() {
       });
       
       toast.success("User deleted successfully");
-      await loadWaterboardData(); // Reload areas after deletion
+      await loadWaterboardData();
     } catch (error) {
       toast.error("Failed to delete user");
     }
@@ -253,13 +254,19 @@ export default function AdminManagement() {
       options: [],
     });
     setEditingAdmin(null);
+    setShowPassword(false); // Reset password visibility
   };
 
   return (
     <Card>
       <div className="space-y-4">
         <div className="flex justify-end">
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(newOpen) => {
+            setOpen(newOpen);
+            if (!newOpen) {
+              resetForm();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -296,14 +303,25 @@ export default function AdminManagement() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required={!editingAdmin}
-                    placeholder={editingAdmin ? "Leave empty to keep current password" : ""}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required={!editingAdmin}
+                      placeholder={editingAdmin ? "Leave empty to keep current password" : ""}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -360,7 +378,10 @@ export default function AdminManagement() {
                 )}
                 
                 <div className="flex justify-end space-x-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => {
+                    setOpen(false);
+                    resetForm();
+                  }}>
                     Cancel
                   </Button>
                   <Button type="submit">
@@ -435,6 +456,7 @@ export default function AdminManagement() {
                           tenderNumber: admin.tenderNumber || "",
                           options: admin.options || [],
                         });
+                        setShowPassword(false); // Reset password visibility when editing
                         setOpen(true);
                       }}
                     >
