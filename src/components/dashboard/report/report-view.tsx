@@ -195,7 +195,7 @@ export function ReportView() {
             <TabsContent value="summary">
               <div className="text-sm text-muted-foreground">
                 {/* Summary content here or component like <ReportSummary records={filteredRecords} /> */}
-                Summary coming soon...
+                Summary details 
               </div>
             </TabsContent>
           </Tabs>

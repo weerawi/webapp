@@ -11,7 +11,7 @@ export default function AdminSettingsPage() {
   return (
     <>
       <Breadcrumb />
-      <Card>
+      <Card className="mx-5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -22,16 +22,16 @@ export default function AdminSettingsPage() {
           <Tabs defaultValue="admins" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="admins">Admin Management</TabsTrigger>
-              <TabsTrigger value="session">Session Settings</TabsTrigger>
+              <TabsTrigger value="session">dummy Settings</TabsTrigger>
               <TabsTrigger value="audit">Audit Logs</TabsTrigger>
             </TabsList>
-            <TabsContent value="admins">
+            <TabsContent className="min-h-[70vh]" value="admins">
               <AdminManagement />
             </TabsContent>
-            <TabsContent value="session">
+            {/* <TabsContent value="session">
               <SessionSettings />
-            </TabsContent>
-            <TabsContent value="audit">
+            </TabsContent> */}
+            <TabsContent  className="min-h-[70vh]"  value="audit">
               <AuditLogs />
             </TabsContent>
           </Tabs>

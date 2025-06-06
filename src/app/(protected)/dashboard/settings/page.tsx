@@ -45,7 +45,7 @@ export default function SettingsPage() {
     <>
       <Breadcrumb />
       <div className="space-y-6">
-        <Card>
+        <Card className='mx-5'>
           <CardHeader>
             <CardTitle>Settings</CardTitle>
           </CardHeader>

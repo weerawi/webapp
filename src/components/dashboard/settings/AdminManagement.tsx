@@ -39,6 +39,7 @@ import {
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card } from "@/components/ui/card";
 
 const AVAILABLE_MODULES = [
   { id: "staff", label: "Staff Management" },
@@ -176,7 +177,8 @@ export default function AdminManagement() {
   };
 
   return (
-    <div className="space-y-4">
+    <Card>
+      <div className="space-y-4">
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -360,5 +362,7 @@ export default function AdminManagement() {
         </TableBody>
       </Table>
     </div>
+    </Card>
+    
   );
 }

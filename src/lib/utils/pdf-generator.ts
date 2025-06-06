@@ -1,26 +1,26 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
+import logo from '@/assets/hegra.jpg'
 export function generatePDFContent(records: any[], isPreview = false) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
   
   // Company letterhead
-  const companyName = "Water Disconnection Management System";
-  const companyAddress = "123 Main Street, Colombo, Sri Lanka";
-  const companyPhone = "Tel: +94 11 1234567 | Email: info@waterdc.lk";
+  const companyName = "Hegra Holdings Lanka(Pvt) Ltd";
+  const companyAddress = "53/1A, Shalwa Road, Nugegoda";
+  const companyPhone = "Tel: +94 77 235 6563 | Email: hegraholdings@gmail.com.lk";
   
   // Add company logo (you'll need to convert your logo to base64)
   // const logoBase64 = "data:image/png;base64,YOUR_LOGO_BASE64_HERE";
   // doc.addImage(logoBase64, "PNG", 15, 10, 30, 30);
   
   // Add a placeholder logo rectangle for now
-  doc.setFillColor(41, 128, 185);
+  doc.setFillColor(41,185 ,128);
   doc.rect(15, 10, 30, 30, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
-  doc.text("LOGO", 30, 27, { align: "center" });
+  doc.text("HEGRA", 30, 27, { align: "center" });
   
   // Company details
   doc.setTextColor(0, 0, 0);
