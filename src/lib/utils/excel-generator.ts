@@ -1,34 +1,46 @@
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-export function generateExcel(records: any[]) {
+export function generateExcel(records: any[], dynamicColumns: string[] = []) {
   // Create workbook
   const wb = XLSX.utils.book_new();
   
+  // Prepare headers
+  const headers: any = {
+    "Date": "Date",
+    "Time": "Time",
+    "Account No": "Account No",
+    "Area": "Area",
+    "Supervisor": "Supervisor",
+    "Team No": "Team No",
+    "Helper": "Helper"
+  };
+  
+  // Add dynamic columns to headers
+  dynamicColumns.forEach(column => {
+    headers[column] = column;
+  });
+  
   // Prepare data
-  const excelData = records.map(record => ({
-    "Date": record.date,
-    "Time": record.time,
-    "Account No": record.accountNo,
-    "Area": record.area,
-    "Supervisor": record.supervisor,
-    "Team No": record.teamNo,
-    "Helper": record.helper,
-    "DC": record.dc ? "Yes" : "No",
-    "RC": record.rc ? "Yes" : "No",
-    "100% Payment": record.payment100 ? "Yes" : "No",
-    "80% Payment": record.payment80 ? "Yes" : "No",
-    "50% Payment": record.payment50 ? "Yes" : "No",
-    "Already Paid": record.alreadyPaid ? "Yes" : "No",
-    "Gate Closed": record.gateClosed ? "Yes" : "No",
-    "Meter Removed": record.meterRemoved ? "Yes" : "No",
-    "Already Disconnected": record.alreadyDisconnected ? "Yes" : "No",
-    "Wrong Meter": record.wrongMeter ? "Yes" : "No",
-    "Billing Error": record.billingError ? "Yes" : "No",
-    "Can't Find": record.cantFind ? "Yes" : "No",
-    "Objections": record.objections ? "Yes" : "No",
-    "Stopped By NWSDB": record.stoppedByNWSDB ? "Yes" : "No",
-  }));
+  const excelData = records.map(record => {
+    const row: any = {
+      "Date": record.date,
+      "Time": record.time,
+      "Account No": record.accountNo,
+      "Area": record.area,
+      "Supervisor": record.supervisor,
+      "Team No": record.teamNo,
+      "Helper": record.helper,
+    };
+    
+    // Add dynamic column values
+    dynamicColumns.forEach(column => {
+      const fieldName = column.toLowerCase().replace(/\s+(.)/g, (match, chr) => chr.toUpperCase());
+      row[column] = record[fieldName] ? "Yes" : "No";
+    });
+    
+    return row;
+  });
   
   // Create worksheet
   const ws = XLSX.utils.json_to_sheet(excelData);
@@ -42,20 +54,7 @@ export function generateExcel(records: any[]) {
     { wch: 15 }, // Supervisor
     { wch: 10 }, // Team No
     { wch: 15 }, // Helper
-    { wch: 8 },  // DC
-    { wch: 8 },  // RC
-    { wch: 12 }, // 100% Payment
-    { wch: 12 }, // 80% Payment
-    { wch: 12 }, // 50% Payment
-    { wch: 12 }, // Already Paid
-    { wch: 12 }, // Gate Closed
-    { wch: 14 }, // Meter Removed
-    { wch: 18 }, // Already Disconnected
-    { wch: 12 }, // Wrong Meter
-    { wch: 12 }, // Billing Error
-    { wch: 10 }, // Can't Find
-    { wch: 10 }, // Objections
-    { wch: 16 }, // Stopped By NWSDB
+    ...dynamicColumns.map(() => ({ wch: 12 })) // Dynamic columns
   ];
   ws["!cols"] = columnWidths;
   

@@ -5,39 +5,60 @@ export interface Admin {
   username: string;
   email: string;
   password: string;
-  role: "Admin" | "Sub-admin";
-  modules?: string[];
+  role: "Admin" | "Waterboard";
   status: "Active" | "Disabled";
-  lastLogin?: string;
   createdAt: string;
   updatedAt: string;
+  lastLogin?: string;
+  // Waterboard specific fields
+  area?: string;
+  tenderNumber?: string;
+  options?: string[]; // DC, RC, etc.
 }
 
-export interface AuditLog {
+export interface WaterboardOption {
   id: string;
-  userId: string;
-  userName: string;
-  action: string;
-  timestamp: string;
-  details?: any;
+  name: string;
+  createdAt: string;
+}
+
+export interface Area {
+  id: string;
+  name: string;
+  assignedTo?: string; // user id
+  createdAt: string;
 }
 
 interface AdminState {
   adminList: Admin[];
+  waterboardOptions: WaterboardOption[];
+  areas: Area[];
   auditLogs: AuditLog[];
-  sessionTimeout: number; // in minutes
 }
 
 const initialState: AdminState = {
   adminList: [],
+  waterboardOptions: [],
+  areas: [],
   auditLogs: [],
-  sessionTimeout: 30, // default 30 minutes
 };
 
 const adminSlice = createSlice({
   name: "admin",
   initialState,
   reducers: {
+    setWaterboardOptions: (state, action: PayloadAction<WaterboardOption[]>) => {
+      state.waterboardOptions = action.payload;
+    },
+    addWaterboardOption: (state, action: PayloadAction<WaterboardOption>) => {
+      state.waterboardOptions.push(action.payload);
+    },
+    setAreas: (state, action: PayloadAction<Area[]>) => {
+      state.areas = action.payload;
+    },
+    addArea: (state, action: PayloadAction<Area>) => {
+      state.areas.push(action.payload);
+    },
     setAdmins(state, action: PayloadAction<Admin[]>) {
       state.adminList = action.payload;
     },
@@ -66,12 +87,17 @@ const adminSlice = createSlice({
 });
 
 export const { 
+  setWaterboardOptions, 
+  addWaterboardOption,
+  setAreas,
+  addArea,
   setAdmins, 
   addAdmin, 
   updateAdmin, 
   deleteAdmin, 
   setAuditLogs, 
   addAuditLog,
-  setSessionTimeout 
+  setSessionTimeout
 } = adminSlice.actions;
+
 export default adminSlice.reducer;

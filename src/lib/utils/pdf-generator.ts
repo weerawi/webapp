@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logo from '@/assets/hegra.jpg'
-export function generatePDFContent(records: any[], isPreview = false) {
+
+export function generatePDFContent(records: any[], dynamicColumns: string[] = [], isPreview = false) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
@@ -11,12 +11,8 @@ export function generatePDFContent(records: any[], isPreview = false) {
   const companyAddress = "53/1A, Shalwa Road, Nugegoda";
   const companyPhone = "Tel: +94 77 235 6563 | Email: hegraholdings@gmail.com.lk";
   
-  // Add company logo (you'll need to convert your logo to base64)
-  // const logoBase64 = "data:image/png;base64,YOUR_LOGO_BASE64_HERE";
-  // doc.addImage(logoBase64, "PNG", 15, 10, 30, 30);
-  
-  // Add a placeholder logo rectangle for now
-  doc.setFillColor(41,185 ,128);
+  // Add company logo placeholder
+  doc.setFillColor(41, 185, 128);
   doc.rect(15, 10, 30, 30, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
@@ -53,32 +49,30 @@ export function generatePDFContent(records: any[], isPreview = false) {
   doc.text(`Generated on: ${currentDate}`, 15, 65);
   doc.text(`Total Records: ${records.length}`, 15, 72);
   
-  // Prepare table data
-  const tableHeaders = [
-    "Date", "Account No", "Area", "Team", "Status", "Payment"
-  ];
+  // Prepare table headers
+  const tableHeaders = ["Date", "Account No", "Area", "Team"];
   
+  // Add dynamic columns to headers
+  if (dynamicColumns.length > 0) {
+    tableHeaders.push(...dynamicColumns);
+  }
+  
+  // Prepare table data
   const tableData = records.map(record => {
-    let status = "Pending";
-    if (record.dc) status = "DC";
-    else if (record.rc) status = "RC";
-    else if (record.gateClosed) status = "Gate Closed";
-    else if (record.meterRemoved) status = "Meter Removed";
-    
-    let payment = "N/A";
-    if (record.payment100) payment = "100%";
-    else if (record.payment80) payment = "80%";
-    else if (record.payment50) payment = "50%";
-    else if (record.alreadyPaid) payment = "Paid";
-    
-    return [
+    const row = [
       record.date,
       record.accountNo,
       record.area,
       record.teamNo,
-      status,
-      payment
     ];
+    
+    // Add dynamic column values
+    dynamicColumns.forEach(column => {
+      const fieldName = column.toLowerCase().replace(/\s+(.)/g, (match, chr) => chr.toUpperCase());
+      row.push(record[fieldName] ? "✓" : "");
+    });
+    
+    return row;
   });
   
   // Add table

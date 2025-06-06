@@ -52,3 +52,56 @@ export const fetchAuditLogsFromFirestore = async (dispatch: AppDispatch) => {
   dispatch(setAuditLogs(logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp))));
   return logs;
 };
+
+export const saveWaterboardOption = async (optionName: string): Promise<string> => {
+  // Check if option already exists (case-insensitive)
+  const snapshot = await getDocs(collection(db, "waterboardOptions"));
+  const exists = snapshot.docs.some(
+    doc => doc.data().name.toLowerCase() === optionName.toLowerCase()
+  );
+  
+  if (exists) {
+    throw new Error("This option already exists");
+  }
+  
+  const docRef = await addDoc(collection(db, "waterboardOptions"), {
+    name: optionName,
+    createdAt: new Date().toISOString(),
+  });
+  return docRef.id;
+};
+
+export const fetchWaterboardOptions = async (): Promise<WaterboardOption[]> => {
+  const snapshot = await getDocs(collection(db, "waterboardOptions"));
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as WaterboardOption[];
+};
+
+export const saveArea = async (areaName: string, userId?: string): Promise<string> => {
+  // Check if area already exists (case-insensitive)
+  const snapshot = await getDocs(collection(db, "areas"));
+  const exists = snapshot.docs.some(
+    doc => doc.data().name.toLowerCase() === areaName.toLowerCase()
+  );
+  
+  if (exists) {
+    throw new Error("This area already exists");
+  }
+  
+  const docRef = await addDoc(collection(db, "areas"), {
+    name: areaName,
+    assignedTo: userId || null,
+    createdAt: new Date().toISOString(),
+  });
+  return docRef.id;
+};
+
+export const fetchAreas = async (): Promise<Area[]> => {
+  const snapshot = await getDocs(collection(db, "areas"));
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Area[];
+};

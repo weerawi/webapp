@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useReports } from "@/lib/hooks/useReports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   Tabs, TabsContent, TabsList, TabsTrigger
 } from "@/components/ui/tabs";
 import {
-  Download, FileText, BarChart3, Camera ,FileSpreadsheet,  Eye 
+  Download, FileText, BarChart3, Camera, FileSpreadsheet, Eye 
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
@@ -27,12 +27,28 @@ import {
 import { PDFPreviewDialog } from "./pdf-preview-dialog";
 import { generatePDFContent } from "@/lib/utils/pdf-generator";
 import { generateExcel } from "@/lib/utils/excel-generator";
+import { fetchWaterboardOptions } from "@/lib/services/adminService";
 
 export function ReportView() {
-  const { filteredRecords = [] } = useReports(); // ✅ default to empty array to prevent crash
+  const { filteredRecords = [] } = useReports();
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [dynamicColumns, setDynamicColumns] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchDynamicColumns();
+  }, []);
+
+  const fetchDynamicColumns = async () => {
+    try {
+      const options = await fetchWaterboardOptions();
+      setDynamicColumns(options.map(o => o.name));
+    } catch (error) {
+      console.error("Failed to fetch columns:", error);
+    }
+  };
+
   const handleViewPhoto = (photoUrl: string) => {
     setSelectedPhoto(photoUrl);
     setPhotoDialogOpen(true);
@@ -43,15 +59,14 @@ export function ReportView() {
   };
   
   const handleDownloadPDF = () => {
-    const doc = generatePDFContent(filteredRecords);
+    const doc = generatePDFContent(filteredRecords, dynamicColumns);
     const currentDate = new Date().toISOString().split("T")[0];
     doc.save(`Disconnection_Report_${currentDate}.pdf`);
   };
   
   const handleDownloadExcel = () => {
-    generateExcel(filteredRecords);
+    generateExcel(filteredRecords, dynamicColumns);
   };
-  ;
 
   const renderCheckmark = (value: boolean) => (
     value ? (
@@ -60,6 +75,13 @@ export function ReportView() {
       </div>
     ) : null
   );
+
+  // Helper function to get field value from record
+  const getFieldValue = (record: any, columnName: string): boolean => {
+    // Convert column name to camelCase to match record fields
+    const fieldName = columnName.toLowerCase().replace(/\s+(.)/g, (match, chr) => chr.toUpperCase());
+    return record[fieldName] || false;
+  };
 
   return (
     <>
@@ -71,32 +93,28 @@ export function ReportView() {
               Disconnection Report ({filteredRecords.length} records)
             </CardTitle>
             <div className="flex items-center gap-2">
-              {/* <Button variant="outline" size="sm" onClick={handleDownloadReport}>
-                <Download className="h-4 w-4 mr-1" />
-                Export
-              </Button> */}
               <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button variant="outline" size="sm">
-      <Download className="h-4 w-4 mr-1" />
-      Export
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="end">
-    <DropdownMenuItem onClick={() => handlePreviewPDF()}>
-      <Eye className="h-4 w-4 mr-2" />
-      Preview PDF
-    </DropdownMenuItem>
-    <DropdownMenuItem onClick={() => handleDownloadPDF()}>
-      <FileText className="h-4 w-4 mr-2" />
-      Download PDF
-    </DropdownMenuItem>
-    <DropdownMenuItem onClick={() => handleDownloadExcel()}>
-      <FileSpreadsheet className="h-4 w-4 mr-2" />
-      Download Excel
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handlePreviewPDF()}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Preview PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownloadPDF()}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Download PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownloadExcel()}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Download Excel
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -116,10 +134,10 @@ export function ReportView() {
 
             {/* Table View */}
             <TabsContent value="table" className="space-y-4">
-              <Table>
-                <ScrollArea className="h-[450px]">
-                  <div className="rounded-md border">
-                    <TableHeader className="sticky top-0 bg-background">
+              <ScrollArea className="h-[450px]">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10">
                       <TableRow>
                         <TableHead className="w-24">Date</TableHead>
                         <TableHead className="w-20">Time</TableHead>
@@ -128,21 +146,11 @@ export function ReportView() {
                         <TableHead className="w-24">Supervisor</TableHead>
                         <TableHead className="w-20">Team</TableHead>
                         <TableHead className="w-20">Helper</TableHead>
-                        <TableHead className="text-center">DC</TableHead>
-                        <TableHead className="text-center">RC</TableHead>
-                        <TableHead className="text-center">100%</TableHead>
-                        <TableHead className="text-center">80%</TableHead>
-                        <TableHead className="text-center">50%</TableHead>
-                        <TableHead className="text-center">Already Paid</TableHead>
-                        <TableHead className="text-center">Un Solved Cus Comp.</TableHead>
-                        <TableHead className="text-center">Gate Closed</TableHead>
-                        <TableHead className="text-center">Meter Removed</TableHead>
-                        <TableHead className="text-center">Already Disconnected</TableHead>
-                        <TableHead className="text-center">Wrong Meter</TableHead>
-                        <TableHead className="text-center">Billing Error</TableHead>
-                        <TableHead className="text-center">Can’t Find</TableHead>
-                        <TableHead className="text-center">Objections</TableHead>
-                        <TableHead className="text-center">Stopped By NWSDB</TableHead>
+                        {dynamicColumns.map((column) => (
+                          <TableHead key={column} className="text-center w-24">
+                            {column}
+                          </TableHead>
+                        ))}
                         <TableHead className="text-center">Photo</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -157,21 +165,11 @@ export function ReportView() {
                           <TableCell>{record.supervisor}</TableCell>
                           <TableCell>{record.teamNo}</TableCell>
                           <TableCell>{record.helper}</TableCell>
-                          <TableCell>{renderCheckmark(record.dc)}</TableCell>
-                          <TableCell>{renderCheckmark(record.rc)}</TableCell>
-                          <TableCell>{renderCheckmark(record.payment100)}</TableCell>
-                          <TableCell>{renderCheckmark(record.payment80)}</TableCell>
-                          <TableCell>{renderCheckmark(record.payment50)}</TableCell>
-                          <TableCell>{renderCheckmark(record.alreadyPaid)}</TableCell>
-                          <TableCell>{renderCheckmark(record.unSolvedCusComp)}</TableCell>
-                          <TableCell>{renderCheckmark(record.gateClosed)}</TableCell>
-                          <TableCell>{renderCheckmark(record.meterRemoved)}</TableCell>
-                          <TableCell>{renderCheckmark(record.alreadyDisconnected)}</TableCell>
-                          <TableCell>{renderCheckmark(record.wrongMeter)}</TableCell>
-                          <TableCell>{renderCheckmark(record.billingError)}</TableCell>
-                          <TableCell>{renderCheckmark(record.cantFind)}</TableCell>
-                          <TableCell>{renderCheckmark(record.objections)}</TableCell>
-                          <TableCell>{renderCheckmark(record.stoppedByNWSDB)}</TableCell>
+                          {dynamicColumns.map((column) => (
+                            <TableCell key={column}>
+                              {renderCheckmark(getFieldValue(record, column))}
+                            </TableCell>
+                          ))}
                           <TableCell>
                             {record.photo && (
                               <Button
@@ -186,16 +184,15 @@ export function ReportView() {
                         </TableRow>
                       ))}
                     </TableBody>
-                  </div>
-                </ScrollArea>
-              </Table>
+                  </Table>
+                </div>
+              </ScrollArea>
             </TabsContent>
 
             {/* Summary View */}
             <TabsContent value="summary">
               <div className="text-sm text-muted-foreground">
-                {/* Summary content here or component like <ReportSummary records={filteredRecords} /> */}
-                Summary details 
+                Summary details will be displayed here
               </div>
             </TabsContent>
           </Tabs>
@@ -224,14 +221,14 @@ export function ReportView() {
       </Dialog>
 
       <PDFPreviewDialog
-  open={pdfPreviewOpen}
-  onOpenChange={setPdfPreviewOpen}
-  records={filteredRecords}
-  onDownload={() => {
-    handleDownloadPDF();
-    setPdfPreviewOpen(false);
-  }}
-/>
+        open={pdfPreviewOpen}
+        onOpenChange={setPdfPreviewOpen}
+        records={filteredRecords}
+        onDownload={() => {
+          handleDownloadPDF();
+          setPdfPreviewOpen(false);
+        }}
+      />
     </>
   );
 }

@@ -36,33 +36,35 @@ import {
   deleteAdminFromFirestore,
   fetchAdminsFromFirestore,
   saveAuditLogToFirestore,
+  saveWaterboardOption,
+  fetchWaterboardOptions,
+  saveArea,
+  fetchAreas,
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-
-const AVAILABLE_MODULES = [
-  { id: "staff", label: "Staff Management" },
-  { id: "reports", label: "Reports" },
-  { id: "settings", label: "Settings" },
-  { id: "dashboard", label: "Dashboard" },
-];
+import { WaterboardOptionsManager } from "./WaterboardOptionManager"; 
 
 export default function AdminManagement() {
   const dispatch = useDispatch<AppDispatch>();
   const { adminList } = useSelector((state: RootState) => state.admin);
   const [open, setOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [waterboardOptions, setWaterboardOptions] = useState<string[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
-    role: "Sub-admin" as "Admin" | "Sub-admin",
-    modules: [] as string[],
+    role: "Admin" as "Admin" | "Waterboard",
+    area: "",
+    tenderNumber: "",
+    options: [] as string[],
   });
 
   useEffect(() => {
     loadAdmins();
+    loadWaterboardData();
   }, []);
 
   const loadAdmins = async () => {
@@ -73,75 +75,124 @@ export default function AdminManagement() {
     }
   };
 
+  const loadWaterboardData = async () => {
+    try {
+      const [options, areasData] = await Promise.all([
+        fetchWaterboardOptions(),
+        fetchAreas(),
+      ]);
+      setWaterboardOptions(options.map(o => o.name));
+      setAreas(areasData.map(a => a.name));
+    } catch (error) {
+      console.error("Failed to load waterboard data:", error);
+    }
+  };
+
+  const handleAddNewOption = async (option: string) => {
+    try {
+      await saveWaterboardOption(option);
+      setWaterboardOptions([...waterboardOptions, option]);
+      toast.success("Option added successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add option");
+      throw error;
+    }
+  };
+
+  const handleAreaChange = async (area: string) => {
+    // Check if area already exists
+    const exists = areas.some(a => a.toLowerCase() === area.toLowerCase());
+    if (exists) {
+      toast.error("This area is already assigned to another user");
+      return;
+    }
+    setFormData({ ...formData, area });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      // Validation for waterboard users
+      if (formData.role === "Waterboard") {
+        if (!formData.area.trim()) {
+          toast.error("Area is required for Waterboard users");
+          return;
+        }
+        
+        // Save area if it's new
+        if (!areas.includes(formData.area)) {
+          await saveArea(formData.area);
+        }
+      }
+
       const adminData = {
         username: formData.username,
         email: formData.email,
         password: formData.password,
         role: formData.role,
-        modules: formData.role === "Admin" ? AVAILABLE_MODULES.map(m => m.id) : formData.modules,
         status: "Active" as const,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        ...(formData.role === "Waterboard" && {
+          area: formData.area,
+          tenderNumber: formData.tenderNumber,
+          options: formData.options,
+        }),
       };
 
       if (editingAdmin) {
         await updateAdminInFirestore(editingAdmin.id, adminData);
         dispatch(updateAdmin({ id: editingAdmin.id, updates: adminData }));
         
-        // Log the action
         await saveAuditLogToFirestore({
-          userId: "current-admin-id", // Replace with actual current user ID
-          userName: "Current Admin", // Replace with actual current user name
-          action: `Updated admin: ${formData.username}`,
+          userId: "current-admin-id",
+          userName: "Current Admin",
+          action: `Updated user: ${formData.username}`,
           details: { adminId: editingAdmin.id },
         });
         
-        toast.success("Admin updated successfully");
+        toast.success("User updated successfully");
       } else {
         const id = await saveAdminToFirestore(adminData);
         dispatch(addAdmin({ id, ...adminData }));
         
-        // Log the action
         await saveAuditLogToFirestore({
-          userId: "current-admin-id", // Replace with actual current user ID
-          userName: "Current Admin", // Replace with actual current user name
-          action: `Added new admin: ${formData.username}`,
+          userId: "current-admin-id",
+          userName: "Current Admin",
+          action: `Added new user: ${formData.username}`,
           details: { adminId: id },
         });
         
-        toast.success("Admin added successfully");
+        toast.success("User added successfully");
       }
 
       resetForm();
       setOpen(false);
+      await loadWaterboardData(); // Reload areas
     } catch (error) {
-      toast.error(editingAdmin ? "Failed to update admin" : "Failed to add admin");
+      toast.error(editingAdmin ? "Failed to update user" : "Failed to add user");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this admin?")) return;
+    if (!confirm("Are you sure you want to delete this user?")) return;
     
     try {
       const admin = adminList.find(a => a.id === id);
       await deleteAdminFromFirestore(id);
       dispatch(deleteAdmin(id));
       
-      // Log the action
       await saveAuditLogToFirestore({
-        userId: "current-admin-id", // Replace with actual current user ID
-        userName: "Current Admin", // Replace with actual current user name
-        action: `Deleted admin: ${admin?.username}`,
+        userId: "current-admin-id",
+        userName: "Current Admin",
+        action: `Deleted user: ${admin?.username}`,
         details: { adminId: id },
       });
       
-      toast.success("Admin deleted successfully");
+      toast.success("User deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete admin");
+      toast.error("Failed to delete user");
     }
   };
 
@@ -151,17 +202,16 @@ export default function AdminManagement() {
       await updateAdminInFirestore(admin.id, { status: newStatus });
       dispatch(updateAdmin({ id: admin.id, updates: { status: newStatus } }));
       
-      // Log the action
       await saveAuditLogToFirestore({
-        userId: "current-admin-id", // Replace with actual current user ID
-        userName: "Current Admin", // Replace with actual current user name
-        action: `${newStatus === "Active" ? "Enabled" : "Disabled"} admin: ${admin.username}`,
+        userId: "current-admin-id",
+        userName: "Current Admin",
+        action: `${newStatus === "Active" ? "Enabled" : "Disabled"} user: ${admin.username}`,
         details: { adminId: admin.id, newStatus },
       });
       
-      toast.success(`Admin ${newStatus === "Active" ? "enabled" : "disabled"}`);
+      toast.success(`User ${newStatus === "Active" ? "enabled" : "disabled"}`);
     } catch (error) {
-      toast.error("Failed to update admin status");
+      toast.error("Failed to update user status");
     }
   };
 
@@ -170,8 +220,10 @@ export default function AdminManagement() {
       username: "",
       email: "",
       password: "",
-      role: "Sub-admin",
-      modules: [],
+      role: "Admin",
+      area: "",
+      tenderNumber: "",
+      options: [],
     });
     setEditingAdmin(null);
   };
@@ -179,190 +231,202 @@ export default function AdminManagement() {
   return (
     <Card>
       <div className="space-y-4">
-      <div className="flex justify-end">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Admin
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingAdmin ? "Edit Admin" : "Add New Admin"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required={!editingAdmin}
-                  placeholder={editingAdmin ? "Leave empty to keep current password" : ""}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value as "Admin" | "Sub-admin" })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Sub-admin">Sub-admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {formData.role === "Sub-admin" && (
+        <div className="flex justify-end">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => resetForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingAdmin ? "Edit User" : "Add New User"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Module Access</Label>
-                  <div className="space-y-2">
-                    {AVAILABLE_MODULES.map((module) => (
-                      <div key={module.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={module.id}
-                          checked={formData.modules.includes(module.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setFormData({
-                                ...formData,
-                                modules: [...formData.modules, module.id],
-                              });
-                            } else {
-                              setFormData({
-                                ...formData,
-                                modules: formData.modules.filter(m => m !== module.id),
-                              });
-                            }
-                          }}
-                        />
-                        <Label htmlFor={module.id} className="text-sm font-normal cursor-pointer">
-                          {module.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    required
+                  />
                 </div>
-              )}
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingAdmin ? "Update" : "Add"} Admin
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-      
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Username</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Modules</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Login</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {adminList.map((admin) => (
-            <TableRow key={admin.id}>
-              <TableCell>{admin.username}</TableCell>
-              <TableCell>{admin.email}</TableCell>
-              <TableCell>
-                <Badge variant={admin.role === "Admin" ? "default" : "secondary"}>
-                  {admin.role}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {admin.role === "Admin" ? (
-                  <Badge variant="outline">All Modules</Badge>
-                ) : (
-                  admin.modules?.map(m => 
-                    AVAILABLE_MODULES.find(am => am.id === m)?.label
-                  ).join(", ") || "-"
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required={!editingAdmin}
+                    placeholder={editingAdmin ? "Leave empty to keep current password" : ""}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="role">User Type</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => setFormData({ ...formData, role: value as "Admin" | "Waterboard" })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Waterboard">Waterboard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {formData.role === "Waterboard" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="area">Area *</Label>
+                      <Input
+                        id="area"
+                        value={formData.area}
+                        onChange={(e) => handleAreaChange(e.target.value)}
+                        placeholder="Enter unique area name"
+                        required
+                      />
+                      {areas.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Existing areas: {areas.join(", ")}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="tenderNumber">Tender Number</Label>
+                      <Input
+                        id="tenderNumber"
+                        value={formData.tenderNumber}
+                        onChange={(e) => setFormData({ ...formData, tenderNumber: e.target.value })}
+                        placeholder="Enter tender number"
+                      />
+                    </div>
+
+                    <WaterboardOptionsManager
+                      selectedOptions={formData.options}
+                      availableOptions={waterboardOptions}
+                      onOptionsChange={(options) => setFormData({ ...formData, options })}
+                      onAddNewOption={handleAddNewOption}
+                    />
+                  </>
                 )}
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={admin.status === "Active" ? "default" : "destructive"}
-                  className="cursor-pointer"
-                  onClick={() => toggleStatus(admin)}
-                >
-                  {admin.status}
-                </Badge>
-              </TableCell>
-              <TableCell>{admin.lastLogin || "Never"}</TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingAdmin(admin);
-                      setFormData({
-                        username: admin.username,
-                        email: admin.email,
-                        password: "",
-                        role: admin.role,
-                        modules: admin.modules || [],
-                      });
-                      setOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
+                
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                    Cancel
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(admin.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
+                  <Button type="submit">
+                    {editingAdmin ? "Update" : "Add"} User
                   </Button>
                 </div>
-              </TableCell>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Username</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Details</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Last Login</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {adminList.map((admin) => (
+              <TableRow key={admin.id}>
+                <TableCell>{admin.username}</TableCell>
+                <TableCell>{admin.email}</TableCell>
+                <TableCell>
+                  <Badge variant={admin.role === "Admin" ? "default" : "secondary"}>
+                    {admin.role}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {admin.role === "Admin" ? (
+                    <Badge variant="outline">Full Access</Badge>
+                  ) : (
+                    <div className="space-y-1">
+                      <div>Area: <span className="font-medium">{admin.area || "-"}</span></div>
+                      {admin.tenderNumber && (
+                        <div className="text-xs">Tender: {admin.tenderNumber}</div>
+                      )}
+                      <div className="text-xs text-muted-foreground">
+                        Options: {admin.options?.length ? admin.options.join(", ") : "None"}
+                      </div>
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={admin.status === "Active" ? "default" : "destructive"}
+                    className="cursor-pointer"
+                    onClick={() => toggleStatus(admin)}
+                  >
+                    {admin.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{admin.lastLogin || "Never"}</TableCell>
+                <TableCell>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingAdmin(admin);
+                        setFormData({
+                          username: admin.username,
+                          email: admin.email,
+                          password: "",
+                          role: admin.role,
+                          area: admin.area || "",
+                          tenderNumber: admin.tenderNumber || "",
+                          options: admin.options || [],
+                        });
+                        setOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(admin.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
-    
   );
 }
