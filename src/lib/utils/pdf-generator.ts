@@ -1,10 +1,13 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export function generatePDFContent(records: any[], dynamicColumns: string[] = [], isPreview = false) {
+export function generatePDFContent(records: any[], dynamicColumns?: string[], isPreview = false) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
+  
+  // Ensure dynamicColumns is always an array
+  const columns = dynamicColumns || [];
   
   // Company letterhead
   const companyName = "Hegra Holdings Lanka(Pvt) Ltd";
@@ -52,9 +55,9 @@ export function generatePDFContent(records: any[], dynamicColumns: string[] = []
   // Prepare table headers
   const tableHeaders = ["Date", "Account No", "Area", "Team"];
   
-  // Add dynamic columns to headers
-  if (dynamicColumns.length > 0) {
-    tableHeaders.push(...dynamicColumns);
+  // Add dynamic columns to headers if they exist
+  if (columns.length > 0) {
+    tableHeaders.push(...columns);
   }
   
   // Prepare table data
@@ -66,11 +69,13 @@ export function generatePDFContent(records: any[], dynamicColumns: string[] = []
       record.teamNo,
     ];
     
-    // Add dynamic column values
-    dynamicColumns.forEach(column => {
-      const fieldName = column.toLowerCase().replace(/\s+(.)/g, (match, chr) => chr.toUpperCase());
-      row.push(record[fieldName] ? "✓" : "");
-    });
+    // Add dynamic column values if columns exist
+    if (columns.length > 0) {
+      columns.forEach(column => {
+        const fieldName = column.toLowerCase().replace(/\s+(.)/g, (match, chr) => chr.toUpperCase());
+        row.push(record[fieldName] ? "✓" : "");
+      });
+    }
     
     return row;
   });

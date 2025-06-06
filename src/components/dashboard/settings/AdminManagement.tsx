@@ -40,6 +40,7 @@ import {
   fetchWaterboardOptions,
   saveArea,
   fetchAreas,
+  deleteAreaByUserId, 
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -109,6 +110,72 @@ export default function AdminManagement() {
     setFormData({ ...formData, area });
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+    
+  //   try {
+  //     // Validation for waterboard users
+  //     if (formData.role === "Waterboard") {
+  //       if (!formData.area.trim()) {
+  //         toast.error("Area is required for Waterboard users");
+  //         return;
+  //       }
+        
+  //       // Save area if it's new
+  //       if (!areas.includes(formData.area)) {
+  //         await saveArea(formData.area,formData.email);
+  //       }
+  //     }
+
+  //     const adminData = {
+  //       username: formData.username,
+  //       email: formData.email,
+  //       password: formData.password,
+  //       role: formData.role,
+  //       status: "Active" as const,
+  //       createdAt: new Date().toISOString(),
+  //       updatedAt: new Date().toISOString(),
+  //       ...(formData.role === "Waterboard" && {
+  //         area: formData.area,
+  //         tenderNumber: formData.tenderNumber,
+  //         options: formData.options,
+  //       }),
+  //     };
+
+  //     if (editingAdmin) {
+  //       await updateAdminInFirestore(editingAdmin.id, adminData);
+  //       dispatch(updateAdmin({ id: editingAdmin.id, updates: adminData }));
+        
+  //       await saveAuditLogToFirestore({
+  //         userId: "current-admin-id",
+  //         userName: "Current Admin",
+  //         action: `Updated user: ${formData.username}`,
+  //         details: { adminId: editingAdmin.id },
+  //       });
+        
+  //       toast.success("User updated successfully");
+  //     } else {
+  //       const id = await saveAdminToFirestore(adminData);
+  //       dispatch(addAdmin({ id, ...adminData }));
+        
+  //       await saveAuditLogToFirestore({
+  //         userId: "current-admin-id",
+  //         userName: "Current Admin",
+  //         action: `Added new user: ${formData.username}`,
+  //         details: { adminId: id },
+  //       });
+        
+  //       toast.success("User added successfully");
+  //     }
+
+  //     resetForm();
+  //     setOpen(false);
+  //     await loadWaterboardData(); // Reload areas
+  //   } catch (error) {
+  //     toast.error(editingAdmin ? "Failed to update user" : "Failed to add user");
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -119,13 +186,8 @@ export default function AdminManagement() {
           toast.error("Area is required for Waterboard users");
           return;
         }
-        
-        // Save area if it's new
-        if (!areas.includes(formData.area)) {
-          await saveArea(formData.area,formData.email);
-        }
       }
-
+  
       const adminData = {
         username: formData.username,
         email: formData.email,
@@ -140,7 +202,7 @@ export default function AdminManagement() {
           options: formData.options,
         }),
       };
-
+  
       if (editingAdmin) {
         await updateAdminInFirestore(editingAdmin.id, adminData);
         dispatch(updateAdmin({ id: editingAdmin.id, updates: adminData }));
@@ -157,6 +219,11 @@ export default function AdminManagement() {
         const id = await saveAdminToFirestore(adminData);
         dispatch(addAdmin({ id, ...adminData }));
         
+        // Save area if it's new and user is Waterboard
+        if (formData.role === "Waterboard" && !areas.includes(formData.area)) {
+          await saveArea(formData.area, id); // Use the new user's ID
+        }
+        
         await saveAuditLogToFirestore({
           userId: "current-admin-id",
           userName: "Current Admin",
@@ -166,7 +233,7 @@ export default function AdminManagement() {
         
         toast.success("User added successfully");
       }
-
+  
       resetForm();
       setOpen(false);
       await loadWaterboardData(); // Reload areas
@@ -174,13 +241,21 @@ export default function AdminManagement() {
       toast.error(editingAdmin ? "Failed to update user" : "Failed to add user");
     }
   };
-
+  
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
     
     try {
       const admin = adminList.find(a => a.id === id);
+      
+      // Delete the admin
       await deleteAdminFromFirestore(id);
+      
+      // If it's a Waterboard user, delete their associated area
+      if (admin?.role === "Waterboard" && admin.area) {
+        await deleteAreaByUserId(id);
+      }
+      
       dispatch(deleteAdmin(id));
       
       await saveAuditLogToFirestore({
@@ -191,6 +266,7 @@ export default function AdminManagement() {
       });
       
       toast.success("User deleted successfully");
+      await loadWaterboardData(); // Reload areas after deletion
     } catch (error) {
       toast.error("Failed to delete user");
     }
