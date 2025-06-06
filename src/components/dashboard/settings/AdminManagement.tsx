@@ -122,7 +122,7 @@ export default function AdminManagement() {
         
         // Save area if it's new
         if (!areas.includes(formData.area)) {
-          await saveArea(formData.area);
+          await saveArea(formData.area,formData.email);
         }
       }
 
