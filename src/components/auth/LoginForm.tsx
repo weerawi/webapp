@@ -13,6 +13,7 @@ import { GRADIENTS } from "@/lib/constant/colors"
 import { useDispatch } from 'react-redux'
 import { loginSuccess } from '@/lib/store/slices/authSlice' 
 import { showLoader, hideLoader } from "@/lib/store/slices/loaderSlice"
+import { getAdminByUid, updateAdminInFirestore } from "@/lib/services/adminService"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")

@@ -6,6 +6,7 @@ import SessionSettings from "@/components/dashboard/settings//SessionSettings";
 import Breadcrumb from "@/components/navigation/Breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield } from "lucide-react";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function AdminSettingsPage() {
   return (
@@ -26,12 +27,14 @@ export default function AdminSettingsPage() {
               <TabsTrigger value="audit">Audit Logs</TabsTrigger>
             </TabsList>
             <TabsContent className="min-h-[70vh]" value="admins">
-              <AdminManagement />
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <AdminManagement />
+              </ProtectedRoute>
             </TabsContent>
             {/* <TabsContent value="session">
               <SessionSettings />
             </TabsContent> */}
-            <TabsContent  className="min-h-[70vh]"  value="audit">
+            <TabsContent className="min-h-[70vh]" value="audit">
               <AuditLogs />
             </TabsContent>
           </Tabs>

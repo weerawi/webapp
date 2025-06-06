@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Admin {
   id: string;
+  uid?: string;
   username: string;
   email: string;
   password: string;

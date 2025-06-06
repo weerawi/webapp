@@ -7,6 +7,7 @@ import { sessionManager } from '@/lib/auth/sessionManager';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/lib/store/store';
 import { loginSuccess, logout } from '@/lib/store/slices/authSlice';
+import { getAdminByUid } from '@/lib/services/adminService';
 
 export function useAuth() {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,7 +29,34 @@ export function useAuth() {
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken();
         sessionManager.setSession(token);
-        dispatch(loginSuccess(firebaseUser));
+        
+        // Fetch user details from Firestore
+        const adminData = await getAdminByUid(firebaseUser.uid);
+        
+        if (adminData) {
+          dispatch(loginSuccess({
+            user: {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              role: adminData.role,
+              username: adminData.username,
+              area: adminData.area,
+              options: adminData.options,
+              tenderNumber: adminData.tenderNumber,
+            },
+            token
+          }));
+        } else {
+          // If no admin data found, just use basic info
+          dispatch(loginSuccess({
+            user: {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+            },
+            token
+          }));
+        }
+        
         console.log('User logged in');
       } else {
         sessionManager.clearSession();
