@@ -8,6 +8,7 @@ import userLocationReducer from "./slices/userLocationsSlice";
 import staffReducer from "./slices/staffSlice";
 import staffAdminReducer from "./slices/staffAdminSlice";
 import adminReducer from "./slices/adminSlice";
+import reconnectionReducer from "./slices/reconnectionSlice"
 
 const persistConfig = {
   key: "root",
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   staff:staffReducer,
   staffAdmin: staffAdminReducer,
   admin: adminReducer,
+  reconnection: reconnectionReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
