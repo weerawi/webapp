@@ -179,8 +179,8 @@ export default function AdminManagement() {
         }
         
         await saveAuditLogToFirestore({
-          userId: "current-admin-id",
-          userName: "Current Admin",
+          userId: currentUser?.uid || "unknown",
+          userName: currentUser?.email || "Unknown Admin",
           action: `Added new user: ${formData.username}`,
           details: { adminId: id },
         });
@@ -213,8 +213,8 @@ export default function AdminManagement() {
       dispatch(deleteAdmin(id));
       
       await saveAuditLogToFirestore({
-        userId: "current-admin-id",
-        userName: "Current Admin",
+        userId: currentUser?.uid || "unknown",
+        userName: currentUser?.email || "Unknown Admin",
         action: `Deleted user: ${admin?.username}`,
         details: { adminId: id },
       });
@@ -233,8 +233,8 @@ export default function AdminManagement() {
       dispatch(updateAdmin({ id: admin.id, updates: { status: newStatus } }));
       
       await saveAuditLogToFirestore({
-        userId: "current-admin-id",
-        userName: "Current Admin",
+        userId: currentUser?.uid || "unknown",
+        userName: currentUser?.email || "Unknown Admin",
         action: `${newStatus === "Active" ? "Enabled" : "Disabled"} user: ${admin.username}`,
         details: { adminId: admin.id, newStatus },
       });

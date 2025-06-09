@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { hideLoader } from "@/lib/store/slices/loaderSlice";
 import { useEffect } from "react";
 
-export default function WaterBoardPage() {
+export default function ReconnectionManagement() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(hideLoader());
