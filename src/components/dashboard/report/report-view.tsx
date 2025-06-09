@@ -16,7 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -85,7 +85,7 @@ export function ReportView() {
 
   return (
     <>
-      <Card className="gap-0 pt-1">
+      <Card className="gap-0 pt-2">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -135,8 +135,7 @@ export function ReportView() {
             {/* Table View */}
             <TabsContent value="table" className="space-y-4">
               <ScrollArea className="h-[450px]">
-                <div className="rounded-md border">
-                  <Table>
+                  {/* <Table> */}
                     <TableHeader className="sticky top-0 bg-background z-10">
                       <TableRow>
                         <TableHead className="w-24">Date</TableHead>
@@ -184,8 +183,8 @@ export function ReportView() {
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
-                </div>
+                  {/* </Table> */}
+                <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </TabsContent>
 
