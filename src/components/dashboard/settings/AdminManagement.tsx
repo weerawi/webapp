@@ -55,6 +55,8 @@ export default function AdminManagement() {
   const [waterboardOptions, setWaterboardOptions] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false); // Add this state
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -150,8 +152,8 @@ export default function AdminManagement() {
         dispatch(updateAdmin({ id: editingAdmin.id, updates: updateData }));
         
         await saveAuditLogToFirestore({
-          userId: "current-admin-id",
-          userName: "Current Admin",
+          userId: currentUser?.uid || "unknown",
+          userName: currentUser?.email || "Unknown Admin",
           action: `Updated user: ${formData.username}`,
           details: { adminId: editingAdmin.id },
         });

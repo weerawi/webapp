@@ -13,7 +13,7 @@ import { GRADIENTS } from "@/lib/constant/colors"
 import { useDispatch } from 'react-redux'
 import { loginSuccess } from '@/lib/store/slices/authSlice' 
 import { showLoader, hideLoader } from "@/lib/store/slices/loaderSlice"
-import { getAdminByUid, updateAdminInFirestore } from "@/lib/services/adminService"
+import { getAdminByUid, updateAdminInFirestore, updateLastLogin } from "@/lib/services/adminService"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -47,8 +47,11 @@ export default function LoginForm() {
         token: await firebaseUser.getIdToken()
       }));
       dispatch(showLoader("Signing in..."));
+      // After successful signInWithEmailAndPassword
+      await updateLastLogin(firebaseUser.uid);
       router.push("/dashboard")
       setTimeout(() => dispatch(hideLoader()), 1000);
+
     } catch (err) {
       setError("Invalid credentials. Please check your email and password.")
     } finally {

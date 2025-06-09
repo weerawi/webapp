@@ -8,8 +8,18 @@ import { setAdmins, setAuditLogs } from "@/lib/store/slices/adminSlice";
 // Function to create user in Firebase Auth
 export const createAuthUser = async (email: string, password: string) => {
   try {
+    // Store current user before creating new one
+    const currentUser = auth.currentUser;
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return userCredential.user.uid;
+    const newUserUid = userCredential.user.uid;
+    
+    // Sign back in the original user if there was one
+    if (currentUser) {
+      await auth.updateCurrentUser(currentUser);
+    }
+    
+    return newUserUid;
   } catch (error: any) {
     if (error.code === 'auth/email-already-in-use') {
       throw new Error('Email is already in use');
@@ -17,7 +27,6 @@ export const createAuthUser = async (email: string, password: string) => {
     throw error;
   }
 };
-
 // Updated saveAdminToFirestore to use the uid from Firebase Auth
 export const saveAdminToFirestore = async (admin: Omit<Admin, "id">, uid: string) => {
   const docRef = await addDoc(collection(db, "admins"), {
@@ -150,4 +159,17 @@ export const fetchAuditLogsFromFirestore = async (dispatch: AppDispatch) => {
   })) as AuditLog[];
   dispatch(setAuditLogs(logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp))));
   return logs;
+};
+
+
+export const updateLastLogin = async (uid: string) => {
+  const q = query(collection(db, "admins"), where("uid", "==", uid));
+  const snapshot = await getDocs(q);
+  
+  if (!snapshot.empty) {
+    const adminDoc = snapshot.docs[0];
+    await updateDoc(doc(db, "admins", adminDoc.id), {
+      lastLogin: new Date().toISOString(),
+    });
+  }
 };
