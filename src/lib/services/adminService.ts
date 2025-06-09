@@ -4,20 +4,25 @@ import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { Admin, AuditLog, WaterboardOption, Area } from "@/lib/store/slices/adminSlice";
 import { AppDispatch } from "@/lib/store/store";
 import { setAdmins, setAuditLogs } from "@/lib/store/slices/adminSlice";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth, signOut } from "firebase/auth";
+import { firebaseConfig } from "@/lib/firebase/config";  
 
+// Function to create user in Firebase Auth
 // Function to create user in Firebase Auth
 export const createAuthUser = async (email: string, password: string) => {
   try {
-    // Store current user before creating new one
-    const currentUser = auth.currentUser;
+    // Create a secondary Firebase Auth instance to avoid affecting the current user
+    const secondaryApp = initializeApp(firebaseConfig, 'Secondary');
+    const secondaryAuth = getAuth(secondaryApp);
     
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // Create user with secondary auth instance
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
     const newUserUid = userCredential.user.uid;
     
-    // Sign back in the original user if there was one
-    if (currentUser) {
-      await auth.updateCurrentUser(currentUser);
-    }
+    // Sign out from secondary auth and delete the app instance
+    await signOut(secondaryAuth);
+    await deleteApp(secondaryApp);
     
     return newUserUid;
   } catch (error: any) {
