@@ -125,7 +125,7 @@ export default function DashboardHome() {
         <div className="grid grid-cols-2 gap-4 w-[600px]"> 
           <DashboardCard href="/dashboard/staff" title="Staff" />
           <DashboardCard href="/dashboard/report" title="Report" />
-          <DashboardCard href="/dashboard/water-board" title="Water Board" />
+          <DashboardCard href="/dashboard/water-board" title="Reconnection Management" />
           <DashboardCard href="/dashboard/live-location" title="Live Location" /> 
         </div> 
         <div 
