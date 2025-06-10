@@ -169,7 +169,7 @@ export default function DashboardCard({
           background: linear-gradient(
             90deg,
             transparent,
-            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0.3),
             /* Increased opacity for better visibility */ transparent
           );
           transform: rotate(-45deg);
@@ -221,12 +221,12 @@ export default function DashboardCard({
           border-radius: 1em; /* Each layer needs border-radius */
           background-image: var(--bi);
           transform: translateZ(var(--tz));
-          box-shadow: 0 0 0.5em rgba(255,255,255, 0.5) inset;
+          box-shadow: 0 0 0.8em rgba(0,0,0, 0.7) inset;
         }
 
         .layer:last-child {
-          box-shadow: 0 0 0.5em rgba(255,255,255, 0.5) inset,
-            0 0 20px rgba(255,255,255, 0.8);
+          box-shadow: 0 0 0.7em rgba(0,0,0, 0.8) inset,
+            0 0 20px rgba(0,0,0, 0.8);
         }
       `}</style>
     </div>
