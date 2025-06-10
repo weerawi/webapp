@@ -10,6 +10,7 @@ import StaffTable from "@/components/dashboard/staff/staffTable";
 import { AppDispatch } from "@/lib/store/store";
 import { Separator } from "@/components/ui/separator";
 import { fetchStaffFromFirestore } from "@/lib/services/staffService";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function StaffPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -23,8 +24,9 @@ export default function StaffPage() {
   return (
     <div>
       <Breadcrumb />
+      <ProtectedRoute allowedRoles={["Admin"]}>
 
-      <Card className="mx-5 px-5 gap-2">
+        <Card className="mx-5 px-5 gap-2">
         <CardHeader className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
@@ -41,6 +43,8 @@ export default function StaffPage() {
 
         <StaffTable />
       </Card>
+      </ProtectedRoute>
+      
     </div>
   );
 }

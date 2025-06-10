@@ -182,7 +182,7 @@ export function ReportFilters() {
       </div>
 
       {/* Payment Status */}
-      <div className="space-y-1">
+      {/* <div className="space-y-1">
         <Label>Payment Status</Label>
         <Select
           value={filters.paymentStatus}
@@ -199,10 +199,10 @@ export function ReportFilters() {
             <SelectItem value="paid">Already Paid</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </div> */}
 
       {/* Disconnection Status */}
-      <div className="space-y-1">
+      {/* <div className="space-y-1">
         <Label>Disconnection Status</Label>
         <Select
           value={filters.disconnectionStatus}
@@ -229,7 +229,7 @@ export function ReportFilters() {
             <SelectItem value="stoppedByNWSDB">Stopped By NWSDB</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </div> */}
 
       <Separator />
 
@@ -289,7 +289,7 @@ export function ReportFilters() {
               </Button>
             </div>
           )}
-          {filters.paymentStatus !== "all" && (
+          {/* {filters.paymentStatus !== "all" && (
             <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
               Payment: {filters.paymentStatus}
               <Button
@@ -301,8 +301,8 @@ export function ReportFilters() {
                 <X className="h-3 w-3" />
               </Button>
             </div>
-          )}
-          {filters.disconnectionStatus !== "all" && (
+          )} */}
+          {/* {filters.disconnectionStatus !== "all" && (
             <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
               Status: {filters.disconnectionStatus}
               <Button
@@ -314,7 +314,7 @@ export function ReportFilters() {
                 <X className="h-3 w-3" />
               </Button>
             </div>
-          )}
+          )} */}
           {(filters.dateFrom || filters.dateTo) && (
             <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
               Date Range

@@ -82,8 +82,8 @@ const reportSlice = createSlice({
         supervisor,
         teamNo,
         helper,
-        paymentStatus,
-        disconnectionStatus,
+        // paymentStatus,
+        // disconnectionStatus,
         dateFrom,
         dateTo,
       } = state.filters;
@@ -93,13 +93,13 @@ const reportSlice = createSlice({
         const matchesSupervisor = supervisor === "all" || record.supervisor === supervisor;
         const matchesTeam = teamNo === "all" || record.teamNo === teamNo;
         const matchesHelper = helper === "all" || record.helper === helper;
-        const matchesPayment =
-          paymentStatus === "all" ||
-          (paymentStatus === "paid" && record.alreadyPaid) ||
-          record[`payment${paymentStatus}` as keyof typeof record];
-        const matchesStatus =
-          disconnectionStatus === "all" ||
-          record[disconnectionStatus as keyof typeof record] === true;
+        // const matchesPayment =
+        //   paymentStatus === "all" ||
+        //   (paymentStatus === "paid" && record.alreadyPaid) ||
+        //   record[`payment${paymentStatus}` as keyof typeof record];
+        // const matchesStatus =
+        //   disconnectionStatus === "all" ||
+        //   record[disconnectionStatus as keyof typeof record] === true;
 
         
           
@@ -119,8 +119,8 @@ const reportSlice = createSlice({
           matchesSupervisor &&
           matchesTeam &&
           matchesHelper &&
-          matchesPayment &&
-          matchesStatus &&
+          // matchesPayment &&
+          // matchesStatus &&
           withinDateRange
         );
       });
