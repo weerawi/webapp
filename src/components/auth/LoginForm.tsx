@@ -28,37 +28,84 @@ export default function LoginForm() {
     dispatch(hideLoader())
   }, [dispatch])
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   setLoading(true)
+  //   setError("")
+
+  //   try {
+  //     const userCredential = await signInWithEmailAndPassword(auth, email, password)
+  //     const firebaseUser = userCredential.user;
+
+  //     // Dispatch Redux action with user data
+  //     dispatch(loginSuccess({
+  //       user: {
+  //         uid: firebaseUser.uid,
+  //         email: firebaseUser.email,
+  //         // Add any other user properties you need
+  //       },
+  //       token: await firebaseUser.getIdToken()
+  //     }));
+  //     dispatch(showLoader("Signing in..."));
+  //     // After successful signInWithEmailAndPassword
+  //     await updateLastLogin(firebaseUser.uid);
+  //     router.push("/dashboard")
+  //     setTimeout(() => dispatch(hideLoader()), 1000);
+
+  //   } catch (err) {
+  //     setError("Invalid credentials. Please check your email and password.")
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
-
+  
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const firebaseUser = userCredential.user;
-
-      // Dispatch Redux action with user data
+  
+      // Fetch the admin data from Firestore
+      const adminData = await getAdminByUid(firebaseUser.uid);
+      
+      // Determine the area based on role
+      let userArea = "";
+      if (adminData) {
+        if (adminData.role === "Admin") {
+          userArea = "all";
+        } else if (adminData.role === "Waterboard") {
+          userArea = adminData.area || "";
+        }
+      }
+  
+      // Dispatch Redux action with user data including area
       dispatch(loginSuccess({
         user: {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          // Add any other user properties you need
+          role: adminData?.role,
+          username: adminData?.username,
+          area: userArea,  
+          options: adminData?.options || []
         },
         token: await firebaseUser.getIdToken()
       }));
+      
       dispatch(showLoader("Signing in..."));
-      // After successful signInWithEmailAndPassword
       await updateLastLogin(firebaseUser.uid);
       router.push("/dashboard")
       setTimeout(() => dispatch(hideLoader()), 1000);
-
+  
     } catch (err) {
       setError("Invalid credentials. Please check your email and password.")
     } finally {
       setLoading(false)
     }
   }
-
   return (
     <div className={`min-h-screen flex items-center justify-center p-4`}> 
       <div className="w-full max-w-sm">

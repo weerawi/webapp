@@ -1,22 +1,24 @@
 "use client";
 import { Card  } from "@/components/ui/card";
 import Breadcrumb from "@/components/navigation/Breadcrumb";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { hideLoader } from "@/lib/store/slices/loaderSlice";
 import { useEffect } from "react";
 import UserMap from "@/components/dashboard/liveLocation/UserMap";
 import { fetchAndStoreUserLocations } from "@/lib/services/userLocationService";
 import UserSidebar from "@/components/dashboard/liveLocation/userSidebar";
 import { setResetLocations } from "@/lib/store/slices/userLocationsSlice";
+import { RootState } from "@/lib/store/store";
 
 export default function LiveLocationPage() {
   const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(hideLoader());
-    fetchAndStoreUserLocations(dispatch);
-    
-    dispatch(setResetLocations())
-  }, [dispatch]);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+useEffect(() => {
+  dispatch(hideLoader());
+  fetchAndStoreUserLocations(dispatch, currentUser);
+  dispatch(setResetLocations());
+}, [dispatch, currentUser]);
 
   return (
     <>
