@@ -122,12 +122,36 @@ export default function DashboardHome() {
 
       <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
         <h1 className="text-4xl font-bold mb-6 text-white">Welcome</h1>
-        <div className="grid grid-cols-2 gap-4 w-[600px]"> 
+        {/* <div className="grid grid-cols-2 gap-4 w-[600px]"> 
           <DashboardCard href="/dashboard/staff" title="Staff" />
           <DashboardCard href="/dashboard/report" title="Report" />
           <DashboardCard href="/dashboard/reconnection-management" title="Reconnection Management" />
           <DashboardCard href="/dashboard/live-location" title="Live Location" /> 
-        </div> 
+        </div>  */}
+
+
+<div className="grid grid-cols-2 gap-8 w-[700px]">
+  <DashboardCard 
+    href="/dashboard/staff" 
+    title="Staff" 
+    gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+  />
+  <DashboardCard 
+    href="/dashboard/report" 
+    title="Report" 
+    gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+  />
+  <DashboardCard 
+    href="/dashboard/reconnection-management" 
+    title="Reconnection" 
+    gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+  />
+  <DashboardCard 
+    href="/dashboard/live-location" 
+    title="Live Location" 
+    gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+  />
+</div>
         <div 
           className="absolute flex justify-center items-center gap-4 top-4 right-4 cursor-pointer text-white transition-colors duration-200"
         >
