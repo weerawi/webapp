@@ -11,6 +11,7 @@ import { RootState, AppDispatch } from '@/lib/store/store';
 import { logout } from '@/lib/store/slices/authSlice';
 import { showLoader,hideLoader } from "@/lib/store/slices/loaderSlice";
 import { useRouter } from "next/navigation";
+import { GRADIENTS } from "@/lib/constant/colors";
 
 export default function DashboardHome() {
   const dispatch = useDispatch<AppDispatch>();
@@ -134,22 +135,26 @@ export default function DashboardHome() {
   <DashboardCard 
     href="/dashboard/staff" 
     title="Staff" 
-    gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+    // gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+    gradient={`${GRADIENTS.insidecard}`}
   />
   <DashboardCard 
     href="/dashboard/report" 
     title="Report" 
-    gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+    // gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+    gradient={`${GRADIENTS.insidecard}`}
   />
   <DashboardCard 
     href="/dashboard/reconnection-management" 
     title="Reconnection" 
-    gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+    // gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+    gradient={`${GRADIENTS.insidecard}`}
   />
   <DashboardCard 
     href="/dashboard/live-location" 
     title="Live Location" 
-    gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+    // gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+    gradient={`${GRADIENTS.insidecard}`}
   />
 </div>
         <div 

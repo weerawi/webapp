@@ -53,5 +53,6 @@ export const COLORS = {
     primaryHover: "bg-gradient-to-r from-green-600 to-blue-700",
     background: "bg-gradient-to-br from-green-50 via-blue-50 to-green-100",
     card: "bg-gradient-to-br from-white to-green-50/30",
+    insidecard: "linear-gradient(135deg, #040b 0%, #005 100%)",
   } as const
   
