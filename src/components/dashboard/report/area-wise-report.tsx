@@ -36,6 +36,8 @@ interface AreaWiseData {
   dcDonePercentage: string;
   totalDcDone: number;
   totalDcPercentage: string;
+  rcDone: number;  
+  rcDonePercentage: string;  
   payment100: number;
   payment80: number;
   payment50: number;
@@ -76,6 +78,8 @@ export function AreaWiseReport() {
           dcDonePercentage: "0%",
           totalDcDone: 0,
           totalDcPercentage: "0%",
+          rcDone: 0,   
+          rcDonePercentage: "0%",  
           payment100: 0,
           payment80: 0,
           payment50: 0,
@@ -96,6 +100,7 @@ export function AreaWiseReport() {
       
       // Update counts based on record fields
       if (record.dc) data.dcDone++;
+      if (record.rc) data.rcDone++; // ADD THIS if you have an 'rc' field in records
       if (record.payment100) data.payment100++;
       if (record.payment80) data.payment80++;
       if (record.payment50) data.payment50++;
@@ -108,6 +113,7 @@ export function AreaWiseReport() {
       if (record.cantFind) data.cantFind++;
       if (record.objections) data.objections++;
       if (record.stoppedByNWSDB) data.stoppedByNWSDB++;
+      if (record.unableToAttend) data.unableToAttend++; // ADD THIS if you have this field
       
       data.totalJobs++;
     });
@@ -120,6 +126,11 @@ export function AreaWiseReport() {
       data.totalDcDone = data.dcDone;
       data.totalDcPercentage = data.dcDonePercentage;
       
+      // Calculate RC Done percentage
+      data.rcDonePercentage = data.totalJobs > 0 
+        ? `${((data.rcDone / data.totalJobs) * 100).toFixed(2)}%` 
+        : "0%";
+        
       // Calculate teams (unique team numbers per area)
       const uniqueTeams = new Set(
         records
@@ -151,6 +162,7 @@ export function AreaWiseReport() {
       teams: totals.teams + area.teams,
       waiting: totals.waiting + area.waiting,
       dcDone: totals.dcDone + area.dcDone,
+      rcDone: totals.rcDone + area.rcDone, 
       payment100: totals.payment100 + area.payment100,
       payment80: totals.payment80 + area.payment80,
       payment50: totals.payment50 + area.payment50,
@@ -172,6 +184,7 @@ export function AreaWiseReport() {
       teams: 0,
       waiting: 0,
       dcDone: 0,
+      rcDone: 0,
       payment100: 0,
       payment80: 0,
       payment50: 0,
@@ -192,7 +205,7 @@ export function AreaWiseReport() {
 
   return (
     <Card className="gap-1 py-2 overflow-x-hidden">
-      <CardHeader >
+      <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Area Wise Disconnection Report</CardTitle>
           <DropdownMenu>
@@ -215,114 +228,126 @@ export function AreaWiseReport() {
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent  className="relative">
+      <CardContent className="relative">
         <ScrollArea className="h-[450px] w-full whitespace-nowrap">
-        <div className="rounded-md border">
-
-            {/* if table not comment header not sticky */}
-          <Table className="w-full"> 
-            <TableHeader className="sticky top-0 bg-background z-20 shadow-sm">
-              <TableRow>
-                <TableHead rowSpan={2} className="text-center border">Area</TableHead>
-                <TableHead colSpan={4} className="text-center border">Balance</TableHead>
-                <TableHead rowSpan={2} className="text-center border">Total<br/>Jobs</TableHead>
-                <TableHead rowSpan={2} className="text-center border">Teams</TableHead>
-                <TableHead rowSpan={2} className="text-center border">Waiting</TableHead>
-                <TableHead colSpan={2} className="text-center border">12:00:00 PM DC</TableHead>
-                <TableHead colSpan={2} className="text-center border">Total DC Done</TableHead>
-                <TableHead colSpan={4} className="text-center border bg-green-50">Payment</TableHead>
-                <TableHead colSpan={8} className="text-center border">Reasons</TableHead>
-              </TableRow>
-              <TableRow>
-                <TableHead className="text-center border">Returned</TableHead>
-                <TableHead className="text-center border">B/F</TableHead>
-                <TableHead className="text-center border">Jobs<br/>Received</TableHead>
-                <TableHead className="text-center border">Total</TableHead>
-                <TableHead className="text-center border">DC Done</TableHead>
-                <TableHead className="text-center border">%</TableHead>
-                <TableHead className="text-center border">Total</TableHead>
-                <TableHead className="text-center border">%</TableHead>
-                <TableHead className="text-center border bg-green-50">100%</TableHead>
-                <TableHead className="text-center border bg-green-50">80%</TableHead>
-                <TableHead className="text-center border bg-green-50">50%</TableHead>
-                <TableHead className="text-center border bg-green-50">Already<br/>Paid</TableHead>
-                <TableHead className="text-center border">Gate<br/>Closed</TableHead>
-                <TableHead className="text-center border">Meter<br/>Removed</TableHead>
-                <TableHead className="text-center border">Already<br/>Disconnected</TableHead>
-                <TableHead className="text-center border">Wrong<br/>Meter</TableHead>
-                <TableHead className="text-center border">Billing<br/>Error</TableHead>
-                <TableHead className="text-center border">Can't<br/>Find</TableHead>
-                <TableHead className="text-center border">Objections</TableHead>
-                <TableHead className="text-center border">Stopped By<br/>NWSDB</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {areaData.map((area) => (
-                <TableRow key={area.area}>
-                  <TableCell className="font-medium">{area.area}</TableCell>
-                  <TableCell className="text-center">{area.returned}</TableCell>
-                  <TableCell className="text-center">{area.broughtForward}</TableCell>
-                  <TableCell className="text-center">{area.jobsReceived}</TableCell>
-                  <TableCell className="text-center">{area.totalJobs}</TableCell>
-                  <TableCell className="text-center font-semibold">{area.totalJobs}</TableCell>
-                  <TableCell className="text-center">{area.teams}</TableCell>
-                  <TableCell className="text-center">{area.waiting}</TableCell>
-                  <TableCell className="text-center">{area.dcDone}</TableCell>
-                  <TableCell className="text-center">{area.dcDonePercentage}</TableCell>
-                  <TableCell className="text-center">{area.totalDcDone}</TableCell>
-                  <TableCell className="text-center">{area.totalDcPercentage}</TableCell>
-                  <TableCell className="text-center bg-green-50">{area.payment100}</TableCell>
-                  <TableCell className="text-center bg-green-50">{area.payment80}</TableCell>
-                  <TableCell className="text-center bg-green-50">{area.payment50}</TableCell>
-                  <TableCell className="text-center bg-green-50">{area.alreadyPaid}</TableCell>
-                  <TableCell className="text-center">{area.gateClosed}</TableCell>
-                  <TableCell className="text-center">{area.meterRemoved}</TableCell>
-                  <TableCell className="text-center">{area.alreadyDisconnected}</TableCell>
-                  <TableCell className="text-center">{area.wrongMeter}</TableCell>
-                  <TableCell className="text-center">{area.billingError}</TableCell>
-                  <TableCell className="text-center">{area.cantFind}</TableCell>
-                  <TableCell className="text-center">{area.objections}</TableCell>
-                  <TableCell className="text-center">{area.stoppedByNWSDB}</TableCell>
+          <div className="rounded-md border">
+            <Table className="w-full"> 
+              <TableHeader className="sticky top-0 bg-background z-20 shadow-sm">
+                <TableRow>
+                  <TableHead rowSpan={2} className="text-center border">Area</TableHead>
+                  <TableHead colSpan={4} className="text-center border">Balance</TableHead>
+                  <TableHead rowSpan={2} className="text-center border">Total<br/>Jobs</TableHead>
+                  <TableHead rowSpan={2} className="text-center border">Teams</TableHead>
+                  <TableHead rowSpan={2} className="text-center border">Waiting</TableHead>
+                  <TableHead colSpan={2} className="text-center border">12:00:00 PM DC</TableHead>
+                  <TableHead colSpan={2} className="text-center border">Total DC Done</TableHead>
+                  <TableHead colSpan={2} className="text-center border">RC Done</TableHead>
+                  <TableHead colSpan={4} className="text-center border bg-green-50">Payment</TableHead>
+                  <TableHead colSpan={9} className="text-center border">Reasons</TableHead>
                 </TableRow>
-              ))}
-              <TableRow className="font-bold bg-gray-100">
-                <TableCell>Total</TableCell>
-                <TableCell className="text-center">{totals.returned}</TableCell>
-                <TableCell className="text-center">{totals.broughtForward}</TableCell>
-                <TableCell className="text-center">{totals.jobsReceived}</TableCell>
-                <TableCell className="text-center">{totals.totalJobs}</TableCell>
-                <TableCell className="text-center">{totals.totalJobs}</TableCell>
-                <TableCell className="text-center">{totals.teams}</TableCell>
-                <TableCell className="text-center">{totals.waiting}</TableCell>
-                <TableCell className="text-center">{totals.dcDone}</TableCell>
-                <TableCell className="text-center">
-                  {totals.totalJobs > 0 
-                    ? `${((totals.dcDone / totals.totalJobs) * 100).toFixed(2)}%` 
-                    : "0%"}
-                </TableCell>
-                <TableCell className="text-center">{totals.dcDone}</TableCell>
-                <TableCell className="text-center">
-                  {totals.totalJobs > 0 
-                    ? `${((totals.dcDone / totals.totalJobs) * 100).toFixed(2)}%` 
-                    : "0%"}
-                </TableCell>
-                <TableCell className="text-center bg-green-50">{totals.payment100}</TableCell>
-                <TableCell className="text-center bg-green-50">{totals.payment80}</TableCell>
-                <TableCell className="text-center bg-green-50">{totals.payment50}</TableCell>
-                <TableCell className="text-center bg-green-50">{totals.alreadyPaid}</TableCell>
-                <TableCell className="text-center">{totals.gateClosed}</TableCell>
-                <TableCell className="text-center">{totals.meterRemoved}</TableCell>
-                <TableCell className="text-center">{totals.alreadyDisconnected}</TableCell>
-                <TableCell className="text-center">{totals.wrongMeter}</TableCell>
-                <TableCell className="text-center">{totals.billingError}</TableCell>
-                <TableCell className="text-center">{totals.cantFind}</TableCell>
-                <TableCell className="text-center">{totals.objections}</TableCell>
-                <TableCell className="text-center">{totals.stoppedByNWSDB}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-        <ScrollBar orientation="horizontal" />
+                <TableRow>
+                  <TableHead className="text-center border">Returned</TableHead>
+                  <TableHead className="text-center border">B/F</TableHead>
+                  <TableHead className="text-center border">Jobs<br/>Received</TableHead>
+                  <TableHead className="text-center border">Total</TableHead>
+                  <TableHead className="text-center border">DC Done</TableHead>
+                  <TableHead className="text-center border">%</TableHead>
+                  <TableHead className="text-center border">Total</TableHead>
+                  <TableHead className="text-center border">%</TableHead>
+                  <TableHead className="text-center border">Total</TableHead>
+                  <TableHead className="text-center border">%</TableHead>
+                  <TableHead className="text-center border bg-green-50">100%</TableHead>
+                  <TableHead className="text-center border bg-green-50">80%</TableHead>
+                  <TableHead className="text-center border bg-green-50">50%</TableHead>
+                  <TableHead className="text-center border bg-green-50">Already<br/>Paid</TableHead>
+                  <TableHead className="text-center border">Gate<br/>Closed</TableHead>
+                  <TableHead className="text-center border">Meter<br/>Removed</TableHead>
+                  <TableHead className="text-center border">Already<br/>Disconnected</TableHead>
+                  <TableHead className="text-center border">Wrong<br/>Meter</TableHead>
+                  <TableHead className="text-center border">Billing<br/>Error</TableHead>
+                  <TableHead className="text-center border">Can't<br/>Find</TableHead>
+                  <TableHead className="text-center border">Objections</TableHead>
+                  <TableHead className="text-center border">Stopped By<br/>NWSDB</TableHead>
+                  <TableHead className="text-center border">Unable To<br/>Attend</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {areaData.map((area) => (
+                  <TableRow key={area.area}>
+                    <TableCell className="font-medium">{area.area}</TableCell>
+                    <TableCell className="text-center">{area.returned}</TableCell>
+                    <TableCell className="text-center">{area.broughtForward}</TableCell>
+                    <TableCell className="text-center">{area.jobsReceived}</TableCell>
+                    <TableCell className="text-center">{area.totalJobs}</TableCell>
+                    <TableCell className="text-center font-semibold">{area.totalJobs}</TableCell>
+                    <TableCell className="text-center">{area.teams}</TableCell>
+                    <TableCell className="text-center">{area.waiting}</TableCell>
+                    <TableCell className="text-center">{area.dcDone}</TableCell>
+                    <TableCell className="text-center">{area.dcDonePercentage}</TableCell>
+                    <TableCell className="text-center">{area.totalDcDone}</TableCell>
+                    <TableCell className="text-center">{area.totalDcPercentage}</TableCell>
+                    <TableCell className="text-center">{area.rcDone}</TableCell>
+                    <TableCell className="text-center">{area.rcDonePercentage}</TableCell>
+                    <TableCell className="text-center bg-green-50">{area.payment100}</TableCell>
+                    <TableCell className="text-center bg-green-50">{area.payment80}</TableCell>
+                    <TableCell className="text-center bg-green-50">{area.payment50}</TableCell>
+                    <TableCell className="text-center bg-green-50">{area.alreadyPaid}</TableCell>
+                    <TableCell className="text-center">{area.gateClosed}</TableCell>
+                    <TableCell className="text-center">{area.meterRemoved}</TableCell>
+                    <TableCell className="text-center">{area.alreadyDisconnected}</TableCell>
+                    <TableCell className="text-center">{area.wrongMeter}</TableCell>
+                    <TableCell className="text-center">{area.billingError}</TableCell>
+                    <TableCell className="text-center">{area.cantFind}</TableCell>
+                    <TableCell className="text-center">{area.objections}</TableCell>
+                    <TableCell className="text-center">{area.stoppedByNWSDB}</TableCell>
+                    <TableCell className="text-center">{area.unableToAttend}</TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="font-bold bg-gray-100">
+                  <TableCell>Total</TableCell>
+                  <TableCell className="text-center">{totals.returned}</TableCell>
+                  <TableCell className="text-center">{totals.broughtForward}</TableCell>
+                  <TableCell className="text-center">{totals.jobsReceived}</TableCell>
+                  <TableCell className="text-center">{totals.totalJobs}</TableCell>
+                  <TableCell className="text-center">{totals.totalJobs}</TableCell>
+                  <TableCell className="text-center">{totals.teams}</TableCell>
+                  <TableCell className="text-center">{totals.waiting}</TableCell>
+                  <TableCell className="text-center">{totals.dcDone}</TableCell>
+                  <TableCell className="text-center">
+                    {totals.totalJobs > 0 
+                      ? `${((totals.dcDone / totals.totalJobs) * 100).toFixed(2)}%` 
+                      : "0%"}
+                  </TableCell>
+                  <TableCell className="text-center">{totals.dcDone}</TableCell>
+                  <TableCell className="text-center">
+                    {totals.totalJobs > 0 
+                      ? `${((totals.dcDone / totals.totalJobs) * 100).toFixed(2)}%` 
+                      : "0%"}
+                  </TableCell>
+                  <TableCell className="text-center">{totals.rcDone}</TableCell>
+                  <TableCell className="text-center">
+                    {totals.totalJobs > 0 
+                      ? `${((totals.rcDone / totals.totalJobs) * 100).toFixed(2)}%` 
+                      : "0%"}
+                  </TableCell>
+                  <TableCell className="text-center bg-green-50">{totals.payment100}</TableCell>
+                  <TableCell className="text-center bg-green-50">{totals.payment80}</TableCell>
+                  <TableCell className="text-center bg-green-50">{totals.payment50}</TableCell>
+                  <TableCell className="text-center bg-green-50">{totals.alreadyPaid}</TableCell>
+                  <TableCell className="text-center">{totals.gateClosed}</TableCell>
+                  <TableCell className="text-center">{totals.meterRemoved}</TableCell>
+                  <TableCell className="text-center">{totals.alreadyDisconnected}</TableCell>
+                  <TableCell className="text-center">{totals.wrongMeter}</TableCell>
+                  <TableCell className="text-center">{totals.billingError}</TableCell>
+                  <TableCell className="text-center">{totals.cantFind}</TableCell>
+                  <TableCell className="text-center">{totals.objections}</TableCell>
+                  <TableCell className="text-center">{totals.stoppedByNWSDB}</TableCell>
+                  <TableCell className="text-center">{totals.unableToAttend}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </CardContent>
     </Card>
