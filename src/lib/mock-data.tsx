@@ -944,7 +944,7 @@ export const mockDisconnectionData = [
   {
     "id": "23",
     "date": "2025-06-08",
-    "time": "05:30",
+    "time": "12:30",
     "accountNo": "ACC1022",
     "area": "Kurunagala",
     "supervisor": "C",
@@ -970,7 +970,7 @@ export const mockDisconnectionData = [
   {
     "id": "24",
     "date": "2025-06-08",
-    "time": "05:45",
+    "time": "15:45",
     "accountNo": "ACC1023",
     "area": "JaEla",
     "supervisor": "C",
