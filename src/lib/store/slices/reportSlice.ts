@@ -20,6 +20,7 @@ interface ReportState {
   supervisors: string[],
   teamNumbers: string[],
   helpers: string[],
+  currentDate: string; 
 }
 
 const initialState: ReportState = {
@@ -41,6 +42,7 @@ const initialState: ReportState = {
   supervisors: [],
   teamNumbers: [],
   helpers: [],
+  currentDate: new Date().toISOString().split('T')[0],
 };
 
 
@@ -129,6 +131,9 @@ const reportSlice = createSlice({
       state.filters = initialState.filters;
       state.filteredRecords = state.records;
     },
+    setCurrentDate: (state, action: PayloadAction<string>) => {
+      state.currentDate = action.payload;
+    },
   },
 });
 
@@ -139,6 +144,7 @@ export const {
   setFilters,
   applyFilters,
   resetFilters,
+  setCurrentDate
 } = reportSlice.actions;
 
 export default reportSlice.reducer;
