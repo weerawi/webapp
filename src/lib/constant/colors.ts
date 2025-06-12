@@ -54,5 +54,9 @@ export const COLORS = {
     background: "bg-gradient-to-br from-green-50 via-blue-50 to-green-100",
     card: "bg-gradient-to-br from-white to-green-50/30",
     insidecard: "linear-gradient(135deg, #393E46 0%, #00CAFF 100%)",  
+    staff: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    report: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    reconnection: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    liveLocation: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
   } as const
   
