@@ -31,10 +31,7 @@
 //   );
 // }
 
-
 ///////////////////////////////////// #d Style card /////////////////////////////////////////////////////
-
-
 
 // "use client";
 
@@ -103,18 +100,18 @@
 //           transition: transform 0.6s;
 //           cursor: pointer;
 //         }
-        
+
 //         .card:hover {
 //           transform: rotateY(-20deg) rotateX(-10deg);
 //         }
-        
+
 //         .card h3 {
 //           font-size: 1.5rem;
 //           font-weight: 600;
 //           margin-bottom: 0.5rem;
 //           text-align: center;
 //         }
-        
+
 //         .layers {
 //           position: absolute;
 //           left: 0;
@@ -124,7 +121,7 @@
 //           transform-style: preserve-3d;
 //           z-index: -1;
 //         }
-        
+
 //         .layer {
 //           position: absolute;
 //           left: 0;
@@ -136,7 +133,7 @@
 //           transform: translateZ(var(--tz));
 //           box-shadow: 0 0 0.5em rgba(0,0,0,0.5) inset;
 //         }
-        
+
 //         .layer:last-child {
 //           box-shadow: 0 0 0.5em rgba(0,0,0,0.5) inset, 0 0 10px rgba(0,0,0,0.8);
 //         }
@@ -188,7 +185,7 @@
 
 //         .card:hover {
 //           transform: rotateY(-20deg) rotateX(-10deg) scale(1.015);
-//           border: 1px solid rgba(255, 255, 255, 0.27); 
+//           border: 1px solid rgba(255, 255, 255, 0.27);
 //         }
 
 //         .card:hover::before {
@@ -238,7 +235,6 @@
 //   );
 // }
 
-
 "use client";
 
 import { ReactNode, useState } from "react";
@@ -254,12 +250,12 @@ interface DashboardCardProps {
   children?: ReactNode;
 }
 
-export default function DashboardCard({ 
-  title, 
-  href, 
+export default function DashboardCard({
+  title,
+  href,
   gradient = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   cardNumber = "01",
-  children 
+  children,
 }: DashboardCardProps) {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -291,7 +287,7 @@ export default function DashboardCard({
           height: 200px;
           box-shadow: inset 5px 5px 5px rgba(0, 0, 0, 0.2),
             inset -5px -5px 15px rgba(255, 255, 255, 0.1),
-            5px 5px 15px rgba(0, 0, 0, 0.3), 
+            5px 5px 15px rgba(0, 0, 0, 0.3),
             -5px -5px 15px rgba(255, 255, 255, 0.1);
           border-radius: 15px;
           transition: 0.5s;
@@ -371,10 +367,11 @@ export default function DashboardCard({
         .card-content h2 {
           position: absolute;
           top: -60px;
-          left: 0px;
+          left: 50%;
+          transform: translateX(-50%);
           font-size: 6rem;
           font-weight: 800;
-          color: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.3);
           z-index: 0;
           line-height: 1;
         }
