@@ -422,44 +422,60 @@ import TaskForm from "@/components/dashboard/reconnection/TaskForm";
 import TaskTable from "@/components/dashboard/reconnection/TaskTable";
 import { Card } from "@/components/ui/card";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-// import TaskForm from "./components/TaskForm";
-// import TaskTable from "./components/TaskTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ReconnectionManagement() {
   const dispatch = useDispatch();
   const tasks = useSelector((state: RootState) => state.reconnection.tasks);
   const activeTasks = tasks.filter(task => !task.finished);
+  const finishedTasks = tasks.filter(task => task.finished);
 
   useEffect(() => {
     loadTasks();
   }, []);
 
   const loadTasks = async () => {
-    dispatch(showLoader());
-    try {
-      const activeTasks = await reconnectionService.getActiveTasks();
-      dispatch(setTasks(activeTasks));
-    } catch (error) {
-      toast.error('Failed to load tasks');
-      console.error(error);
-    } finally {
-      dispatch(hideLoader());
-    }
-  };
+  dispatch(showLoader());
+  try {
+    const [activeTasks, finishedTasks] = await Promise.all([
+      reconnectionService.getActiveTasks(),
+      reconnectionService.getFinishedTasks()
+    ]);
+    dispatch(setTasks([...activeTasks, ...finishedTasks]));
+  } catch (error) {
+    toast.error('Failed to load tasks');
+    console.error(error);
+  } finally {
+    dispatch(hideLoader());
+  }
+};
 
-  return (
-    <>
-      <Breadcrumb />
-      <ProtectedRoute allowedRoles={["Admin"]}>
-        <div className="space-y-6 mx-5">
+
+return (
+  <>
+    <Breadcrumb />
+    <ProtectedRoute allowedRoles={["Admin"]}>
+      <div className="space-y-6 mx-5">
         <Card className="px-5">
           <TaskForm onTaskAdded={loadTasks} />
-        <TaskTable tasks={activeTasks} onTaskUpdated={loadTasks} />
+          
+          <Tabs defaultValue="active" className="mt-0">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="active">Active Tasks ({activeTasks.length})</TabsTrigger>
+              <TabsTrigger value="finished">Finished Tasks ({finishedTasks.length})</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active">
+              <TaskTable tasks={activeTasks} onTaskUpdated={loadTasks} showActions={true} />
+            </TabsContent>
+            
+            <TabsContent value="finished">
+              <TaskTable tasks={finishedTasks} onTaskUpdated={loadTasks} showActions={false} />
+            </TabsContent>
+          </Tabs>
         </Card>
-        
       </div>
-      </ProtectedRoute>
-      
-    </>
-  );
+    </ProtectedRoute>
+  </>
+);
 }

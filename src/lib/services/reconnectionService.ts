@@ -40,6 +40,15 @@ import { uploadService } from './uploadService';
         ...doc.data()
       } as ReconnectionTask));
     },
+
+    async getFinishedTasks(): Promise<ReconnectionTask[]> {
+      const q = query(collection(db, 'reconnectionTasks'), where('finished', '==', true));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as ReconnectionTask));
+    },
   
     // Update task status
     async updateTaskStatus(taskId: string, updates: Partial<ReconnectionTask>): Promise<void> {
@@ -79,3 +88,6 @@ import { uploadService } from './uploadService';
     
     scheduleCleanup();
   };
+
+
+  
