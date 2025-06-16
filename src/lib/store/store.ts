@@ -9,6 +9,7 @@ import staffReducer from "./slices/staffSlice";
 import staffAdminReducer from "./slices/staffAdminSlice";
 import adminReducer from "./slices/adminSlice";
 import reconnectionReducer from "./slices/reconnectionSlice"
+import areaReducer from "./slices/areaSlice"
 
 const persistConfig = {
   key: "root",
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
   staffAdmin: staffAdminReducer,
   admin: adminReducer,
   reconnection: reconnectionReducer,
+  area: areaReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

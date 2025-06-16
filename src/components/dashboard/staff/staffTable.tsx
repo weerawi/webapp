@@ -1,9 +1,9 @@
 // components/staff/StaffTable.tsx
 "use client";
-import { useSelector, useDispatch } from "react-redux";  
-import { RootState, AppDispatch } from "@/lib/store/store"; 
-import { deleteStaffAndSync  } from "@/lib/services/staffService";  
-import { toast } from "sonner";  
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/lib/store/store";
+import { deleteStaffAndSync } from "@/lib/services/staffService";
+import { toast } from "sonner";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,10 +30,14 @@ import {
   TrendingDown,
   Eye,
   EyeOff,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { useState } from "react";
 import EditStaffDialog from "./EditStaffDialog";
-import { Staff } from "@/lib/store/slices/staffSlice";
+import { Staff } from "@/lib/store/slices/staffSlice"; 
+import { updateStaffAndSync } from "@/lib/services/staffService";
+
 
 export default function StaffTable() {
   const staffList = useSelector((state: RootState) => state.staff.staffList);
@@ -60,9 +64,10 @@ export default function StaffTable() {
 
   const filteredStaff = staffList.filter(
     (staff) =>
-      staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      staff.phone.includes(searchQuery)
+      // staff.isActive && 
+      (staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        staff.phone.includes(searchQuery))
   );
 
   const getLinkedStaffName = (linkedId: string) => {
@@ -75,7 +80,86 @@ export default function StaffTable() {
     setShowPasswords((prev) => ({ ...prev, [staffId]: !prev[staffId] }));
   };
 
+  // const handleStatusToggle = async (staff: Staff) => {
+  //   const newStatus = !staff.isActive;
+  //   const action = newStatus ? "activate" : "deactivate";
+  
+  //   const confirmed = await new Promise((resolve) => {
+  //     const result = window.confirm(
+  //       `Are you sure you want to ${action} ${staff.username}? ` +
+  //         (!newStatus && staff.linkedStaffId
+  //           ? "This will also unlink their team partner."
+  //           : "")
+  //     );
+  //     resolve(result);
+  //   });
+  
+  //   if (!confirmed) return;
+  
+  //   try {
+  //     // Update the staff member
+  //     await updateStaffAndSync(dispatch, staff.id, { isActive: newStatus });
+  
+  //     // If deactivating and has a linked partner, unlink both
+  //     if (!newStatus && staff.linkedStaffId) {
+  //       const linkedStaff = staffList.find(s => s.id === staff.linkedStaffId);
+  //       if (linkedStaff) {
+  //         await updateStaffAndSync(dispatch, staff.linkedStaffId, {
+  //           linkedStaffId: "",
+  //           teamNumber: 0 // Reset team number for the unlinked staff
+  //         });
+  //       }
+  //     }
+  
+  //     toast.success(`${staff.username} has been ${action}d successfully`);
+  //   } catch (error) {
+  //     toast.error(`Failed to ${action} staff member`);
+  //   }
+  // };
+
   // Calculate trend based on last month's data
+  
+  
+  const handleStatusToggle = async (staff: Staff) => {
+    const newStatus = !staff.isActive;
+    const action = newStatus ? "activate" : "deactivate";
+  
+    const confirmed = await new Promise((resolve) => {
+      const result = window.confirm(
+        `Are you sure you want to ${action} ${staff.username}? ` +
+          (!newStatus && staff.linkedStaffId
+            ? "Their partner will remain in the team waiting for a new partner."
+            : "")
+      );
+      resolve(result);
+    });
+  
+    if (!confirmed) return;
+  
+    try {
+      // If deactivating, also reset team number
+      const updates: Partial<Staff> = { isActive: newStatus };
+      if (!newStatus) {
+        updates.teamNumber = 0; // Reset team number when deactivating
+      }
+      
+      // Update the staff member
+      await updateStaffAndSync(dispatch, staff.id, updates);
+  
+      // If deactivating and has a linked partner, only unlink (don't reset partner's team)
+      if (!newStatus && staff.linkedStaffId) {
+        await updateStaffAndSync(dispatch, staff.linkedStaffId, {
+          linkedStaffId: "" // Only unlink, keep their team number
+        });
+      }
+  
+      toast.success(`${staff.username} has been ${action}d successfully`);
+    } catch (error) {
+      toast.error(`Failed to ${action} staff member`);
+    }
+  };
+  
+  
   const calculateTrend = () => {
     const now = new Date();
     const lastMonth = new Date(
@@ -214,6 +298,18 @@ export default function StaffTable() {
                   <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground w-[250px]">
                     Contact
                   </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
+                    Area
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
+                    Team
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
+                    Emp #
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
+                    Status
+                  </th>
                   <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground w-[160px]">
                     Password
                   </th>
@@ -268,15 +364,36 @@ export default function StaffTable() {
                         </div>
                       </td>
                       <td className="px-4 py-2">
-                        <div className="flex items-center gap-4 text-sm">
+                        <div className="flex flex-col items-center  text-sm">
                           <span className="text-muted-foreground">
                             {staff.email}
-                          </span>
-                          <span className="text-muted-foreground">•</span>
+                          </span> 
                           <span className="text-muted-foreground">
                             {staff.phone}
                           </span>
                         </div>
+                      </td>
+
+                      <td className="px-4 py-2">
+                        <span className="text-sm">{staff.area}</span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <Badge variant="outline" className="text-xs">
+                          Team {staff.teamNumber}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className="text-sm font-mono">
+                          {staff.empNumber}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <Badge
+                          variant={staff.isActive ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {staff.isActive ? "Active" : "Inactive"}
+                        </Badge>
                       </td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
@@ -339,8 +456,23 @@ export default function StaffTable() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              onClick={() => handleStatusToggle(staff)}
+                            >
+                              {staff.isActive ? (
+                                <>
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Activate
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               className="text-destructive"
-                              onClick={() => setDeletingStaff(staff)} // ✅ Fix here
+                              onClick={() => setDeletingStaff(staff)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete

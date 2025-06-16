@@ -41,3 +41,15 @@ export const deleteStaffAndSync = async (
   await deleteDoc(staffRef);
   dispatch(deleteStaff(id));
 };
+
+
+export const updateLinkedStaff = async (
+  dispatch: AppDispatch,
+  staffId: string,
+  linkedStaffId: string
+) => {
+  // Update the linked staff's linkedStaffId field
+  const linkedStaffRef = doc(db, "staff", linkedStaffId);
+  await updateDoc(linkedStaffRef, { linkedStaffId: staffId });
+  dispatch(updateStaff({ id: linkedStaffId, updates: { linkedStaffId: staffId } }));
+};

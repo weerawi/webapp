@@ -11,6 +11,7 @@ import { AppDispatch } from "@/lib/store/store";
 import { Separator } from "@/components/ui/separator";
 import { fetchStaffFromFirestore } from "@/lib/services/staffService";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { fetchAreasFromFirestore } from "@/lib/services/areaService";
 
 export default function StaffPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,6 +20,7 @@ export default function StaffPage() {
     dispatch(hideLoader());
     // Fetch staff data on component mount
     fetchStaffFromFirestore(dispatch);
+    fetchAreasFromFirestore(dispatch);
   }, [dispatch]); 
 
   return (

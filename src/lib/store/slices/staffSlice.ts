@@ -9,7 +9,12 @@ export interface Staff {
   password: string;
   userType: "Helper" | "Supervisor";
   linkedStaffId: string;
-  createdAt?: string; // Add timestamp for trend calculation
+  createdAt?: string; 
+  area: string;
+  teamNumber: number;
+  empNumber: string;
+  joinDate: string;
+  isActive: boolean;
 }
 
 interface StaffState {

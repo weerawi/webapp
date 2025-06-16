@@ -1,9 +1,7 @@
-// components/staff/EditStaffDialog.tsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/lib/store/store"; 
-import { updateStaffAndSync } from "@/lib/services/staffService";
+import { AppDispatch, RootState } from "@/lib/store/store";  
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Staff } from "@/lib/store/slices/staffSlice";
+import { updateStaffAndSync } from "@/lib/services/staffService";
 
 interface EditStaffDialogProps {
   staff: Staff;
@@ -41,26 +40,125 @@ export default function EditStaffDialog({
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
-    email: staff.email,
-    phone: staff.phone,
-    password: staff.password,
-    userType: staff.userType,
-    linkedStaffId: staff.linkedStaffId || "none",  
+    email: "",
+    phone: "",
+    password: "",
+    userType: "Helper" as "Helper" | "Supervisor",
+    linkedStaffId: "none",  
   });
+
+  // Initialize form when dialog opens or staff changes
+  useEffect(() => {
+    if (open && staff) {
+      setForm({
+        email: staff.email,
+        phone: staff.phone,
+        password: staff.password,
+        userType: staff.userType,
+        linkedStaffId: staff.linkedStaffId || "none",
+      });
+    }
+  }, [open, staff]);
+
+  useEffect(()=>{
+
+    console.log("edit open /////////////////////////////")
+  },[])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   try {
+  //     const oldLinkedStaffId = staff.linkedStaffId;
+  //     const newLinkedStaffId = form.linkedStaffId === "none" ? "" : form.linkedStaffId;
+      
+  //     const updateData = {
+  //       ...form,
+  //       linkedStaffId: newLinkedStaffId,
+  //     };
+      
+  //     // Update current staff
+  //     await updateStaffAndSync(dispatch, staff.id, updateData);
+      
+  //     // Handle partner changes
+  //     if (oldLinkedStaffId !== newLinkedStaffId) {
+  //       // Unlink old partner and reset their team number
+  //       if (oldLinkedStaffId) {
+  //         await updateStaffAndSync(dispatch, oldLinkedStaffId, { 
+  //           linkedStaffId: "",
+  //           teamNumber: 0 // Reset team number when unlinked
+  //         });
+  //       }
+        
+  //       // Link new partner and update their team number
+  //       if (newLinkedStaffId) {
+  //         await updateStaffAndSync(dispatch, newLinkedStaffId, { 
+  //           linkedStaffId: staff.id,
+  //           teamNumber: staff.teamNumber // Assign same team number as current staff
+  //         });
+  //       }
+  //     }
+      
+  //     toast.success("Staff member updated successfully");
+  //     onOpenChange(false);
+  //   } catch (error) {
+  //     toast.error("Failed to update staff member");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+
+  // Get available partners based on current form userType
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const oldLinkedStaffId = staff.linkedStaffId;
+      const newLinkedStaffId = form.linkedStaffId === "none" ? "" : form.linkedStaffId;
+      
+      // If changing partner
+      if (oldLinkedStaffId !== newLinkedStaffId) {
+        // Unlink old partner but keep their team number
+        if (oldLinkedStaffId) {
+          await updateStaffAndSync(dispatch, oldLinkedStaffId, { 
+            linkedStaffId: ""
+            // Don't reset team number - they stay in same team waiting for new partner
+          });
+        }
+        
+        // Link new partner and update their team number to match current staff
+        if (newLinkedStaffId) {
+          const newPartner = staffList.find(s => s.id === newLinkedStaffId);
+          
+          // If new partner had a different team, unlink their old partner
+          if (newPartner?.linkedStaffId) {
+            await updateStaffAndSync(dispatch, newPartner.linkedStaffId, {
+              linkedStaffId: ""
+            });
+          }
+          
+          // Update new partner with current staff's team number and link
+          await updateStaffAndSync(dispatch, newLinkedStaffId, { 
+            linkedStaffId: staff.id,
+            teamNumber: staff.teamNumber // Assign same team number
+          });
+        }
+      }
+      
+      // Update current staff
       const updateData = {
         ...form,
-        linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+        linkedStaffId: newLinkedStaffId,
       };
-      await updateStaffAndSync(dispatch, staff.id, updateData); 
+      await updateStaffAndSync(dispatch, staff.id, updateData);
+      
       toast.success("Staff member updated successfully");
       onOpenChange(false);
     } catch (error) {
@@ -70,23 +168,81 @@ export default function EditStaffDialog({
     }
   };
 
-  const linkedOptions =
-    form.userType === "Helper"
-      ? staffList.filter(
-          (s) => s.userType === "Supervisor" && s.id !== staff.id
-        )
-      : staffList.filter((s) => s.userType === "Helper" && s.id !== staff.id);
+  // const getLinkedOptions = () => {
+  //   return staffList.filter((s) => {
+  //     // Same area and active
+  //     if (s.area !== staff.area || !s.isActive || s.id === staff.id) {
+  //       return false;
+  //     }
+      
+  //     // Get the opposite user type
+  //     const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
+      
+  //     // Must be the opposite type
+  //     if (s.userType !== targetType) {
+  //       return false;
+  //     }
+      
+  //     // Include current partner OR staff without partners
+  //     return s.id === staff.linkedStaffId || !s.linkedStaffId || s.linkedStaffId === "";
+  //   });
+  // };
+
+
+  const getLinkedOptions = () => {
+    return staffList.filter((s) => {
+      // Must be in same area, active, and not the current staff
+      if (s.area !== staff.area || !s.isActive || s.id === staff.id) {
+        return false;
+      }
+      
+      // Get the opposite user type
+      const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
+      
+      // Must be the opposite type
+      if (s.userType !== targetType) {
+        return false;
+      }
+      
+      // Include staff in these scenarios:
+      // 1. Current partner (already linked)
+      if (s.id === staff.linkedStaffId) {
+        return true;
+      }
+      
+      // 2. Staff without partners
+      if (!s.linkedStaffId || s.linkedStaffId === "") {
+        return true;
+      }
+      
+      // 3. Staff with team number 0 (previously deactivated, now reactivated)
+      if (s.teamNumber === 0) {
+        return true;
+      }
+      
+      // 4. Staff whose current partner is inactive
+      const partner = staffList.find(p => p.id === s.linkedStaffId);
+      if (partner && !partner.isActive) {
+        return true;
+      }
+      
+      return false;
+    });
+  };
+
+
+  const linkedOptions = getLinkedOptions();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh]  flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Staff Member</DialogTitle>
           <DialogDescription>
             Update staff member details for {staff.username}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -138,14 +294,14 @@ export default function EditStaffDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 ">
             <Label htmlFor="userType">User Type</Label>
             <Select
               value={form.userType}
               onValueChange={(val) =>
                 setForm({
                   ...form,
-                  userType: val as any,
+                  userType: val as "Helper" | "Supervisor",
                   linkedStaffId: "none",
                 })
               }
@@ -160,39 +316,39 @@ export default function EditStaffDialog({
             </Select>
           </div>
 
-          {linkedOptions.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="linkedStaff">
-                {form.userType === "Helper"
-                  ? "Assign to Supervisor"
-                  : "Assign Helpers"}
-              </Label>
-              <Select
-                value={form.linkedStaffId || "none"}
-                onValueChange={(val) =>
-                  setForm({ ...form, linkedStaffId: val })
-                }
-              >
-                <SelectTrigger id="linkedStaff">
-                  <SelectValue
-                    placeholder={`Select ${
-                      form.userType === "Helper" ? "supervisor" : "helper"
-                    }`}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {linkedOptions.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.username} - {s.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Partner Selection - This should ALWAYS be visible */}
+          <div className="space-y-2">
+            <Label htmlFor="linkedStaff">
+              {form.userType === "Helper"
+                ? "Assign to Supervisor"
+                : "Assign Helper"}
+            </Label>
+            <Select
+              value={form.linkedStaffId}
+              onValueChange={(val) =>
+                setForm({ ...form, linkedStaffId: val })
+              }
+            >
+              <SelectTrigger id="linkedStaff">
+                <SelectValue placeholder="Select partner" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {linkedOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.username} - {s.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {linkedOptions.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No available {form.userType === "Helper" ? "supervisors" : "helpers"} in this area
+              </p>
+            )}
+          </div>
 
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
