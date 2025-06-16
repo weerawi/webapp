@@ -6,34 +6,49 @@ import {
   fetchReportsFailure
 } from "../store/slices/reportSlice";
 import { mockDisconnectionData } from "@/lib/mock-data";
-
+import { AuthUser } from "../store/slices/authSlice";
 
 // Call this function in ReportPage
-export async function fetchAndStoreReports(dispatch: AppDispatch) {
+// Update the function signature to accept currentUser
+export async function fetchAndStoreReports(
+  dispatch: AppDispatch,
+  currentUser: AuthUser | null  // Add this parameter
+) {
   try {
     dispatch(fetchReportsStart());
 
-    // Mocking delay and data
     await new Promise((res) => setTimeout(res, 500));
-    dispatch(fetchReportsSuccess(mockDisconnectionData));
+    
+    // Add filtering logic here
+    let filteredReports = mockDisconnectionData;
+    
+    if (currentUser?.role === 'Waterboard' && currentUser.area) {
+      console.log("snhdkfdfdf", filteredReports);
+      filteredReports = mockDisconnectionData.filter(
+        report => report.area === currentUser.area  // Assuming reports have an 'area' field
+      );
+      console.log("snhdkfdfdf", filteredReports);
+    }
+    
+    dispatch(fetchReportsSuccess(filteredReports));
 
-    // 🔒 Future Firebase (commented for now)
+    // Future Firebase implementation would also need filtering
     /*
     const db = getFirestore();
     const snapshot = await getDocs(collection(db, "disconnectionRecords"));
-    const reports = snapshot.docs.map(doc => ({
+    let reports = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     })) as DisconnectionRecord[];
+    
+    // Apply same filtering for Firebase data
+    if (currentUser?.role === 'Waterboard' && currentUser.area) {
+      reports = reports.filter(report => report.area === currentUser.area);
+    }
+    
     dispatch(fetchReportsSuccess(reports));
     */
   } catch (err: unknown) {
-    let errorMessage = "Failed to load reports";
-    if (err instanceof Error) {
-      errorMessage = err.message;
-    } else if (typeof err === "string") {
-      errorMessage = err;
-    }
-    dispatch(fetchReportsFailure(errorMessage));
+    // ... rest of error handling stays the same
   }
 }

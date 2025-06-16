@@ -53,7 +53,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/lib/store/store";
 import { fetchAndStoreReports } from "@/lib/services/reportService";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -69,11 +69,12 @@ import { FileText, MapPin, Users } from "lucide-react";
 export default function ReportPage() {
   const dispatch = useDispatch<AppDispatch>();
   const [activeTab, setActiveTab] = useState("disconnection");
-
-  useEffect(() => {
-    fetchAndStoreReports(dispatch);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  
+  useEffect(() => { 
     dispatch(hideLoader());
-  }, [dispatch]);
+    fetchAndStoreReports(dispatch, currentUser); 
+  }, [dispatch, currentUser]);
 
   return (
     <>
