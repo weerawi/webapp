@@ -95,13 +95,13 @@ export default function ReportPage() {
                 <FileText className="h-4 w-4" />
                 Disconnection
               </TabsTrigger>
-              <TabsTrigger value="area" className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Area Wise
-              </TabsTrigger>
               <TabsTrigger value="supervisor" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
+                <MapPin className="h-4 w-4" />
                 Supervisor Wise
+              </TabsTrigger>
+              <TabsTrigger value="area" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Area Wise
               </TabsTrigger>
             </TabsList>
 
@@ -118,13 +118,14 @@ export default function ReportPage() {
               </div>
             </TabsContent>
 
+            <TabsContent value="supervisor">
+              <SupervisorWiseReport />
+            </TabsContent>
+
             <TabsContent value="area">
               <AreaWiseReport />
             </TabsContent>
 
-            <TabsContent value="supervisor">
-              <SupervisorWiseReport />
-            </TabsContent>
           </Tabs>
         </div>
       </Card>
