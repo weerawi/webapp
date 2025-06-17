@@ -53,7 +53,7 @@ interface SupervisorWiseData {
   payment80: number;
   payment50: number;
   alreadyPaid: number;
-  paymentPercentage: string;
+  // paymentPercentage: string;
   unSolvedCusComp: number;
   gateClosed: number;
   meterRemoved: number;
@@ -142,7 +142,7 @@ export function SupervisorWiseReport() {
           payment80: 0,
           payment50: 0,
           alreadyPaid: 0,
-          paymentPercentage: "0%",
+          // paymentPercentage: "0%",
           unSolvedCusComp: 0,
           gateClosed: 0,
           meterRemoved: 0,
@@ -198,10 +198,10 @@ export function SupervisorWiseReport() {
       }
       
       // Calculate payment percentage
-      const totalPayments = data.payment100 + data.payment80 + data.payment50 + data.alreadyPaid;
-      if (data.totalJobs > 0) {
-        data.paymentPercentage = `${((totalPayments / data.totalJobs) * 100).toFixed(0)}%`;
-      }
+      // const totalPayments = data.payment100 + data.payment80 + data.payment50 + data.alreadyPaid;
+      // if (data.totalJobs > 0) {
+      //   data.paymentPercentage = `${((totalPayments / data.totalJobs) * 100).toFixed(0)}%`;
+      // }
       
       // Calculate days (unique dates for this team)
       const teamDates = new Set(
@@ -365,7 +365,7 @@ return (
             <TableHead rowSpan={2} className="text-center border">Waiting</TableHead>
             <TableHead rowSpan={2} className="text-center border">OC Done</TableHead>
             <TableHead rowSpan={2} className="text-center border">RC Done</TableHead>
-            <TableHead colSpan={5} className="text-center border bg-green-50">Paid</TableHead>
+            <TableHead colSpan={4} className="text-center border bg-green-50">Paid</TableHead>
             <TableHead colSpan={10} className="text-center border">Reasons</TableHead>
             <TableHead rowSpan={2} className="text-center border">Helpers</TableHead>
           </TableRow>
@@ -377,7 +377,7 @@ return (
             <TableHead className="text-center border bg-green-50">80%</TableHead>
             <TableHead className="text-center border bg-green-50">50%</TableHead>
             <TableHead className="text-center border bg-green-50">Already<br/>Paid</TableHead>
-            <TableHead className="text-center border bg-green-50">%</TableHead>
+            {/* <TableHead className="text-center border bg-green-50">%</TableHead> */}
             <TableHead className="text-center border">Un Solved<br/>Cus Comp</TableHead>
             <TableHead className="text-center border">Gate<br/>Closed</TableHead>
             <TableHead className="text-center border">Meter<br/>Removed</TableHead>
@@ -422,7 +422,7 @@ return (
                     <TableCell className="text-center bg-green-50">{data.payment80}</TableCell>
                     <TableCell className="text-center bg-green-50">{data.payment50}</TableCell>
                     <TableCell className="text-center bg-green-50">{data.alreadyPaid}</TableCell>
-                    <TableCell className="text-center bg-green-50 font-medium">{data.paymentPercentage}</TableCell>
+                    {/* <TableCell className="text-center bg-green-50 font-medium">{data.paymentPercentage}</TableCell> */}
                     <TableCell className="text-center">{data.unSolvedCusComp}</TableCell>
                     <TableCell className="text-center">{data.gateClosed}</TableCell>
                     <TableCell className="text-center">{data.meterRemoved}</TableCell>
@@ -451,11 +451,11 @@ return (
                   <TableCell className="text-center bg-green-50">{areaTotals.payment80}</TableCell>
                   <TableCell className="text-center bg-green-50">{areaTotals.payment50}</TableCell>
                   <TableCell className="text-center bg-green-50">{areaTotals.alreadyPaid}</TableCell>
-                  <TableCell className="text-center bg-green-50">
+                  {/* <TableCell className="text-center bg-green-50">
                     {areaTotals.totalJobs > 0 
                       ? `${(((areaTotals.payment100 + areaTotals.payment80 + areaTotals.payment50 + areaTotals.alreadyPaid) / areaTotals.totalJobs) * 100).toFixed(0)}%` 
                       : "0%"}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell className="text-center">{areaTotals.unSolvedCusComp}</TableCell>
                   <TableCell className="text-center">{areaTotals.gateClosed}</TableCell>
                   <TableCell className="text-center">{areaTotals.meterRemoved}</TableCell>
