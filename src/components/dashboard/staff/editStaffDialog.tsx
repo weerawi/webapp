@@ -44,7 +44,8 @@ export default function EditStaffDialog({
     phone: "",
     password: "",
     userType: "Helper" as "Helper" | "Supervisor",
-    linkedStaffId: "none",  
+    linkedStaffId: "none",
+    area: "",  
   });
 
   // Initialize form when dialog opens or staff changes
@@ -56,6 +57,7 @@ export default function EditStaffDialog({
         password: staff.password,
         userType: staff.userType,
         linkedStaffId: staff.linkedStaffId || "none",
+        area: staff.area,
       });
     }
   }, [open, staff]);
@@ -190,37 +192,39 @@ export default function EditStaffDialog({
 
 
   const getLinkedOptions = () => {
+    console.log("Current staff area:", staff.area); // Debug line
+  
     return staffList.filter((s) => {
-      // Must be in same area, active, and not the current staff
+      console.log("Checking staff:", s.username, "Area:", s.area); // Debug line
+      
+      // Use staff.area directly instead of form.area
       if (s.area !== staff.area || !s.isActive || s.id === staff.id) {
         return false;
       }
       
-      // Get the opposite user type
+      // Get the opposite user type based on form.userType
       const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
       
-      // Must be the opposite type
       if (s.userType !== targetType) {
         return false;
       }
       
-      // Include staff in these scenarios:
-      // 1. Current partner (already linked)
+      // Include current partner
       if (s.id === staff.linkedStaffId) {
         return true;
       }
       
-      // 2. Staff without partners
+      // Include staff without partners
       if (!s.linkedStaffId || s.linkedStaffId === "") {
         return true;
       }
       
-      // 3. Staff with team number 0 (previously deactivated, now reactivated)
+      // Include staff with team number 0
       if (s.teamNumber === 0) {
         return true;
       }
       
-      // 4. Staff whose current partner is inactive
+      // Include staff whose partner is inactive
       const partner = staffList.find(p => p.id === s.linkedStaffId);
       if (partner && !partner.isActive) {
         return true;
@@ -229,7 +233,6 @@ export default function EditStaffDialog({
       return false;
     });
   };
-
 
   const linkedOptions = getLinkedOptions();
 

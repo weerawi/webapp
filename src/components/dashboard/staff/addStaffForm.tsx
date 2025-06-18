@@ -212,6 +212,12 @@ export default function AddStaffForm() {
       return false;
     }
     
+    // Must be opposite userType
+    const oppositeType = form.userType === "Helper" ? "Supervisor" : "Helper";
+    if (s.userType !== oppositeType) {
+      return false;
+    }
+    
     // Must not already have a partner (available for pairing)
     return !s.linkedStaffId || s.linkedStaffId === "";
   });
@@ -467,7 +473,7 @@ export default function AddStaffForm() {
                 </SelectContent>
               </Select>
             </div>
-             
+            
             <div className="space-y-2">
               <Label htmlFor="linkedStaff" className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />

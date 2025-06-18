@@ -141,6 +141,7 @@ export default function StaffTable() {
       const updates: Partial<Staff> = { isActive: newStatus };
       if (!newStatus) {
         updates.teamNumber = 0; // Reset team number when deactivating
+        updates.linkedStaffId = "";
       }
       
       // Update the staff member
@@ -328,7 +329,7 @@ export default function StaffTable() {
               <tbody className="divide-y">
                 {filteredStaff.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center">
+                    <td colSpan={10} className="py-12 text-center">
                       <User className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
                       <h3 className="text-lg font-medium mb-2">
                         No staff members found
@@ -450,7 +451,7 @@ export default function StaffTable() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => setEditingStaff(staff)}
+                              onClick={() => {setEditingStaff(staff); console.log("EDit cllicj")}}
                             >
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
