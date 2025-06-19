@@ -273,7 +273,7 @@ export default function DashboardCard({
       <div className="card-container" onClick={handleClick}>
         <div className="card-box">
           <div className="card-content ">
-            <h2 className="">{cardNumber}</h2>
+            {/* <h2 className="">{cardNumber}</h2> */}
             <h3>{title}</h3>
             {children}
           </div>
