@@ -352,7 +352,7 @@ export function SupervisorWiseReport() {
             <TableHeader className="sticky top-0 bg-background z-20 shadow-sm">
               <TableRow>
                 <TableHead rowSpan={2} className="text-center border">
-                  Team
+                  Team No
                 </TableHead>
                 <TableHead rowSpan={2} className="text-center border">
                   S.Name

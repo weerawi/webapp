@@ -48,8 +48,6 @@
 //   );
 // }
 
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -64,16 +62,16 @@ import { ReportFilters } from "@/components/dashboard/report/report-filters";
 import { AreaWiseReport } from "@/components/dashboard/report/area-wise-report";
 import { SupervisorWiseReport } from "@/components/dashboard/report/supervisor-wise-report";
 import { hideLoader } from "@/lib/store/slices/loaderSlice";
-import { FileText, MapPin, Users } from "lucide-react";
+import { BarChart3, FileText, MapPin, Users } from "lucide-react";
 
 export default function ReportPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const [activeTab, setActiveTab] = useState("disconnection");
+  const [activeTab, setActiveTab] = useState("workdone");
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  
-  useEffect(() => { 
+
+  useEffect(() => {
     dispatch(hideLoader());
-    fetchAndStoreReports(dispatch, currentUser); 
+    fetchAndStoreReports(dispatch, currentUser);
   }, [dispatch, currentUser]);
 
   return (
@@ -83,29 +81,26 @@ export default function ReportPage() {
       <Card className="mx-5 py-1 pb-2 mb-5 w-full max-w-[calc(98vw-2rem)] ">
         <div className="container mx-auto px-6 space-y-3">
           <div className="flex flex-col">
-            <CardHeader className="text-3xl font-semibold pl-0">Reports</CardHeader>
-            <p className="text-muted-foreground">
-              Track and analyze disconnection activities with comprehensive reporting tools
-            </p>
-          </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
-              <TabsTrigger value="disconnection" className="flex items-center gap-2">
+            {/* <CardHeader className="text-3xl font-semibold pl-0">
+              Reports
+            </CardHeader>  */}
+            <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-4"
+          >
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="workdone" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Disconnection
+                Work Done
               </TabsTrigger>
-              <TabsTrigger value="supervisor" className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Supervisor Wise
-              </TabsTrigger>
-              <TabsTrigger value="area" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Area Wise
+              <TabsTrigger value="summary" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Summary View
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="disconnection">
+            <TabsContent value="workdone">
               <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
                 <div className="lg:col-span-1">
                   <Card className="px-4 py-2">
@@ -118,15 +113,35 @@ export default function ReportPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="supervisor">
-              <SupervisorWiseReport />
-            </TabsContent>
+            <TabsContent value="summary">
+              <Tabs defaultValue="supervisor" className="w-full">
+                <TabsList className="grid w-full max-w-md grid-cols-2">
+                  <TabsTrigger
+                    value="supervisor"
+                    className="flex items-center gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    Supervisor Wise
+                  </TabsTrigger>
+                  <TabsTrigger value="area" className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Area Wise
+                  </TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="area">
-              <AreaWiseReport />
-            </TabsContent>
+                <TabsContent value="supervisor" className="mt-4">
+                  <SupervisorWiseReport />
+                </TabsContent>
 
+                <TabsContent value="area" className="mt-4">
+                  <AreaWiseReport />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
           </Tabs>
+          </div>
+
+          
         </div>
       </Card>
     </>
