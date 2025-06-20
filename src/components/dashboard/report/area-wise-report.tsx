@@ -657,7 +657,7 @@ export function AreaWiseReport() {
           const totalValue = totals[row.key as keyof typeof totals];
           
           return (
-            <TableRow key={row.key}>
+            <TableRow className=" [&>td]:py-1 [&>td]:px-2" key={row.key}>
               <TableCell className={`sticky left-0 z-10 bg-background w-[200px] min-w-[200px] ${row.bold ? 'font-bold' : ''}`}>
                 {row.label}
               </TableCell>
