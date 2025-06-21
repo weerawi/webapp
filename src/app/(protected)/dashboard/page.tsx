@@ -122,11 +122,11 @@
 
 //       <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
 //         <h1 className="text-4xl font-bold mb-6 text-white">Welcome</h1>
-//         {/* <div className="grid grid-cols-2 gap-4 w-[600px]"> 
+//         {/* <div className="grid grid-cols-2 gap-4 w-[600px]">
 //           <DashboardCard href="/dashboard/staff" title="Staff" />
 //           <DashboardCard href="/dashboard/report" title="Report" />
 //           <DashboardCard href="/dashboard/reconnection-management" title="Reconnection Management" />
-//           <DashboardCard href="/dashboard/live-location" title="Live Location" /> 
+//           <DashboardCard href="/dashboard/live-location" title="Live Location" />
 //         </div>  */}
 
 //         {/* <div className="grid grid-cols-2 gap-8 w-[700px]">
@@ -206,19 +206,7 @@
 //   );
 // }
 
-
-
 ///////////////////////////////////////////////////   without vantajs    //////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
 
 "use client";
 import Link from "next/link";
@@ -272,8 +260,8 @@ export default function DashboardHome() {
 
       <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
         <h1 className="text-4xl font-bold mb-6 text-black">Welcome</h1>
-     
-        <div className="grid grid-cols-2 gap-8 w-[700px]">
+
+        <div className="grid grid-cols-3 gap-8 w-[1000px]">
           <DashboardCard
             href="/dashboard/staff"
             title="Staff"
@@ -297,6 +285,12 @@ export default function DashboardHome() {
             title="Live Location"
             gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
             cardNumber="04"
+          />
+          <DashboardCard
+            href="/dashboard/watreboard"
+            title="Waterboard Management"
+            gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+            cardNumber="05"
           />
         </div>
 
