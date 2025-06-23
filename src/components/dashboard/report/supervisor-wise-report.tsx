@@ -383,7 +383,7 @@ export function SupervisorWiseReport() {
                   Waiting
                 </TableHead>
                 <TableHead rowSpan={2} className="text-center border">
-                  OC Done
+                  DC Done
                 </TableHead>
                 <TableHead rowSpan={2} className="text-center border">
                   RC Done
