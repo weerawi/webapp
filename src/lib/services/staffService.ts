@@ -176,16 +176,33 @@ export const updateAttendanceAndSync = async (
 
 // Update attendance record (mock version)
 export const updateAttendanceAndSync = async (
-  dispatch: AppDispatch,
-  id: string,
-  updates: Partial<AttendanceRecord>
-) => {
-  // Simulate async call
-  await new Promise(resolve => setTimeout(resolve, 300));
+  dispatch: AppDispatch)=> {
+  const raw = Array.isArray(mockAttendanceData)
+    ? (mockAttendanceData[0]?.attendance || [])
+    : [];
+
+  const normalized: AttendanceRecord[] = raw.map((r: any, i: number) => ({
+    id: r.id || `mock-${i}`,
+    staffId: r.staffId || r.staffID || `STAFF-${i}`,
+    staffName: r.staffName || r.name || "Unknown",
+    area: r.area || "Unknown",
+    teamNumber: r.teamNumber ?? r.team ?? 0,
+    role: r.role || "helper",
+    date: r.date || new Date().toISOString().slice(0, 10),
+    timeIn: r.timeIn || "",
+    timeOut: r.timeOut || "",
+    status: r.status === "in" ? "in" : "out",
+    gpsLocation: r.gpsLocation || r.location || "",
+    imageUrl: r.imageUrl,
+  }));
+
+  dispatch(setAttendance(normalized));
+  return;
   
-  // Just dispatch to Redux since we're using mock data
-  dispatch(updateAttendance({ id, updates }));
-};
+  // const snapshot = await getDocs(collection(db, "attendance"));
+  // const live = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AttendanceRecord[];
+  // dispatch(setAttendance(live));
+}
 
 // Check in staff member
 export const checkInStaff = async (

@@ -13,7 +13,7 @@ export const mockAttendanceData = [
           "timeOut": "17:30",
           "status": "out",
           "gpsLocation": "https://maps.google.com/?q=6.0535,80.2210",
-          "imageUrl": "https://via.placeholder.com/150?text=indushan"
+          "imageUrl": "https://i.pravatar.cc/150?u=test123"
         },
         {
           "id": "att-002",
@@ -26,7 +26,7 @@ export const mockAttendanceData = [
           "timeOut": "17:45",
           "status": "out",
           "gpsLocation": "https://maps.google.com/?q=6.9553,79.9220",
-          "imageUrl": "https://via.placeholder.com/150?text=chamu"
+          "imageUrl": "https://i.pravatar.cc/150?u=test123"
         },
         {
           "id": "att-003",
@@ -39,7 +39,7 @@ export const mockAttendanceData = [
           "timeOut": "",
           "status": "in",
           "gpsLocation": "https://maps.google.com/?q=6.9600,79.9150",
-          "imageUrl": "https://via.placeholder.com/150?text=Tharindu"
+          "imageUrl": "https://i.pravatar.cc/150?u=test123"
         },
         {
           "id": "att-004",
@@ -52,7 +52,7 @@ export const mockAttendanceData = [
           "timeOut": "18:00",
           "status": "out",
           "gpsLocation": "https://maps.google.com/?q=6.9580,79.9180",
-          "imageUrl": "https://via.placeholder.com/150?text=vinod"
+          "imageUrl": "https://picsum.photos/seed/test123/157"
         },
         {
           "id": "att-005",
@@ -182,7 +182,7 @@ export const mockAttendanceData = [
           "timeOut": "18:10",
           "status": "out",
           "gpsLocation": "https://maps.google.com/?q=6.0455,80.2205",
-          "imageUrl": "https://via.placeholder.com/150?text=tha"
+          "imageUrl": "https://picsum.photos/seed/test123/159"
         },
         {
           "id": "att-015",
