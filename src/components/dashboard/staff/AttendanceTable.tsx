@@ -47,8 +47,8 @@ export default function AttendanceTable() {
   const uniqueAreas = [...new Set(attendanceRecords.map((r) => r.area))];
 
   return (
-    <Card className="border-0 shadow-lg">
-      <div className="px-6 py-4">
+    <Card className="border-0 shadow-lg py-0">
+      <div className="px-6 py-2 ">
         {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
           <div className="relative flex-1 min-w-[300px]">

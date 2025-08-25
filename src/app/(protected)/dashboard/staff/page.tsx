@@ -51,7 +51,7 @@ useEffect(() => {
 
           <Separator />
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-0">
             <TabsList className="grid w-[400px] grid-cols-2">
               <TabsTrigger value="user-roles" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -63,11 +63,11 @@ useEffect(() => {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="user-roles" className="mt-6">
+            <TabsContent value="user-roles" className="mt-1">
               <StaffTable />
             </TabsContent>
             
-            <TabsContent value="attendance" className="mt-6">
+            <TabsContent value="attendance" className="mt-1">
               <AttendanceTable />
             </TabsContent>
           </Tabs>
