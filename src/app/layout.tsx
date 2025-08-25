@@ -8,17 +8,15 @@ import Footer from './footer';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-screen pb-20"> {/* pb matches footer height */}
+      <body className="min-h-screen flex flex-col">
         <Providers>
-          <main>
+          {/* Main content area that accounts for footer height */}
+          <main className="flex-1 pb-16">
             {children}
           </main>
           <Toaster richColors position="top-right" />
         </Providers>
-        <footer className="z-50 fixed bottom-0 left-0 w-full h-10flex items-center justify-center shadow">
-          
-          <Footer/>
-        </footer>
+        <Footer />
       </body>
     </html>
   );
