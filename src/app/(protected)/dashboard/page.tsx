@@ -254,6 +254,14 @@ export default function DashboardHome() {
     });
   }, [user, isAuthenticated]);
 
+  useEffect(() => {
+    const prev = document.body.style.overflowY;
+    document.body.style.overflowY = "hidden";
+    return () => {
+      document.body.style.overflowY = prev;
+    };
+  }, []);
+
   const handleLogout = async () => {
     dispatch(showLoader("Logging out..."));
     try {
@@ -267,7 +275,7 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-hidden">
       <div className="fixed inset-0 -z-10" />
 
       <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
