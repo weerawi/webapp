@@ -122,22 +122,45 @@ export const fetchAreas = async (): Promise<Area[]> => {
 };
 
 // Waterboard Options functions
-export const saveWaterboardOption = async (optionName: string): Promise<string> => {
-  const snapshot = await getDocs(collection(db, "waterboardOptions"));
-  const exists = snapshot.docs.some(
-    doc => doc.data().name.toLowerCase() === optionName.toLowerCase()
-  );
+// export const saveWaterboardOption = async (optionName: string): Promise<string> => {
+//   const snapshot = await getDocs(collection(db, "waterboardOptions"));
+//   const exists = snapshot.docs.some(
+//     doc => doc.data().name.toLowerCase() === optionName.toLowerCase()
+//   );
   
+//   if (exists) {
+//     throw new Error("This option already exists");
+//   }
+  
+//   const docRef = await addDoc(collection(db, "waterboardOptions"), {
+//     name: optionName,
+//     createdAt: new Date().toISOString(),
+//   });
+//   return docRef.id;
+// };
+
+// updated after structure change in report view
+export const saveWaterboardOption = async (optionName: string): Promise<string> => {
+  const clean = optionName.trim();
+  if (!clean) throw new Error("Option name cannot be empty");
+
+  const snapshot = await getDocs(collection(db, "waterboardOptions"));
+  const exists = snapshot.docs.some(doc =>
+    (doc.data().name as string).trim().toLowerCase() === clean.toLowerCase()
+  );
+
   if (exists) {
     throw new Error("This option already exists");
   }
-  
+
   const docRef = await addDoc(collection(db, "waterboardOptions"), {
-    name: optionName,
+    name: clean,
     createdAt: new Date().toISOString(),
   });
   return docRef.id;
 };
+
+
 
 export const fetchWaterboardOptions = async (): Promise<WaterboardOption[]> => {
   const snapshot = await getDocs(collection(db, "waterboardOptions"));
