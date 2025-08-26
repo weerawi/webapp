@@ -39,6 +39,7 @@ import { PDFPreviewDialog } from "./pdf-preview-dialog";
 import { generatePDFContent } from "@/lib/utils/pdf-generator";
 import { generateExcel } from "@/lib/utils/excel-generator";
 import { fetchWaterboardOptions } from "@/lib/services/adminService";
+import { buildOrderedColumns } from "@/lib/constant/report-structure"; 
 
 export function ReportView() {
   const { filteredRecords = [] } = useReports();
@@ -54,7 +55,11 @@ export function ReportView() {
   const fetchDynamicColumns = async () => {
     try {
       const options = await fetchWaterboardOptions();
-      setDynamicColumns(options.map((o) => o.name));
+      const names = options.map(o => o.name);
+      const ordered = buildOrderedColumns(names, false);
+      console.debug("Fetched option names:", names);
+      console.debug("Ordered dynamic columns:", ordered);
+      setDynamicColumns(ordered);
     } catch (error) {
       console.error("Failed to fetch columns:", error);
     }
@@ -87,12 +92,54 @@ export function ReportView() {
     ) : null;
 
   // Helper function to get field value from record
-  const getFieldValue = (record: any, columnName: string): boolean => {
-    // Convert column name to camelCase to match record fields
-    const fieldName = columnName
+  // const getFieldValue = (record: any, columnName: string): boolean => {
+  //   // Convert column name to camelCase to match record fields
+  //   const fieldName = columnName
+  //     .toLowerCase()
+  //     .replace(/\s+(.)/g, (match, chr) => chr.toUpperCase());
+  //   return record[fieldName] || false;
+  // };
+  const COLUMN_KEY_MAP: Record<string, string[]> = {
+    "DC": ["dc"],
+    "RC": ["rc"],
+    "Payment Amount": ["paymentAmount"],        // if numeric, you will display differently (not a green dot)
+    "100%": ["payment100", "payment_100"],
+    "99-75%": ["payment80", "payment99_75"],
+    "74-50%": ["payment50", "payment74_50"],
+    "CTP": ["ctp"],
+    "P": ["houseClosedP", "gateClosed"],        // verify mapping
+    "T": ["houseClosedT", "meterRemoved"],      // verify mapping
+    "Complaint": ["unSolvedCusComp", "complaint"],
+    "Protest": ["objections", "protest"],
+    "Not.Att": ["cantFind", "notAtt", "notAttempted"],
+    "Already DC": ["alreadyDisconnected", "alreadyDc"],
+    "Remarks": ["remarksFlag", "remarksPresent"] // remove or adapt if not boolean
+  };
+
+  // If a column name not in map, derive a candidate key.
+  const fallbackCandidates = (name: string): string[] => {
+    const cleaned = name
       .toLowerCase()
-      .replace(/\s+(.)/g, (match, chr) => chr.toUpperCase());
-    return record[fieldName] || false;
+      .replace(/[%().]/g, " ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .split(" ")
+      .filter(Boolean);
+    if (!cleaned.length) return [];
+    const camel = cleaned
+      .map((w, i) => (i === 0 ? w : w[0].toUpperCase() + w.slice(1)))
+      .join("");
+    return [camel];
+  };
+
+  const getFieldValue = (record: any, columnName: string): boolean => {
+    const candidates = COLUMN_KEY_MAP[columnName] || fallbackCandidates(columnName);
+    for (const key of candidates) {
+      if (key in (record || {})) {
+        return Boolean(record[key]);
+      }
+    }
+    return false;
   };
 
   return (
@@ -136,6 +183,7 @@ export function ReportView() {
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
+                  <TableHead className="w-10">S/No</TableHead>
                   <TableHead className="w-24">Date</TableHead>
                   <TableHead className="w-20">Time</TableHead>
                   <TableHead className="w-28">Account No</TableHead>
@@ -155,6 +203,7 @@ export function ReportView() {
               <TableBody>
                 {filteredRecords.map((record) => (
                   <TableRow key={record.id}>
+                    <TableCell>{record.id}</TableCell>
                     <TableCell>{record.date}</TableCell>
                     <TableCell>{record.time}</TableCell>
                     <TableCell>{record.accountNo}</TableCell>
