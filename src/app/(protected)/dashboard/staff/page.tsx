@@ -53,11 +53,11 @@ useEffect(() => {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-0">
             <TabsList className="grid w-[400px] grid-cols-2">
-              <TabsTrigger value="user-roles" className="flex items-center gap-2">
+              <TabsTrigger value="user-roles" className="flex items-center gap-2 cursor-pointer">
                 <Users className="h-4 w-4" />
                 User Roles
               </TabsTrigger>
-              <TabsTrigger value="attendance" className="flex items-center gap-2">
+              <TabsTrigger value="attendance" className="flex items-center gap-2 cursor-pointer">
                 <Clock className="h-4 w-4" />
                 Attendance
               </TabsTrigger>
