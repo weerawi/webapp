@@ -389,11 +389,25 @@ export default function StaffTable() {
                         </span>
                       </td>
                       <td className="px-4 py-2">
-                        <Badge
+                        {/* <Badge
                           variant={staff.isActive ? "default" : "secondary"}
                           className="text-xs"
                         >
                           {staff.isActive ? "Active" : "Inactive"}
+                        </Badge> */}
+                        <Badge
+                          variant={
+                            staff.status === 'Active' ? "default" : 
+                            staff.status === 'Incomplete' ? "outline" : 
+                            "secondary"
+                          }
+                          className={`text-xs ${
+                            staff.status === 'Active' ? 'text-xs' : 
+                            staff.status === 'Incomplete' ? 'text-xs' : 
+                            'bg-gray-500 text-white'
+                          }`}
+                        >
+                          {staff.status || (staff.isActive ? 'Active' : 'Inactive')}
                         </Badge>
                       </td>
                       <td className="px-4 py-2">
