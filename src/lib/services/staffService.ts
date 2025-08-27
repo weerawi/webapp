@@ -108,16 +108,36 @@ export const deleteStaffAndSync = async (
   dispatch(deleteStaff(id));
 };
 
+// export const updateLinkedStaff = async (
+//   dispatch: AppDispatch,
+//   staffId: string,
+//   linkedStaffId: string
+// ) => {
+//   // Update the linked staff's linkedStaffId field
+//   const linkedStaffRef = doc(db, "staff", linkedStaffId);
+//   await updateDoc(linkedStaffRef, { linkedStaffId: staffId });
+//   dispatch(updateStaff({ id: linkedStaffId, updates: { linkedStaffId: staffId } }));
+// };
+
 export const updateLinkedStaff = async (
   dispatch: AppDispatch,
-  staffId: string,
-  linkedStaffId: string
+  newStaffId: string,          // the staff we just created (or updated)
+  linkedStaffId: string,       // the chosen partner
+  targetTeamNumber?: number    // optional: force partner to this team
 ) => {
-  // Update the linked staff's linkedStaffId field
   const linkedStaffRef = doc(db, "staff", linkedStaffId);
-  await updateDoc(linkedStaffRef, { linkedStaffId: staffId });
-  dispatch(updateStaff({ id: linkedStaffId, updates: { linkedStaffId: staffId } }));
+
+  const updates: Partial<Staff> = {
+    linkedStaffId: newStaffId,
+  };
+  if (targetTeamNumber && targetTeamNumber > 0) {
+    updates.teamNumber = targetTeamNumber;  // move partner to merged team
+  }
+
+  await updateDoc(linkedStaffRef, updates);
+  dispatch(updateStaff({ id: linkedStaffId, updates }));
 };
+
 
 // ========== ATTENDANCE FUNCTIONS ==========
 

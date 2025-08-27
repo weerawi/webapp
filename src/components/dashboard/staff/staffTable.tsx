@@ -34,9 +34,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import EditStaffDialog from "./EditStaffDialog";
+import EditStaffDialog from "./editStaffDialog";
 import { Staff } from "@/lib/store/slices/staffSlice"; 
 import { updateStaffAndSync } from "@/lib/services/staffService";
+import ActivateStaffDialog from "./ActivateStaffDialog";
 
 
 export default function StaffTable() {
@@ -120,10 +121,53 @@ export default function StaffTable() {
   // Calculate trend based on last month's data
   
   
+  // const handleStatusToggle = async (staff: Staff) => {
+  //   const newStatus = !staff.isActive;
+  //   const action = newStatus ? "activate" : "deactivate";
+  
+  //   const confirmed = await new Promise((resolve) => {
+  //     const result = window.confirm(
+  //       `Are you sure you want to ${action} ${staff.username}? ` +
+  //         (!newStatus && staff.linkedStaffId
+  //           ? "Their partner will remain in the team waiting for a new partner."
+  //           : "")
+  //     );
+  //     resolve(result);
+  //   });
+  
+  //   if (!confirmed) return;
+  
+  //   try {
+  //     // If deactivating, also reset team number
+  //     const updates: Partial<Staff> = { isActive: newStatus };
+  //     if (!newStatus) {
+  //       updates.teamNumber = 0; // Reset team number when deactivating
+  //       updates.linkedStaffId = "";
+  //     }
+      
+  //     // Update the staff member
+  //     await updateStaffAndSync(dispatch, staff.id, updates);
+  
+  //     // If deactivating and has a linked partner, only unlink (don't reset partner's team)
+  //     if (!newStatus && staff.linkedStaffId) {
+  //       await updateStaffAndSync(dispatch, staff.linkedStaffId, {
+  //         linkedStaffId: "" // Only unlink, keep their team number
+  //       });
+  //     }
+  
+  //     toast.success(`${staff.username} has been ${action}d successfully`);
+  //   } catch (error) {
+  //     toast.error(`Failed to ${action} staff member`);
+  //   }
+  // };
+  // Replace the entire handleStatusToggle function with this:
+
+  const [activatingStaff, setActivatingStaff] = useState<Staff | null>(null);
+
   const handleStatusToggle = async (staff: Staff) => {
     const newStatus = !staff.isActive;
     const action = newStatus ? "activate" : "deactivate";
-  
+
     const confirmed = await new Promise((resolve) => {
       const result = window.confirm(
         `Are you sure you want to ${action} ${staff.username}? ` +
@@ -133,33 +177,34 @@ export default function StaffTable() {
       );
       resolve(result);
     });
-  
+
     if (!confirmed) return;
-  
+
     try {
-      // If deactivating, also reset team number
-      const updates: Partial<Staff> = { isActive: newStatus };
-      if (!newStatus) {
-        updates.teamNumber = 0; // Reset team number when deactivating
-        updates.linkedStaffId = "";
+      if (newStatus) {
+        // OPEN TEAM-SELECT DIALOG INSTEAD OF AUTO
+        setActivatingStaff(staff);
+      } else {
+        // Deactivate: unlink + team 0 (released)
+        const updates: Partial<Staff> = {
+          isActive: false,
+          teamNumber: 0,
+          linkedStaffId: "",
+        };
+        await updateStaffAndSync(dispatch, staff.id, updates);
+
+        if (staff.linkedStaffId) {
+          await updateStaffAndSync(dispatch, staff.linkedStaffId, {
+            linkedStaffId: "",
+          });
+        }
+        toast.success(`${staff.username} has been deactivated`);
       }
-      
-      // Update the staff member
-      await updateStaffAndSync(dispatch, staff.id, updates);
-  
-      // If deactivating and has a linked partner, only unlink (don't reset partner's team)
-      if (!newStatus && staff.linkedStaffId) {
-        await updateStaffAndSync(dispatch, staff.linkedStaffId, {
-          linkedStaffId: "" // Only unlink, keep their team number
-        });
-      }
-  
-      toast.success(`${staff.username} has been ${action}d successfully`);
     } catch (error) {
+      console.error("Status toggle error:", error);
       toast.error(`Failed to ${action} staff member`);
     }
   };
-  
   
   const calculateTrend = () => {
     const now = new Date();
@@ -509,6 +554,17 @@ export default function StaffTable() {
           staff={editingStaff}
           open={!!editingStaff}
           onOpenChange={(open) => !open && setEditingStaff(null)}
+        />
+      )}
+
+      
+      {activatingStaff && (
+        <ActivateStaffDialog
+          open={!!activatingStaff}
+          staff={activatingStaff}
+          onOpenChange={(open) => {
+            if (!open) setActivatingStaff(null);
+          }}
         />
       )}
 

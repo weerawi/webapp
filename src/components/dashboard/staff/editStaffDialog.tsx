@@ -116,60 +116,101 @@ export default function EditStaffDialog({
 
 
 
-  // Get available partners based on current form userType
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const oldLinkedStaffId = staff.linkedStaffId;
-      const newLinkedStaffId = form.linkedStaffId === "none" ? "" : form.linkedStaffId;
+
+
+// Replace the handleSubmit function with this version:
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    console.log("Starting update with form:", form);
+    const oldLinkedStaffId = staff.linkedStaffId;
+    const newLinkedStaffId = form.linkedStaffId === "none" ? "" : form.linkedStaffId;
+    
+    // CRITICAL FIX: Verify the current staff still exists in Firestore
+    // We'll do this in the staffService instead
+    
+    // If changing partner
+    if (oldLinkedStaffId !== newLinkedStaffId) {
+      console.log("Changing partner from", oldLinkedStaffId, "to", newLinkedStaffId);
       
-      // If changing partner
-      if (oldLinkedStaffId !== newLinkedStaffId) {
-        // Unlink old partner but keep their team number
-        if (oldLinkedStaffId) {
-          await updateStaffAndSync(dispatch, oldLinkedStaffId, { 
-            linkedStaffId: ""
-            // Don't reset team number - they stay in same team waiting for new partner
-          });
-        }
+      // Unlink old partner but keep their team number - CHECK IF EXISTS FIRST
+      if (oldLinkedStaffId) {
+        console.log("Checking if old partner exists:", oldLinkedStaffId);
+        // Check if old partner exists in Redux state first
+        const oldPartner = staffList.find(s => s.id === oldLinkedStaffId);
         
-        // Link new partner and update their team number to match current staff
-        if (newLinkedStaffId) {
-          const newPartner = staffList.find(s => s.id === newLinkedStaffId);
-          
-          // If new partner had a different team, unlink their old partner
-          if (newPartner?.linkedStaffId) {
-            await updateStaffAndSync(dispatch, newPartner.linkedStaffId, {
+        if (oldPartner) {
+          console.log("Unlinking old partner:", oldLinkedStaffId);
+          try {
+            await updateStaffAndSync(dispatch, oldLinkedStaffId, { 
               linkedStaffId: ""
             });
+          } catch (err) {
+            console.warn("Failed to unlink old partner, likely deleted:", err);
+            // Continue execution even if this fails
           }
-          
-          // Update new partner with current staff's team number and link
-          await updateStaffAndSync(dispatch, newLinkedStaffId, { 
-            linkedStaffId: staff.id,
-            teamNumber: staff.teamNumber // Assign same team number
-          });
+        } else {
+          console.warn("Old partner not found in Redux store, might have been deleted");
         }
       }
       
-      // Update current staff
-      const updateData = {
-        ...form,
-        linkedStaffId: newLinkedStaffId,
-      };
-      await updateStaffAndSync(dispatch, staff.id, updateData);
-      
-      toast.success("Staff member updated successfully");
-      onOpenChange(false);
-    } catch (error) {
-      toast.error("Failed to update staff member");
-    } finally {
-      setLoading(false);
+      // Link new partner and update their team number to match current staff
+      if (newLinkedStaffId) {
+        const newPartner = staffList.find(s => s.id === newLinkedStaffId);
+        console.log("New partner found:", newPartner);
+        
+        if (!newPartner) {
+          throw new Error(`Partner with ID ${newLinkedStaffId} not found`);
+        }
+        
+        // If new partner had a different team, unlink their old partner
+        if (newPartner.linkedStaffId && newPartner.linkedStaffId !== staff.id) {
+          const oldPartnerOfNew = staffList.find(s => s.id === newPartner.linkedStaffId);
+          
+          if (oldPartnerOfNew) {
+            console.log("Unlinking new partner's previous connection:", newPartner.linkedStaffId);
+            try {
+              await updateStaffAndSync(dispatch, newPartner.linkedStaffId, {
+                linkedStaffId: ""
+              });
+            } catch (err) {
+              console.warn("Failed to unlink partner's old connection, continuing anyway:", err);
+            }
+          }
+        }
+        
+        // Update new partner with current staff's team number and link
+        console.log("Updating new partner with team:", staff.teamNumber);
+        await updateStaffAndSync(dispatch, newLinkedStaffId, { 
+          linkedStaffId: staff.id,
+          teamNumber: staff.teamNumber // Assign same team number
+        });
+      }
     }
-  };
-
+    
+    // Only update the fields we actually want to change
+    const updateData: Partial<Staff> = {
+      email: form.email,
+      phone: form.phone,
+      password: form.password,
+      userType: form.userType,
+      linkedStaffId: newLinkedStaffId,
+    };
+    
+    console.log("Updating staff member with:", updateData);
+    await updateStaffAndSync(dispatch, staff.id, updateData);
+    
+    toast.success("Staff member updated successfully");
+    onOpenChange(false);
+  } catch (error) {
+    console.error("Error updating staff:", error);
+    toast.error(`Failed to update staff member: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    setLoading(false);
+  }
+};
   // const getLinkedOptions = () => {
   //   return staffList.filter((s) => {
   //     // Same area and active
@@ -191,48 +232,87 @@ export default function EditStaffDialog({
   // };
 
 
-  const getLinkedOptions = () => {
-    console.log("Current staff area:", staff.area); // Debug line
+  // const getLinkedOptions = () => {
+  //   console.log("Current staff area:", staff.area); // Debug line
   
-    return staffList.filter((s) => {
-      console.log("Checking staff:", s.username, "Area:", s.area); // Debug line
+  //   return staffList.filter((s) => {
+  //     console.log("Checking staff:", s.username, "Area:", s.area); // Debug line
       
-      // Use staff.area directly instead of form.area
-      if (s.area !== staff.area || !s.isActive || s.id === staff.id) {
-        return false;
-      }
+  //     // Use staff.area directly instead of form.area
+  //     if (s.area !== staff.area || !s.isActive || s.id === staff.id) {
+  //       return false;
+  //     }
       
-      // Get the opposite user type based on form.userType
-      const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
+  //     // Get the opposite user type based on form.userType
+  //     const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
       
-      if (s.userType !== targetType) {
-        return false;
-      }
+  //     if (s.userType !== targetType) {
+  //       return false;
+  //     }
       
-      // Include current partner
-      if (s.id === staff.linkedStaffId) {
-        return true;
-      }
+  //     // Include current partner
+  //     if (s.id === staff.linkedStaffId) {
+  //       return true;
+  //     }
       
-      // Include staff without partners
-      if (!s.linkedStaffId || s.linkedStaffId === "") {
-        return true;
-      }
+  //     // Include staff without partners
+  //     if (!s.linkedStaffId || s.linkedStaffId === "") {
+  //       return true;
+  //     }
       
-      // Include staff with team number 0
-      if (s.teamNumber === 0) {
-        return true;
-      }
+  //     // Include staff with team number 0
+  //     if (s.teamNumber === 0) {
+  //       return true;
+  //     }
       
-      // Include staff whose partner is inactive
-      const partner = staffList.find(p => p.id === s.linkedStaffId);
-      if (partner && !partner.isActive) {
-        return true;
-      }
+  //     // Include staff whose partner is inactive
+  //     const partner = staffList.find(p => p.id === s.linkedStaffId);
+  //     if (partner && !partner.isActive) {
+  //       return true;
+  //     }
       
-      return false;
-    });
-  };
+  //     return false;
+  //   });
+  // };
+
+
+const getLinkedOptions = () => {
+  const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
+
+  // For debugging
+  console.log("Looking for available", targetType, "in area", staff.area);
+  console.log("All staff:", staffList.map(s => ({
+    name: s.username,
+    type: s.userType,
+    area: s.area,
+    team: s.teamNumber,
+    status: s.status,
+    linkedTo: s.linkedStaffId || "none"
+  })));
+
+  return staffList.filter((s) => {
+    // Basic criteria
+    if (s.id === staff.id) return false;
+    if (s.area !== staff.area) return false;
+    if (!s.isActive) return false;
+    if (s.userType !== targetType) return false;
+
+    // Also include staff with "Incomplete" status regardless of linkedStaffId
+    // This is the key fix - show helpers/supervisors waiting for partners
+    if (s.status === 'Incomplete') return true;
+
+    // Original checks
+    const emptyLink = !s.linkedStaffId || s.linkedStaffId === "" || s.linkedStaffId === "none";
+    if (emptyLink) return true;
+    if (s.linkedStaffId === staff.id) return true;
+
+    // Partner inactive?
+    const partner = staffList.find(p => p.id === s.linkedStaffId);
+    if (partner && !partner.isActive) return true;
+
+    return false;
+  });
+};
 
   const linkedOptions = getLinkedOptions();
 
