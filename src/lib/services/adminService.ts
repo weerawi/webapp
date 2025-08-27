@@ -60,8 +60,33 @@ export const getAdminByUid = async (uid: string): Promise<Admin | null> => {
 };
 
 // Update deleteAdminFromFirestore to not delete from Auth (we'll handle this separately)
+// export const deleteAdminFromFirestore = async (id: string) => {
+//   await deleteDoc(doc(db, "admins", id));
+// };
+// Update deleteAdminFromFirestore to also clean up the assigned areas
 export const deleteAdminFromFirestore = async (id: string) => {
-  await deleteDoc(doc(db, "admins", id));
+  try {
+    // First get the admin document to find their UID
+    const adminDoc = await getDoc(doc(db, "admins", id));
+    if (adminDoc.exists()) {
+      const adminData = adminDoc.data();
+      const uid = adminData.uid;
+      
+      // If we have a UID, delete any areas assigned to this admin
+      if (uid) {
+        console.log(`Deleting areas assigned to admin ${id} with UID ${uid}`);
+        await deleteAreaByUserId(uid);
+      }
+       
+      await deleteAreaByUserId(null);
+    }
+    
+    // Finally delete the admin document itself
+    await deleteDoc(doc(db, "admins", id));
+  } catch (error) {
+    console.error("Error deleting admin and their areas:", error);
+    throw error;
+  }
 };
 
 // Rest of your existing functions remain the same...
@@ -90,8 +115,13 @@ export const deleteAreaByUserId = async (userId: string) => {
     
     const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
     await Promise.all(deletePromises);
+    
+    const deletedCount = deletePromises.length;
+    console.log(`Deleted ${deletedCount} areas with assignedTo=${userId}`);
+    return deletedCount;
   } catch (error) {
-    console.error("Error deleting area:", error);
+    console.error(`Error deleting areas (assignedTo=${userId}):`, error);
+    throw error;
   }
 };
 

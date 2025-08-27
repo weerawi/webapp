@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,15 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
     });
     return map;
   }, [staff]);
+
+  // Get auth state for user info
+  const { user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = user?.role === 'admin';
+  useEffect(() => {
+    if (user && !isAdmin && user.area) {
+      setSelectedArea(user.area);
+    }
+  }, [user, isAdmin]);
 
   const areaOptions = useMemo(
     () => Array.from(completedTeamsMap.keys()).sort(),
@@ -142,7 +151,9 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
             {/* Area Select */}
             <div className="flex-1 space-y-2">
               <Label htmlFor="area">Area</Label>
-              <Select value={selectedArea} onValueChange={(v) => { setSelectedArea(v); setSelectedTeamNumber(''); }}>
+              <Select value={selectedArea} onValueChange={(v) => { setSelectedArea(v); setSelectedTeamNumber(''); }}
+                // disabled={!isAdmin}
+                >
                 <SelectTrigger>
                   <SelectValue placeholder="Select area" />
                 </SelectTrigger>
