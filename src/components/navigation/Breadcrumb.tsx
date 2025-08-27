@@ -2,27 +2,55 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { showLoader } from '@/lib/store/slices/loaderSlice';
-import { useDispatch } from 'react-redux';
-import router from 'next/router';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/lib/store/store';
 
 export default function Breadcrumb() {
   const pathname = usePathname();
   const pathSegments = pathname.split('/').filter(segment => segment !== '');
   const dispatch = useDispatch();
-const router = useRouter();
+  const router = useRouter();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [areaName, setAreaName] = useState<string | null>(null);
+  
+  // Only show area for non-admin users
+  useEffect(() => {
+    if (user && user.role !== 'admin' && user.area) {
+      setAreaName(user.area);
+    } else {
+      setAreaName(null);
+    }
+  }, [user]);
+
   return (
     <nav className="text-gray-600 py-3 px-6">
       <ul className="flex items-center space-x-2">
         <li>
-          <div onClick={() => {
-                dispatch(showLoader(`Loading Dashboard..`));
-                router.push("/dashboard")
-              }}  className="hover:underline cursor-pointer">
+          <div 
+            onClick={() => {
+              dispatch(showLoader(`Loading Dashboard..`));
+              router.push("/dashboard")
+            }}  
+            className="hover:underline cursor-pointer"
+          >
             Dashboard
           </div>
         </li>
+        
+        {/* Display area if user is not admin */}
+        {areaName && (
+          <>
+            <span>/</span>
+            <li>
+              <span className="text-blue-600 font-medium">
+                {areaName} Area
+              </span>
+            </li>
+          </>
+        )}
+        
         {pathSegments.map((segment, index) => {
           const href = '/' + pathSegments.slice(0, index + 1).join('/');
           const isLast = index === pathSegments.length - 1;
@@ -52,4 +80,4 @@ const router = useRouter();
       </ul>
     </nav>
   );
-} 
+}
