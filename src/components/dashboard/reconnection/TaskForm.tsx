@@ -152,7 +152,7 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
             <div className="flex-1 space-y-2">
               <Label htmlFor="area">Area</Label>
               <Select value={selectedArea} onValueChange={(v) => { setSelectedArea(v); setSelectedTeamNumber(''); }}
-                // disabled={!isAdmin}
+                disabled={!isAdmin}
                 >
                 <SelectTrigger>
                   <SelectValue placeholder="Select area" />
