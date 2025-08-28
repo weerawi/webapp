@@ -61,17 +61,19 @@ export function generatePDFContent(
   doc.text(`Total Records: ${records.length}`, 15, 53);
   
   // Prepare table headers - fixed columns plus dynamic
-  const tableHeaders = [
-    "S/No",
-    "Date", 
-    "Time",
-    "Account No", 
-    "Area", 
-    "Supervisor",
-    "Team",
-    "Helper",
-    ...dynamicColumns
-  ];
+ const tableHeaders = [
+  "S/No",
+  "Date", 
+  "Time",
+  "Account No",
+  "Meter No",  
+  "Area", 
+  "Supervisor",
+  "Team",
+  "Helper",
+  "Reading",      
+  ...dynamicColumns
+];
   
   // Prepare table data with proper field mapping
   const tableData = records.map((record, index) => {
@@ -80,26 +82,28 @@ export function generatePDFContent(
       record.date,
       record.time,
       record.accountNo,
+      record.meterNo || '-',     // Added
       record.area,
       record.supervisor,
       record.teamNo,
       record.helper,
+      record.reading || '-',      // Added
     ];
     
     // Add dynamic column values using the same mapping logic
     dynamicColumns.forEach(column => {
-      row.push(getFieldValue(record, column) ? "✓" : "");
+      row.push(getFieldValue(record, column) ? "Y" : "");
     });
     
     return row;
   });
   
   // Calculate column widths for landscape A4
-  const fixedColumnsWidth = 120; // Width for first 8 columns
+  const fixedColumnsWidth = 144; // Increased for 10 fixed columns
   const availableWidth = 267; // 297mm - 30mm margins
   const dynamicColumnWidth = dynamicColumns.length > 0 
-    ? Math.min((availableWidth - fixedColumnsWidth) / dynamicColumns.length, 15)
-    : 15;
+    ? Math.min((availableWidth - fixedColumnsWidth) / dynamicColumns.length, 12)
+    : 12;
   
   // Add table with adjusted settings for landscape
   autoTable(doc, {
@@ -117,13 +121,15 @@ export function generatePDFContent(
       1: { cellWidth: 18 }, // Date
       2: { cellWidth: 12 }, // Time
       3: { cellWidth: 20 }, // Account No
-      4: { cellWidth: 18 }, // Area
-      5: { cellWidth: 18 }, // Supervisor
-      6: { cellWidth: 12 }, // Team
-      7: { cellWidth: 12 }, // Helper
+      4: { cellWidth: 18 }, // Meter No
+      5: { cellWidth: 18 }, // Area
+      6: { cellWidth: 18 }, // Supervisor
+      7: { cellWidth: 12 }, // Team
+      8: { cellWidth: 12 }, // Helper
+      9: { cellWidth: 15 }, // Reading
       // Dynamic columns get calculated width
       ...Object.fromEntries(
-        dynamicColumns.map((_, i) => [i + 8, { cellWidth: dynamicColumnWidth }])
+        dynamicColumns.map((_, i) => [i + 10, { cellWidth: dynamicColumnWidth }])
       )
     },
     headStyles: {

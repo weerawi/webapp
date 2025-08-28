@@ -15,10 +15,12 @@ export function generateExcel(
       "Date": record.date,
       "Time": record.time,
       "Account No": record.accountNo,
+      "Meter No": record.meterNo || '-',      // Added
       "Area": record.area,
       "Supervisor": record.supervisor,
       "Team No": record.teamNo,
       "Helper": record.helper,
+      "Reading": record.reading || '-',        // Added
     };
     
     // Add dynamic column values using proper field mapping
@@ -37,10 +39,12 @@ export function generateExcel(
     { wch: 12 }, // Date
     { wch: 10 }, // Time
     { wch: 15 }, // Account No
+    { wch: 15 }, // Meter No      - Added
     { wch: 15 }, // Area
     { wch: 15 }, // Supervisor
     { wch: 10 }, // Team No
     { wch: 15 }, // Helper
+    { wch: 12 }, // Reading        - Added
     ...dynamicColumns.map(() => ({ wch: 10 })) // Dynamic columns
   ];
   ws["!cols"] = columnWidths;

@@ -191,10 +191,12 @@ export function ReportView() {
                   <TableHead className="w-24">Date</TableHead>
                   <TableHead className="w-20">Time</TableHead>
                   <TableHead className="w-28">Account No</TableHead>
+                  <TableHead className="w-20">Meter No</TableHead>
                   <TableHead className="w-24">Area</TableHead>
                   <TableHead className="w-24">Supervisor</TableHead>
                   <TableHead className="w-20">Team</TableHead>
                   <TableHead className="w-20">Helper</TableHead>
+                  <TableHead className="w-16">Reading</TableHead>
                   {dynamicColumns.map((column) => (
                     <TableHead key={column} className="text-center w-24">
                       {column}
@@ -211,10 +213,12 @@ export function ReportView() {
                     <TableCell>{record.date}</TableCell>
                     <TableCell>{record.time}</TableCell>
                     <TableCell>{record.accountNo}</TableCell>
+                    <TableCell>{record.meterNo || '-'}</TableCell>
                     <TableCell>{record.area}</TableCell>
                     <TableCell>{record.supervisor}</TableCell>
                     <TableCell>{record.teamNo}</TableCell>
                     <TableCell>{record.helper}</TableCell>
+                    
                     {dynamicColumns.map((column) => (
                       <TableCell key={column}>
                         {renderCheckmark(getFieldValue(record, column))}
