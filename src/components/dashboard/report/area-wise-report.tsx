@@ -210,11 +210,11 @@ export function AreaWiseReport() {
   };
 
   const handleDownloadExcel = () => {
-    generateAreaWiseExcel(areaData);
+    generateAreaWiseExcel(areaData, dateRange, selectedArea);
   };
 
   const handleDownloadPDF = () => {
-    generateAreaWisePDF(areaData);
+    generateAreaWisePDF(areaData, dateRange, selectedArea);
   };
 
   const calculateTotals = () => {
@@ -635,7 +635,7 @@ export function AreaWiseReport() {
           { label: "Total Jobs", key: "totalJobs", bold: true },
           { label: "Teams", key: "teams" },
           { label: "Waiting", key: "waiting" },
-          { label: "12:00:00 PM DC", key: "dcDone", showPercentage: "dcDonePercentage" },
+          // { label: "12:00:00 PM DC", key: "dcDone", showPercentage: "dcDonePercentage" },
           { label: "Total DC Done", key: "totalDcDone", showPercentage: "totalDcPercentage", bgColor: "bg-blue-50" },
           { label: "Total RC Done", key: "rcDone", showPercentage: "rcDonePercentage", bgColor: "bg-green-50" },
           { label: "100%", key: "payment100", percentage: true, bgColor: "bg-red-50" },

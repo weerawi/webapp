@@ -1,133 +1,176 @@
 import * as XLSX from "xlsx";
+import { format } from "date-fns";
 
 export const generateSupervisorWiseExcel = (
   groupedData: Record<string, any[]>,
-  calculateAreaTotals: (areaData: any[]) => any
+  calculateAreaTotals: (areaData: any[]) => any,
+  dateRange: { from: Date; to: Date | undefined }
 ) => {
-  // Create flat array with proper structure including area totals
-  const flatData: any[] = [];
+  const workbook = XLSX.utils.book_new();
+  const data: any[][] = [];
   
-  // Add header row structure
+  // Title and date range
+  const dateRangeText = dateRange.to 
+    ? `${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}`
+    : format(dateRange.from, "dd/MM/yyyy");
+  
+  data.push(["Hagra Holdings Lanka (Pvt) Ltd - Daily DC/RC Summary"]);
+  data.push([dateRangeText]);
+  data.push([]);
+  
+  // Headers
+  data.push([
+    "Team No", "S.Name", "Area", "Helpers",
+    "Previous Day Balance", "Returned", "B/F", 
+    "Jobs Received", "Total Jobs", "Days", "Waiting",
+    "DC Done", "RC Done",
+    "100%", "80%", "50%", "Already Paid",
+    "Un Solved Cus Comp", "Gate Closed", "Meter Removed", 
+    "Already Disconnected", "Wrong Meter", "Billing Error", 
+    "Can't Find", "Objections", "Stopped By NWSDB", "Unable To Attend"
+  ]);
+  
+  let rowIndex = 4; // Starting after headers
+  const totalRowIndices: number[] = [];
+  let grandTotalRowIndex = 0;
+  
+  // Add data rows
   Object.entries(groupedData).forEach(([area, areaData]) => {
-    // Add individual supervisor rows for this area
-    areaData.forEach(data => {
-      flatData.push({
-        'Team': data.teamNo,
-        'S.Name': data.supervisor,
-        'Area': data.area,
-        'Returned': data.returned,
-        'Returned %': data.returnedPercentage,
-        'B/F': data.broughtForward,
-        'B/F %': data.bfPercentage,
-        'Jobs Received': data.jobsReceived,
-        'Total Jobs': data.totalJobs,
-        'Days': data.days,
-        'Waiting': data.waiting,
-        'OC Done': data.ocDone,
-        'RC Done': data.rcDone,
-        '100%': data.payment100,
-        '80%': data.payment80,
-        '50%': data.payment50,
-        'Already Paid': data.alreadyPaid,
-        'Payment %': data.paymentPercentage,
-        'Un Solved Cus Comp': data.unSolvedCusComp,
-        'Gate Closed': data.gateClosed,
-        'Meter Removed': data.meterRemoved,
-        'Already Disconnected': data.alreadyDisconnected,
-        'Wrong Meter': data.wrongMeter,
-        'Billing Error': data.billingError,
-        "Can't Find": data.cantFind,
-        'Objections': data.objections,
-        'Stopped By NWSDB': data.stoppedByNWSDB,
-        'Unable To Attend': data.unableToAttend,
-        'Helpers': data.helpers.join(", ")
-      });
+    // Individual supervisor rows
+    areaData.forEach(item => {
+      data.push([
+        item.teamNo, item.supervisor, item.area, item.helpers.join(", "),
+        item.previousDayBalance, item.returned, item.broughtForward,
+        item.jobsReceived, item.totalJobs, item.days, item.waiting,
+        item.ocDone, item.rcDone,
+        item.payment100, item.payment80, item.payment50, item.alreadyPaid,
+        item.unSolvedCusComp, item.gateClosed, item.meterRemoved,
+        item.alreadyDisconnected, item.wrongMeter, item.billingError,
+        item.cantFind, item.objections, item.stoppedByNWSDB, item.unableToAttend
+      ]);
+      rowIndex++;
     });
     
-    // Add area total row
+    // Area total row
     const areaTotals = calculateAreaTotals(areaData);
-    flatData.push({
-      'Team': '',
-      'S.Name': '',
-      'Area': `Total for ${area}`,
-      'Returned': areaTotals.returned,
-      'Returned %': '',
-      'B/F': areaTotals.broughtForward,
-      'B/F %': '',
-      'Jobs Received': areaTotals.jobsReceived,
-      'Total Jobs': areaTotals.totalJobs,
-      'Days': '',
-      'Waiting': areaTotals.waiting,
-      'OC Done': areaTotals.ocDone,
-      'RC Done': areaTotals.rcDone,
-      '100%': areaTotals.payment100,
-      '80%': areaTotals.payment80,
-      '50%': areaTotals.payment50,
-      'Already Paid': areaTotals.alreadyPaid,
-      'Payment %': areaTotals.totalJobs > 0 
-        ? `${(((areaTotals.payment100 + areaTotals.payment80 + areaTotals.payment50 + areaTotals.alreadyPaid) / areaTotals.totalJobs) * 100).toFixed(0)}%` 
-        : "0%",
-      'Un Solved Cus Comp': areaTotals.unSolvedCusComp,
-      'Gate Closed': areaTotals.gateClosed,
-      'Meter Removed': areaTotals.meterRemoved,
-      'Already Disconnected': areaTotals.alreadyDisconnected,
-      'Wrong Meter': areaTotals.wrongMeter,
-      'Billing Error': areaTotals.billingError,
-      "Can't Find": areaTotals.cantFind,
-      'Objections': areaTotals.objections,
-      'Stopped By NWSDB': areaTotals.stoppedByNWSDB,
-      'Unable To Attend': areaTotals.unableToAttend,
-      'Helpers': ''
-    });
-    
-    // Add empty row between areas for better readability
-    flatData.push({});
+    data.push([
+      "", "", `Total for ${area}`, "",
+      areaTotals.previousDayBalance, areaTotals.returned, areaTotals.broughtForward,
+      areaTotals.jobsReceived, areaTotals.totalJobs, "",
+      areaTotals.waiting, areaTotals.ocDone, areaTotals.rcDone,
+      areaTotals.payment100, areaTotals.payment80, areaTotals.payment50, areaTotals.alreadyPaid,
+      areaTotals.unSolvedCusComp, areaTotals.gateClosed, areaTotals.meterRemoved,
+      areaTotals.alreadyDisconnected, areaTotals.wrongMeter, areaTotals.billingError,
+      areaTotals.cantFind, areaTotals.objections, areaTotals.stoppedByNWSDB, areaTotals.unableToAttend
+    ]);
+    totalRowIndices.push(rowIndex);
+    rowIndex++;
   });
   
-  // Remove the last empty row
-  if (flatData.length > 0 && Object.keys(flatData[flatData.length - 1]).length === 0) {
-    flatData.pop();
+  // Grand Total
+  const grandTotal = Object.values(groupedData).reduce((grand, areaData) => {
+    const areaTotals = calculateAreaTotals(areaData);
+    return {
+      previousDayBalance: grand.previousDayBalance + areaTotals.previousDayBalance,
+      returned: grand.returned + areaTotals.returned,
+      broughtForward: grand.broughtForward + areaTotals.broughtForward,
+      jobsReceived: grand.jobsReceived + areaTotals.jobsReceived,
+      totalJobs: grand.totalJobs + areaTotals.totalJobs,
+      waiting: grand.waiting + areaTotals.waiting,
+      ocDone: grand.ocDone + areaTotals.ocDone,
+      rcDone: grand.rcDone + areaTotals.rcDone,
+      payment100: grand.payment100 + areaTotals.payment100,
+      payment80: grand.payment80 + areaTotals.payment80,
+      payment50: grand.payment50 + areaTotals.payment50,
+      alreadyPaid: grand.alreadyPaid + areaTotals.alreadyPaid,
+      unSolvedCusComp: grand.unSolvedCusComp + areaTotals.unSolvedCusComp,
+      gateClosed: grand.gateClosed + areaTotals.gateClosed,
+      meterRemoved: grand.meterRemoved + areaTotals.meterRemoved,
+      alreadyDisconnected: grand.alreadyDisconnected + areaTotals.alreadyDisconnected,
+      wrongMeter: grand.wrongMeter + areaTotals.wrongMeter,
+      billingError: grand.billingError + areaTotals.billingError,
+      cantFind: grand.cantFind + areaTotals.cantFind,
+      objections: grand.objections + areaTotals.objections,
+      stoppedByNWSDB: grand.stoppedByNWSDB + areaTotals.stoppedByNWSDB,
+      unableToAttend: grand.unableToAttend + areaTotals.unableToAttend,
+    };
+  }, {
+    previousDayBalance: 0, returned: 0, broughtForward: 0, jobsReceived: 0,
+    totalJobs: 0, waiting: 0, ocDone: 0, rcDone: 0, payment100: 0,
+    payment80: 0, payment50: 0, alreadyPaid: 0, unSolvedCusComp: 0,
+    gateClosed: 0, meterRemoved: 0, alreadyDisconnected: 0, wrongMeter: 0,
+    billingError: 0, cantFind: 0, objections: 0, stoppedByNWSDB: 0, unableToAttend: 0,
+  });
+  
+  data.push([
+    "", "", "GRAND TOTAL", "",
+    grandTotal.previousDayBalance, grandTotal.returned, grandTotal.broughtForward,
+    grandTotal.jobsReceived, grandTotal.totalJobs, "",
+    grandTotal.waiting, grandTotal.ocDone, grandTotal.rcDone,
+    grandTotal.payment100, grandTotal.payment80, grandTotal.payment50, grandTotal.alreadyPaid,
+    grandTotal.unSolvedCusComp, grandTotal.gateClosed, grandTotal.meterRemoved,
+    grandTotal.alreadyDisconnected, grandTotal.wrongMeter, grandTotal.billingError,
+    grandTotal.cantFind, grandTotal.objections, grandTotal.stoppedByNWSDB, grandTotal.unableToAttend
+  ]);
+  grandTotalRowIndex = rowIndex;
+  
+  const worksheet = XLSX.utils.aoa_to_sheet(data);
+  
+  // Set column widths
+  worksheet['!cols'] = [
+    { wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, // Team, Name, Area, Helpers
+    { wch: 12 }, { wch: 10 }, { wch: 8 }, // Balance columns
+    { wch: 12 }, { wch: 10 }, { wch: 8 }, { wch: 10 }, // Jobs, Days, Waiting
+    { wch: 10 }, { wch: 10 }, // DC/RC Done
+    { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 12 }, // Payment columns
+    { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, // Reason columns 1-4
+    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, // Reason columns 5-8
+    { wch: 18 }, { wch: 15 } // Last reason columns
+  ];
+  
+  // Apply styles
+  const range = XLSX.utils.decode_range(worksheet['!ref']!);
+  
+  // Style header row (row 4, index 3)
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: 3, c: col });
+    if (!worksheet[cellRef]) continue;
+    
+    worksheet[cellRef].s = {
+      fill: { bgColor: { indexed: 64 }, fgColor: { rgb: "4285F4" } },
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: "center" }
+    };
   }
   
-  const worksheet = XLSX.utils.json_to_sheet(flatData);
+  // Style area total rows (light gray)
+  totalRowIndices.forEach(rowIdx => {
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: col });
+      if (!worksheet[cellRef]) continue;
+      
+      worksheet[cellRef].s = {
+        fill: { bgColor: { indexed: 64 }, fgColor: { rgb: "F0F0F0" } },
+        font: { bold: true },
+        alignment: { horizontal: "center" }
+      };
+    }
+  });
   
-  // Apply some basic styling to column widths
-  const columnWidths = [
-    { wch: 8 },   // Team
-    { wch: 15 },  // S.Name
-    { wch: 15 },  // Area
-    { wch: 10 },  // Returned
-    { wch: 10 },  // Returned %
-    { wch: 10 },  // B/F
-    { wch: 10 },  // B/F %
-    { wch: 12 },  // Jobs Received
-    { wch: 10 },  // Total Jobs
-    { wch: 8 },   // Days
-    { wch: 10 },  // Waiting
-    { wch: 10 },  // OC Done
-    { wch: 10 },  // RC Done
-    { wch: 8 },   // 100%
-    { wch: 8 },   // 80%
-    { wch: 8 },   // 50%
-    { wch: 12 },  // Already Paid
-    { wch: 10 },  // Payment %
-    { wch: 15 },  // Un Solved Cus Comp
-    { wch: 12 },  // Gate Closed
-    { wch: 15 },  // Meter Removed
-    { wch: 18 },  // Already Disconnected
-    { wch: 12 },  // Wrong Meter
-    { wch: 12 },  // Billing Error
-    { wch: 12 },  // Can't Find
-    { wch: 12 },  // Objections
-    { wch: 18 },  // Stopped By NWSDB
-    { wch: 15 },  // Unable To Attend
-    { wch: 20 },  // Helpers
-  ];
-  worksheet['!cols'] = columnWidths;
+  // Style grand total row (darker gray)
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: grandTotalRowIndex, c: col });
+    if (!worksheet[cellRef]) continue;
+    
+    worksheet[cellRef].s = {
+      fill: { bgColor: { indexed: 64 }, fgColor: { rgb: "DCDCDC" } },
+      font: { bold: true },
+      alignment: { horizontal: "center" }
+    };
+  }
   
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Supervisor Wise Report");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Supervisor Report");
   
-  const currentDate = new Date().toISOString().split("T")[0];
-  XLSX.writeFile(workbook, `Supervisor_Wise_Report_${currentDate}.xlsx`);
+  const fileName = `Supervisor_Wise_Report_${format(dateRange.from, "yyyy-MM-dd")}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
 };

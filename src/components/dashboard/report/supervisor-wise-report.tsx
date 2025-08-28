@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { generateSupervisorWiseExcel } from "@/lib/utils/sup-excel-generator";
+import { generateSupervisorWisePDF } from "@/lib/utils/sup-pdf-generator";
 
 // Update the SupervisorWiseData interface:
 interface SupervisorWiseData {
@@ -280,12 +281,11 @@ export function SupervisorWiseReport() {
   }, {} as Record<string, SupervisorWiseData[]>);
 
   const handleDownloadExcel = () => {
-    generateSupervisorWiseExcel(groupedData, calculateAreaTotals);
+    generateSupervisorWiseExcel(groupedData, calculateAreaTotals, dateRange);
   };
 
   const handleDownloadPDF = () => {
-    // generateSupervisorWisePDF(groupedData);
-    return true;
+    generateSupervisorWisePDF(groupedData, calculateAreaTotals, dateRange);
   };
 
   return (
