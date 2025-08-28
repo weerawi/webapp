@@ -40,6 +40,8 @@ import { generatePDFContent } from "@/lib/utils/pdf-generator";
 import { generateExcel } from "@/lib/utils/excel-generator";
 import { fetchWaterboardOptions } from "@/lib/services/adminService";
 import { buildOrderedColumns } from "@/lib/constant/report-structure"; 
+import { useDispatch } from "react-redux";
+import { setDynamicColumnsAll } from "@/lib/store/slices/reportSlice";
 
 export function ReportView() {
   const { filteredRecords = [] } = useReports();
@@ -47,6 +49,7 @@ export function ReportView() {
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [dynamicColumns, setDynamicColumns] = useState<string[]>([]);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     fetchDynamicColumns();
@@ -60,6 +63,7 @@ export function ReportView() {
       console.debug("Fetched option names:", names);
       console.debug("Ordered dynamic columns:", ordered);
       setDynamicColumns(ordered);
+      dispatch(setDynamicColumnsAll(ordered));
     } catch (error) {
       console.error("Failed to fetch columns:", error);
     }
@@ -75,13 +79,13 @@ export function ReportView() {
   };
 
   const handleDownloadPDF = () => {
-    const doc = generatePDFContent(filteredRecords, dynamicColumns);
+    const doc = generatePDFContent(filteredRecords, dynamicColumns, getFieldValue);
     const currentDate = new Date().toISOString().split("T")[0];
     doc.save(`Disconnection_Report_${currentDate}.pdf`);
   };
 
   const handleDownloadExcel = () => {
-    generateExcel(filteredRecords, dynamicColumns);
+    generateExcel(filteredRecords, dynamicColumns, getFieldValue);
   };
 
   const renderCheckmark = (value: boolean) =>
@@ -261,6 +265,8 @@ export function ReportView() {
         open={pdfPreviewOpen}
         onOpenChange={setPdfPreviewOpen}
         records={filteredRecords}
+        dynamicColumns={dynamicColumns}
+        getFieldValue={getFieldValue}
         onDownload={() => {
           handleDownloadPDF();
           setPdfPreviewOpen(false);

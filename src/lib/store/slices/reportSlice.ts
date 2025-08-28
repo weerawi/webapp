@@ -22,6 +22,7 @@ interface ReportState {
   teamNumbers: string[],
   helpers: string[],
   currentDate: string; 
+  dynamicColumns: string[];
 }
 
 const initialState: ReportState = {
@@ -45,6 +46,7 @@ const initialState: ReportState = {
   teamNumbers: [],
   helpers: [],
   currentDate: new Date().toISOString().split('T')[0],
+  dynamicColumns: [],
 };
 
 
@@ -140,6 +142,9 @@ const reportSlice = createSlice({
     setCurrentDate: (state, action: PayloadAction<string>) => {
       state.currentDate = action.payload;
     },
+    setDynamicColumnsAll: (state, action: PayloadAction<string[]>) => {
+      state.dynamicColumns = action.payload;
+    },
   },
 });
 
@@ -150,7 +155,8 @@ export const {
   setFilters,
   applyFilters,
   resetFilters,
-  setCurrentDate
+  setCurrentDate,
+  setDynamicColumnsAll,
 } = reportSlice.actions;
 
 export default reportSlice.reducer;
