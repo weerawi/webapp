@@ -54,7 +54,7 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
 
   // Get auth state for user info
   const { user } = useSelector((state: RootState) => state.auth);
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'Admin';
   useEffect(() => {
     if (user && !isAdmin && user.area) {
       setSelectedArea(user.area);
