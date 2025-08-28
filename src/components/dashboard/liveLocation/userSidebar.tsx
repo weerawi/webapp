@@ -46,6 +46,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 
 export default function UserSidebar() {
   const dispatch = useDispatch();
@@ -53,23 +55,69 @@ export default function UserSidebar() {
     (state: RootState) => state.userLocations
   );
   const searchTerm = useSelector((state: RootState) => state.userLocations.searchTerm);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const [selectedArea, setSelectedArea] = useState<string>("all");
+  const areas = useSelector((state: RootState) => state.area.areas);
 
+  console.log("jskjfbsdkls ....." ,areas)
 
   // userSidebar.tsx
 const filteredUsers = users.filter((user) => {
-    // Add safety checks
-    if (!user || !user.name || typeof user.name !== 'string') {
+  if (!user || !user.name || typeof user.name !== 'string') {
+    return false;
+  }
+  
+  // Area filtering
+  if (currentUser?.role === "Admin") {
+    // Admin can filter by selected area
+    if (selectedArea !== "all" && user.area !== selectedArea) {
       return false;
     }
-    if (!searchTerm || typeof searchTerm !== 'string') {
-      return true; // Show all users if no search term
+  } else {
+    // Non-admin sees only their area
+    if (currentUser?.area && user.area !== currentUser.area) {
+      return false;
     }
-    return user.name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  }
+  
+  // Search term filtering
+  if (!searchTerm || typeof searchTerm !== 'string') {
+    return true;
+  }
+  return user.name.toLowerCase().includes(searchTerm.toLowerCase());
+});
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Users</h3>
+
+    {currentUser?.role === "Admin" ? (
+      <Select value={selectedArea} onValueChange={setSelectedArea}>
+        <SelectTrigger className="mb-2">
+          <SelectValue placeholder="All Areas" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Areas</SelectItem>
+          {areas.map((area) => (
+            <SelectItem key={area.id} value={area.name}>
+              {area.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ) : (
+      // Show disabled dropdown for non-admin users
+      <Select value={currentUser?.area || "all"} disabled>
+        <SelectTrigger className="mb-2">
+          <SelectValue placeholder={currentUser?.area || "Your Area"} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={currentUser?.area || "all"}>
+            {currentUser?.area || "Your Area"}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    )}
 
       <Input
         placeholder="Search user..."
@@ -82,16 +130,16 @@ const filteredUsers = users.filter((user) => {
           {filteredUsers.map((user) => (
             <Card
               key={user.id}
-              className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-muted ${
+              className={`w-40 flex flex-row items-center gap-2 p-1.5 cursor-pointer hover:bg-muted ${
                 selectedUserId === user.id ? "border border-blue-500" : ""
               }`}
               onClick={() => dispatch(setSelectedUserId(user.id))}
             >
-              <Avatar>
+              <Avatar className="h-8 w-8">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback>{user.name[0]}</AvatarFallback>
+                <AvatarFallback className="text-xs">{user.name[0]}</AvatarFallback>
               </Avatar>
-              <div className="text-sm font-medium">{user.name}</div>
+              <div className="text-xs font-medium">{user.name}</div>
             </Card>
           ))}
         </div>
