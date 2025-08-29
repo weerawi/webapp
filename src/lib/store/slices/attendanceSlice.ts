@@ -7,12 +7,13 @@ export interface AttendanceRecord {
   staffName: string;
   area: string;
   teamNumber: number;
-  role: 'supervisor' | 'helper';
+  role?: string;
   date: string;
-  timeIn: string;
-  timeOut: string;
-  status: 'in' | 'out';
-  gpsLocation: string;
+  timeIn?: string;
+  timeOut?: string;
+  status: "in" | "out";
+  gpsLocationIn?: string;   
+  gpsLocationOut?: string; 
   imageUrl?: string;
 }
 

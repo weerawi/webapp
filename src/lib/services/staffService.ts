@@ -196,9 +196,11 @@ export const updateAttendanceAndSync = async (
 
 // Update attendance record (mock version)
 export const updateAttendanceAndSync = async (
-  dispatch: AppDispatch)=> {
-  const raw = Array.isArray(mockAttendanceData)
-    ? (mockAttendanceData[0]?.attendance || [])
+  dispatch: AppDispatch
+) => {
+  // mockAttendanceData is now directly an array, not nested
+  const raw = Array.isArray(mockAttendanceData) 
+    ? mockAttendanceData 
     : [];
 
   const normalized: AttendanceRecord[] = raw.map((r: any, i: number) => ({
@@ -212,16 +214,13 @@ export const updateAttendanceAndSync = async (
     timeIn: r.timeIn || "",
     timeOut: r.timeOut || "",
     status: r.status === "in" ? "in" : "out",
-    gpsLocation: r.gpsLocation || r.location || "",
+    gpsLocationIn: r.gpsLocationIn || "",  // Updated
+    gpsLocationOut: r.gpsLocationOut || "",  // Added
     imageUrl: r.imageUrl,
   }));
 
   dispatch(setAttendance(normalized));
   return;
-  
-  // const snapshot = await getDocs(collection(db, "attendance"));
-  // const live = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AttendanceRecord[];
-  // dispatch(setAttendance(live));
 }
 
 // Check in staff member
