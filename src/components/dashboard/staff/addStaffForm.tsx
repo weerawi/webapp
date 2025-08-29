@@ -98,60 +98,73 @@ const mergedTeamForPair = (partner: Staff | undefined, currentTeam: number, area
   return suggestedNewTeam;
 };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+// const handleSubmit = async (e: React.FormEvent) => {
+//   e.preventDefault();
 
-  // global Emp# uniqueness (quick UX check)
-  const dup = staffList.some(
-    s => s.empNumber.trim().toLowerCase() === form.empNumber.trim().toLowerCase()
-  );
-  if (dup) {
-    toast.error("Employee number must be unique.");
-    return;
-  }
+//   // Existing validation checks...
+//   const dup = staffList.some(
+//     s => s.empNumber.trim().toLowerCase() === form.empNumber.trim().toLowerCase()
+//   );
+//   if (dup) {
+//     toast.error("Employee number must be unique.");
+//     return;
+//   }
 
-  const password = form.userType === "Supervisor" ? form.password : "";
-  if (form.userType === "Supervisor" && password.trim().length === 0) {
-    toast.error("Please set a password for the supervisor.");
-    return;
-  }
+//   const password = form.userType === "Supervisor" ? form.password : "";
+//   if (form.userType === "Supervisor" && password.trim().length === 0) {
+//     toast.error("Please set a password for the supervisor.");
+//     return;
+//   }
 
-  setLoading(true);
-  try {
-    // If a partner is chosen, compute the merged target team (lowest number).
-    const partner = form.linkedStaffId && form.linkedStaffId !== "none"
-      ? staffList.find(s => s.id === form.linkedStaffId)
-      : undefined;
+//   setLoading(true);
+//   try {
+//     // Create Firebase Auth user for Supervisor
+//     let uid: string | undefined;
+//     if (form.userType === "Supervisor" && password) {
+//       try {
+//         const { createStaffAuthUser } = await import("@/lib/services/staffService");
+//         uid = await createStaffAuthUser(form.email, password);
+//       } catch (error: any) {
+//         toast.error(error.message || "Failed to create authentication for supervisor");
+//         setLoading(false);
+//         return;
+//       }
+//     }
 
-    const targetTeam = mergedTeamForPair(partner, form.teamNumber, form.area);
+//     // Rest of your existing logic for partner and team...
+//     const partner = form.linkedStaffId && form.linkedStaffId !== "none"
+//       ? staffList.find(s => s.id === form.linkedStaffId)
+//       : undefined;
 
-    const staffData = {
-      ...form,
-      teamNumber: targetTeam,                     // <- enforce merged team
-      password,
-      linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
-      joinDate: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      isActive: true,
-    };
+//     const targetTeam = mergedTeamForPair(partner, form.teamNumber, form.area);
 
-    const id = await saveStaffToFirestore(staffData);
-    dispatch(addStaff({ id, ...staffData }));
+//     const staffData = {
+//       ...form,
+//       uid, // Add the UID if created
+//       teamNumber: targetTeam,
+//       password,
+//       linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+//       joinDate: new Date().toISOString(),
+//       createdAt: new Date().toISOString(),
+//       isActive: true,
+//     };
 
-    // If linked, also update the partner to link back AND move partner to target team.
-    if (partner) {
-      await updateLinkedStaff(dispatch, id, partner.id, targetTeam); // <- new signature below
-    }
+//     const id = await saveStaffToFirestore(staffData);
+//     dispatch(addStaff({ id, ...staffData }));
 
-    toast.success("Staff member added successfully");
-    resetForm();
-    setOpen(false);
-  } catch (error) {
-    toast.error("Failed to add staff member");
-  } finally {
-    setLoading(false);
-  }
-};
+//     if (partner) {
+//       await updateLinkedStaff(dispatch, id, partner.id, targetTeam);
+//     }
+
+//     toast.success("Staff member added successfully");
+//     resetForm();
+//     setOpen(false);
+//   } catch (error) {
+//     toast.error("Failed to add staff member");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
 
 
@@ -293,6 +306,90 @@ const handleSubmit = async (e: React.FormEvent) => {
 //   // Return incomplete teams and option for new team
 //   return [...incompleteTeams.sort((a, b) => a - b), maxTeamNumber + 1];
 // };
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // Validation
+  const dup = staffList.some(
+    s => s.empNumber.trim().toLowerCase() === form.empNumber.trim().toLowerCase()
+  );
+  if (dup) {
+    toast.error("Employee number must be unique.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    let uid: string | undefined;
+    let finalPassword = "";
+
+    // Only Supervisors get their own auth account
+    if (form.userType === "Supervisor") {
+      if (!form.password || form.password.trim().length === 0) {
+        toast.error("Please set a password for the supervisor.");
+        setLoading(false);
+        return;
+      }
+      
+      finalPassword = form.password;
+      
+      try {
+        const { createStaffAuthUser } = await import("@/lib/services/staffService");
+        uid = await createStaffAuthUser(form.email, finalPassword);
+      } catch (error: any) {
+        toast.error(error.message || "Failed to create authentication");
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Helper - inherit password from linked supervisor if exists
+      if (form.linkedStaffId && form.linkedStaffId !== "none") {
+        const linkedSupervisor = staffList.find(
+          s => s.id === form.linkedStaffId && s.userType === "Supervisor"
+        );
+        if (linkedSupervisor) {
+          finalPassword = linkedSupervisor.password;
+          uid = linkedSupervisor.uid; // Share the supervisor's UID
+        }
+      }
+    }
+
+    const partner = form.linkedStaffId && form.linkedStaffId !== "none"
+      ? staffList.find(s => s.id === form.linkedStaffId)
+      : undefined;
+
+    const targetTeam = mergedTeamForPair(partner, form.teamNumber, form.area);
+
+    const staffData = {
+      ...form,
+      uid, // Will be undefined for helpers without supervisors
+      teamNumber: targetTeam,
+      password: finalPassword,
+      linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+      joinDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      isActive: true,
+    };
+
+    const id = await saveStaffToFirestore(staffData);
+    dispatch(addStaff({ id, ...staffData }));
+
+    if (partner) {
+      await updateLinkedStaff(dispatch, id, partner.id, targetTeam);
+    }
+
+    toast.success("Staff member added successfully");
+    resetForm();
+    setOpen(false);
+  } catch (error) {
+    console.error("Error adding staff:", error);
+    toast.error("Failed to add staff member");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 const getAvailableTeamNumbers = (selectedArea: string) => {
   // For the form we don't yet know the final role (user can pick),

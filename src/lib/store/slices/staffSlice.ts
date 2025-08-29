@@ -58,6 +58,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Staff {
   id: string;
+  uid?: string;
   username: string;
   email: string;
   phone: string;

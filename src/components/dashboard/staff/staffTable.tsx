@@ -63,12 +63,27 @@ export default function StaffTable() {
     }
   };
 
+  // const filteredStaff = staffList.filter(
+  //   (staff) =>
+  //     // staff.isActive && 
+  //     (staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       staff.phone.includes(searchQuery))
+  // );
   const filteredStaff = staffList.filter(
-    (staff) =>
-      // staff.isActive && 
-      (staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (staff) => {
+      // Add safety checks
+      if (!staff || !staff.username || !staff.email || !staff.phone) {
+        console.warn('Incomplete staff object:', staff);
+        return false;
+      }
+      
+      return (
+        staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        staff.phone.includes(searchQuery))
+        staff.phone.includes(searchQuery)
+      );
+    }
   );
 
   const getLinkedStaffName = (linkedId: string) => {

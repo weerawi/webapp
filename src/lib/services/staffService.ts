@@ -65,12 +65,34 @@ import { setStaff, updateStaff, deleteStaff } from "../store/slices/staffSlice";
 import { setAttendance, addAttendance, updateAttendance } from "../store/slices/attendanceSlice";
 import { AttendanceRecord } from "../store/slices/attendanceSlice";
 import { mockAttendanceData } from "../data/mockAttendanceData";
+import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth, signOut } from "firebase/auth";
+import { firebaseConfig } from "@/lib/firebase/config";
 
-// Import mock data
-// import mockAttendanceData from "../data/mockAttendanceData.json";
+// Create auth user for Supervisor only
+export const createStaffAuthUser = async (email: string, password: string) => {
+  try {
+    // Use secondary auth instance to avoid affecting current user
+    const secondaryApp = initializeApp(firebaseConfig, 'StaffSecondary');
+    const secondaryAuth = getAuth(secondaryApp);
+    
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const newUserUid = userCredential.user.uid;
+    
+    await signOut(secondaryAuth);
+    await deleteApp(secondaryApp);
+    
+    return newUserUid;
+  } catch (error: any) {
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('Email is already in use');
+    }
+    throw error;
+  }
+};
 
-// ========== STAFF FUNCTIONS ==========
-// Save new staff to Firestore
+// Update saveStaffToFirestore to include uid
 export const saveStaffToFirestore = async (staff: Omit<Staff, "id">) => {
   const docRef = await addDoc(collection(db, "staff"), staff);
   return docRef.id;
