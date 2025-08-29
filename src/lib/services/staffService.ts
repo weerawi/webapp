@@ -57,7 +57,7 @@
 
 
 // lib/services/staffService.ts
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs,setDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Staff } from "../store/slices/staffSlice";
 import { AppDispatch } from "../store/store";
@@ -68,7 +68,7 @@ import { mockAttendanceData } from "../data/mockAttendanceData";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, signOut } from "firebase/auth";
-import { firebaseConfig } from "@/lib/firebase/config";
+import { firebaseConfig } from "@/lib/firebase/config"; 
 
 // Create auth user for Supervisor only
 export const createStaffAuthUser = async (email: string, password: string) => {
@@ -94,8 +94,15 @@ export const createStaffAuthUser = async (email: string, password: string) => {
 
 // Update saveStaffToFirestore to include uid
 export const saveStaffToFirestore = async (staff: Omit<Staff, "id">) => {
-  const docRef = await addDoc(collection(db, "staff"), staff);
-  return docRef.id;
+  // For Supervisors with UID, use it as document ID
+  if (staff.uid && staff.userType === "Supervisor") {
+    await setDoc(doc(db, "staff", staff.uid), staff);
+    return staff.uid;
+  } else {
+    // Helpers without UID continue using auto-generated IDs
+    const docRef = await addDoc(collection(db, "staff"), staff);
+    return docRef.id;
+  }
 };
 
 // Fetch and sync all staff

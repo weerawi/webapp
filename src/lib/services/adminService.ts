@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, setDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/config";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { Admin, AuditLog, WaterboardOption, Area } from "@/lib/store/slices/adminSlice";
@@ -34,30 +34,29 @@ export const createAuthUser = async (email: string, password: string) => {
 };
 // Updated saveAdminToFirestore to use the uid from Firebase Auth
 export const saveAdminToFirestore = async (admin: Omit<Admin, "id">, uid: string) => {
-  const docRef = await addDoc(collection(db, "admins"), {
+  await setDoc(doc(db, "admins", uid), {
     ...admin,
-    uid, // Store the Firebase Auth UID
+    uid,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
-  return docRef.id;
+  return uid; // Return UID as the document ID
 };
 
 // Function to get admin details by UID
 export const getAdminByUid = async (uid: string): Promise<Admin | null> => {
-  const q = query(collection(db, "admins"), where("uid", "==", uid));
-  const snapshot = await getDocs(q);
+  const docSnap = await getDoc(doc(db, "admins", uid));
   
-  if (snapshot.empty) {
+  if (!docSnap.exists()) {
     return null;
   }
   
-  const doc = snapshot.docs[0];
   return {
-    id: doc.id,
-    ...doc.data()
+    id: uid,
+    ...docSnap.data()
   } as Admin;
 };
+
 
 // Update deleteAdminFromFirestore to not delete from Auth (we'll handle this separately)
 // export const deleteAdminFromFirestore = async (id: string) => {
@@ -66,25 +65,11 @@ export const getAdminByUid = async (uid: string): Promise<Admin | null> => {
 // Update deleteAdminFromFirestore to also clean up the assigned areas
 export const deleteAdminFromFirestore = async (id: string) => {
   try {
-    // First get the admin document to find their UID
-    const adminDoc = await getDoc(doc(db, "admins", id));
-    if (adminDoc.exists()) {
-      const adminData = adminDoc.data();
-      const uid = adminData.uid;
-      
-      // If we have a UID, delete any areas assigned to this admin
-      if (uid) {
-        console.log(`Deleting areas assigned to admin ${id} with UID ${uid}`);
-        await deleteAreaByUserId(uid);
-      }
-       
-      await deleteAreaByUserId(null);
-    }
-    
-    // Finally delete the admin document itself
+    // id is now the UID itself
+    await deleteAreaByUserId(id);
     await deleteDoc(doc(db, "admins", id));
   } catch (error) {
-    console.error("Error deleting admin and their areas:", error);
+    console.error("Error deleting admin:", error);
     throw error;
   }
 };
@@ -221,12 +206,11 @@ export const fetchAuditLogsFromFirestore = async (dispatch: AppDispatch) => {
 
 
 export const updateLastLogin = async (uid: string) => {
-  const q = query(collection(db, "admins"), where("uid", "==", uid));
-  const snapshot = await getDocs(q);
+  const docRef = doc(db, "admins", uid);
+  const docSnap = await getDoc(docRef);
   
-  if (!snapshot.empty) {
-    const adminDoc = snapshot.docs[0];
-    await updateDoc(doc(db, "admins", adminDoc.id), {
+  if (docSnap.exists()) {
+    await updateDoc(docRef, {
       lastLogin: new Date().toISOString(),
     });
   }

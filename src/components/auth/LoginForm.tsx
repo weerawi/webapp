@@ -108,7 +108,7 @@ export default function LoginForm() {
   // }
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
   setLoading(true)
   setError("")
@@ -118,13 +118,11 @@ export default function LoginForm() {
     const firebaseUser = userCredential.user;
 
     // First, check if this user is a staff member (Supervisor)
-    const { query, where, getDocs, collection } = await import("firebase/firestore");
+    const { doc, getDoc } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase/config");
     
-    const staffQuery = query(collection(db, "staff"), where("uid", "==", firebaseUser.uid));
-    const staffSnapshot = await getDocs(staffQuery);
-    
-    if (!staffSnapshot.empty) {
+    const staffDoc = await getDoc(doc(db, "staff", firebaseUser.uid));
+    if (staffDoc.exists()) {
       // This is a Supervisor trying to login - block them
       await auth.signOut();
       setError("Staff members cannot access the admin panel. Please use the mobile app.");
@@ -139,7 +137,7 @@ export default function LoginForm() {
       await auth.signOut();
       setError("Unauthorized access. Please contact your administrator.");
       return;
-    }
+    } 
 
     // Determine the area based on role
     let userArea = "";
