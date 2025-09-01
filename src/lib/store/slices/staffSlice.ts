@@ -123,13 +123,26 @@ const staffSlice = createSlice({
       state.staffList.push(action.payload);
       state.staffList = recalcStatuses(state.staffList.slice());
     },
-    updateStaff(state, action: PayloadAction<{ id: string; updates: Partial<Staff> }>) {
-      const index = state.staffList.findIndex(staff => staff.id === action.payload.id);
+    updateStaff: (state, action) => {
+      const { id, updates } = action.payload;
+      const index = state.staffList.findIndex((s) => s.id === id);
       if (index !== -1) {
-        state.staffList[index] = { ...state.staffList[index], ...action.payload.updates };
-        state.staffList = recalcStatuses(state.staffList.slice());
+        const updatedStaff = { ...state.staffList[index], ...updates };
+        
+        // Recalculate status
+        if (updatedStaff.isActive) {
+          if (updatedStaff.linkedStaffId && updatedStaff.teamNumber > 0) {
+            updatedStaff.status = 'Active';
+          } else {
+            updatedStaff.status = 'Incomplete';
+          }
+        } else {
+          updatedStaff.status = 'Inactive';
+        }
+        
+        state.staffList[index] = updatedStaff;
       }
-    },
+    },  
     deleteStaff(state, action: PayloadAction<string>) {
       state.staffList = state.staffList.filter(staff => staff.id !== action.payload);
       state.staffList = recalcStatuses(state.staffList.slice());

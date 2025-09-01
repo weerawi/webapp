@@ -57,7 +57,7 @@
 
 
 // lib/services/staffService.ts
-import { collection, addDoc, getDocs,setDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs,setDoc, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Staff } from "../store/slices/staffSlice";
 import { AppDispatch } from "../store/store";
@@ -128,14 +128,76 @@ export const updateStaffAndSync = async (
 };
 
 // Delete staff and dispatch to Redux
-export const deleteStaffAndSync = async (
-  dispatch: AppDispatch,
-  id: string
-) => {
-  const staffRef = doc(db, "staff", id);
-  await deleteDoc(staffRef);
-  dispatch(deleteStaff(id));
-};
+// export const deleteStaffAndSync = async (
+//   dispatch: AppDispatch,
+//   id: string
+// ) => {
+//   const staffRef = doc(db, "staff", id);
+//   await deleteDoc(staffRef);
+//   dispatch(deleteStaff(id));
+// };
+export async function deleteStaffAndSync(dispatch: AppDispatch, staffId: string) {
+  try {
+    // Get the staff member to be deleted
+    const staffDoc = await getDoc(doc(db, "staff", staffId));
+    if (!staffDoc.exists()) {
+      throw new Error("Staff member not found");
+    }
+    
+    const staffData = staffDoc.data();
+    const linkedStaffId = staffData.linkedStaffId;
+    
+    // Delete the selected staff member from Firestore
+    await deleteDoc(doc(db, "staff", staffId));
+    dispatch(deleteStaff(staffId));
+    
+    // If they had a partner, update the partner's status to Incomplete
+    if (linkedStaffId) {
+      const partnerDoc = await getDoc(doc(db, "staff", linkedStaffId));
+      if (partnerDoc.exists()) {
+        // Update partner to be incomplete and unlinked
+        await updateDoc(doc(db, "staff", linkedStaffId), {
+          linkedStaffId: "",
+          status: "Incomplete",
+          updatedAt: new Date().toISOString()
+        });
+        
+        // Update Redux state for the partner
+        dispatch(updateStaff({
+          id: linkedStaffId,
+          updates: {
+            linkedStaffId: "",
+            status: "Incomplete"
+          }
+        }));
+      }
+    }
+    
+    // Delete Firebase Auth user ONLY for supervisors with their own UID
+    // Only delete if this staff member is a supervisor and has their own unique UID
+    if (staffData.userType === "Supervisor" && staffData.uid) {
+      try {
+        // Create secondary app to delete the user without affecting current session
+        const secondaryApp = initializeApp(firebaseConfig, 'DeleteStaffApp');
+        const secondaryAuth = getAuth(secondaryApp);
+        
+        // Note: We can't directly delete a user from admin side without their credentials
+        // This would need to be done through Firebase Admin SDK on the backend
+        // For now, just clean up the app instance
+        await deleteApp(secondaryApp);
+        
+        console.log("Note: Firebase Auth user cleanup requires backend Admin SDK");
+      } catch (error) {
+        console.warn("Auth cleanup note:", error);
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting staff:", error);
+    throw error;
+  }
+}
 
 // export const updateLinkedStaff = async (
 //   dispatch: AppDispatch,

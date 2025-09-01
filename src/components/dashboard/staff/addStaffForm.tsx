@@ -342,18 +342,19 @@ const handleSubmit = async (e: React.FormEvent) => {
         setLoading(false);
         return;
       }
-    } else {
-      // Helper - inherit password from linked supervisor if exists
-      if (form.linkedStaffId && form.linkedStaffId !== "none") {
-        const linkedSupervisor = staffList.find(
-          s => s.id === form.linkedStaffId && s.userType === "Supervisor"
-        );
-        if (linkedSupervisor) {
-          finalPassword = linkedSupervisor.password;
-          uid = linkedSupervisor.uid; // Share the supervisor's UID
-        }
+    }else {
+    // Helper - DON'T share UIDs, only inherit password
+    if (form.linkedStaffId && form.linkedStaffId !== "none") {
+      const linkedSupervisor = staffList.find(
+        s => s.id === form.linkedStaffId && s.userType === "Supervisor"
+      );
+      if (linkedSupervisor) {
+        finalPassword = linkedSupervisor.password;
+        // Remove this line: uid = linkedSupervisor.uid;
+        // Helpers should NOT share supervisor's UID
       }
     }
+  }
 
     const partner = form.linkedStaffId && form.linkedStaffId !== "none"
       ? staffList.find(s => s.id === form.linkedStaffId)
@@ -361,9 +362,18 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     const targetTeam = mergedTeamForPair(partner, form.teamNumber, form.area);
 
-    const staffData = {
+    // const staffData = {
+    //   ...form,
+    //   uid, // Will be undefined for helpers without supervisors
+    //   teamNumber: targetTeam,
+    //   password: finalPassword,
+    //   linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+    //   joinDate: new Date().toISOString(),
+    //   createdAt: new Date().toISOString(),
+    //   isActive: true,
+    // };
+    const staffData: any = {
       ...form,
-      uid, // Will be undefined for helpers without supervisors
       teamNumber: targetTeam,
       password: finalPassword,
       linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
@@ -371,6 +381,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       createdAt: new Date().toISOString(),
       isActive: true,
     };
+    if (uid) {
+      staffData.uid = uid;
+    }
 
     const id = await saveStaffToFirestore(staffData);
     dispatch(addStaff({ id, ...staffData }));
