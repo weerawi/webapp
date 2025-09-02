@@ -13,6 +13,7 @@ import { reconnectionService } from '@/lib/services/reconnectionService';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
+import { combineStaffLists } from '@/types/staff';
 
 interface TaskFormProps {
   onTaskAdded: () => void;
@@ -25,7 +26,10 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   
   // const teams = ['Team A', 'Team B', 'Team C', 'Team D'];
-  const staff = useSelector((state: RootState) => state.staff.staffList);
+  // const staff = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+    const helpers = useSelector((state: RootState) => state.helper.helpers);
+    const staff = combineStaffLists(supervisors, helpers);
   const [selectedArea, setSelectedArea] = useState('');
   const [selectedTeamNumber, setSelectedTeamNumber] = useState<number | ''>('');
 

@@ -5,7 +5,7 @@ import { AppDispatch } from "../store/store";
 import { setAreas } from "../store/slices/areaSlice";
 
 export const fetchAreasFromFirestore = async (dispatch: AppDispatch) => {
-  const snapshot = await getDocs(collection(db, "areas"));
+  const snapshot = await getDocs(collection(db, "all_areas"));
   const areas = snapshot.docs.map((doc) => ({
     id: doc.id,
     name: doc.data().name,

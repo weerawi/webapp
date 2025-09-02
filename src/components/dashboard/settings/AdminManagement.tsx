@@ -42,6 +42,7 @@ import {
   fetchAreas,
   deleteAreaByUserId,
   createAuthUser,
+  saveAreaOptions,
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -151,6 +152,11 @@ export default function AdminManagement() {
         await updateAdminInFirestore(editingAdmin.id, updateData);
         dispatch(updateAdmin({ id: editingAdmin.id, updates: updateData }));
         
+        // Update area options if it's a Waterboard user
+        if (formData.role === "Waterboard" && formData.area) {
+          await saveAreaOptions(formData.area, formData.options);
+        }
+        
         await saveAuditLogToFirestore({
           userId: currentUser?.uid || "unknown",
           userName: currentUser?.email || "Unknown Admin",
@@ -173,6 +179,17 @@ export default function AdminManagement() {
         const id = await saveAdminToFirestore(adminData, uid);
         dispatch(addAdmin({ id, ...adminData, uid }));
         
+        // Save area and area-specific options
+        if (formData.role === "Waterboard") {
+          if (!areas.includes(formData.area)) {
+            await saveArea(formData.area, id);
+          }
+          // Save to areaOptions collection
+          if (formData.options.length > 0) {
+            await saveAreaOptions(formData.area, formData.options);
+          }
+        }
+
         // Save area if it's new and user is Waterboard
         if (formData.role === "Waterboard" && !areas.includes(formData.area)) {
           await saveArea(formData.area, id);

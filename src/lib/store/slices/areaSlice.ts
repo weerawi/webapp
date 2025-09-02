@@ -15,7 +15,7 @@ const initialState: AreaState = {
 };
 
 const areaSlice = createSlice({
-  name: "areas",
+  name: "all_areas",
   initialState,
   reducers: {
     setAreas(state, action: PayloadAction<Area[]>) {
