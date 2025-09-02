@@ -2,7 +2,6 @@
 "use client";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/lib/store/store";
-import { deleteStaffAndSync } from "@/lib/services/staffService";
 import { toast } from "sonner";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,14 +33,17 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import EditStaffDialog from "./editStaffDialog";
-import { Staff } from "@/lib/store/slices/staffSlice"; 
-import { updateStaffAndSync } from "@/lib/services/staffService";
+import EditStaffDialog from "./editStaffDialog"; 
 import ActivateStaffDialog from "./ActivateStaffDialog";
+import { Staff, combineStaffLists } from "@/types/staff";
+import { updateSupervisorAndSync, deleteSupervisorAndSync } from "@/lib/services/supervisorService";
+import { updateHelperAndSync, deleteHelperAndSync } from "@/lib/services/helperService";
 
 
 export default function StaffTable() {
-  const staffList = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+  const helpers = useSelector((state: RootState) => state.helper.helpers);
+  const staffList = combineStaffLists(supervisors, helpers);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
@@ -51,17 +53,20 @@ export default function StaffTable() {
   const [deletingStaff, setDeletingStaff] = useState<Staff | null>(null); // Add this state
 
   const handleDelete = async () => {
-    if (!deletingStaff) return;
-
-    try {
-      await deleteStaffAndSync(dispatch, deletingStaff.id);
-      toast.success(`${deletingStaff.username} has been deleted successfully`);
-      setDeletingStaff(null);
-    } catch (error) {
-      toast.error("Failed to delete staff member");
-      console.error("Delete error:", error);
+  if (!deletingStaff) return;
+  try {
+    if (deletingStaff.userType === 'Supervisor') {
+      await deleteSupervisorAndSync(dispatch, deletingStaff.id);
+    } else {
+      await deleteHelperAndSync(dispatch, deletingStaff.id);
     }
-  };
+    toast.success(`${deletingStaff.username} has been deleted successfully`);
+    setDeletingStaff(null);
+  } catch (error) {
+    toast.error("Failed to delete staff member");
+    console.error("Delete error:", error);
+  }
+};
 
   // const filteredStaff = staffList.filter(
   //   (staff) =>
@@ -197,21 +202,29 @@ export default function StaffTable() {
 
     try {
       if (newStatus) {
-        // OPEN TEAM-SELECT DIALOG INSTEAD OF AUTO
         setActivatingStaff(staff);
       } else {
-        // Deactivate: unlink + team 0 (released)
-        const updates: Partial<Staff> = {
+        const updates = {
           isActive: false,
           teamNumber: 0,
-          linkedStaffId: "",
+          linkedHelperId: "",
+          linkedSupervisorId: "",
         };
-        await updateStaffAndSync(dispatch, staff.id, updates);
-
-        if (staff.linkedStaffId) {
-          await updateStaffAndSync(dispatch, staff.linkedStaffId, {
-            linkedStaffId: "",
-          });
+        
+        if (staff.userType === "Supervisor") {
+          await updateSupervisorAndSync(dispatch, staff.id, updates);
+          if (staff.linkedStaffId) {
+            await updateHelperAndSync(dispatch, staff.linkedStaffId, {
+              linkedSupervisorId: "",
+            });
+          }
+        } else {
+          await updateHelperAndSync(dispatch, staff.id, updates);
+          if (staff.linkedStaffId) {
+            await updateSupervisorAndSync(dispatch, staff.linkedStaffId, {
+              linkedHelperId: "",
+            });
+          }
         }
         toast.success(`${staff.username} has been deactivated`);
       }

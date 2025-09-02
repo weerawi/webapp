@@ -1,4 +1,4 @@
-import { Staff } from "@/lib/store/slices/staffSlice";
+import { Staff } from "@/types/staff";
 
 /**
  * Teams are per-area and must be positive integers (>=1).

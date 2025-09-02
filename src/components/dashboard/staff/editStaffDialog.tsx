@@ -21,8 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { Staff } from "@/lib/store/slices/staffSlice";
-import { updateStaffAndSync } from "@/lib/services/staffService";
+// import { Staff } from "@/lib/store/slices/staffSlice";
+// import { updateStaffAndSync } from "@/lib/services/staffService";
+import { Staff, combineStaffLists } from "@/types/staff";
+import { updateSupervisorAndSync } from "@/lib/services/supervisorService";
+import { updateHelperAndSync } from "@/lib/services/helperService";
 
 interface EditStaffDialogProps {
   staff: Staff;
@@ -36,7 +39,9 @@ export default function EditStaffDialog({
   onOpenChange,
 }: EditStaffDialogProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const staffList = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+  const helpers = useSelector((state: RootState) => state.helper.helpers);
+  const staffList = combineStaffLists(supervisors, helpers);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -124,89 +129,64 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setLoading(true);
   try {
-    console.log("Starting update with form:", form);
     const oldLinkedStaffId = staff.linkedStaffId;
     const newLinkedStaffId = form.linkedStaffId === "none" ? "" : form.linkedStaffId;
     
-    // CRITICAL FIX: Verify the current staff still exists in Firestore
-    // We'll do this in the staffService instead
-    
-    // If changing partner
-    if (oldLinkedStaffId !== newLinkedStaffId) {
-      console.log("Changing partner from", oldLinkedStaffId, "to", newLinkedStaffId);
+    if (staff.userType === "Supervisor") {
+      const updateData = {
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        linkedHelperId: newLinkedStaffId,
+      };
       
-      // Unlink old partner but keep their team number - CHECK IF EXISTS FIRST
-      if (oldLinkedStaffId) {
-        console.log("Checking if old partner exists:", oldLinkedStaffId);
-        // Check if old partner exists in Redux state first
-        const oldPartner = staffList.find(s => s.id === oldLinkedStaffId);
-        
-        if (oldPartner) {
-          console.log("Unlinking old partner:", oldLinkedStaffId);
-          try {
-            await updateStaffAndSync(dispatch, oldLinkedStaffId, { 
-              linkedStaffId: ""
-            });
-          } catch (err) {
-            console.warn("Failed to unlink old partner, likely deleted:", err);
-            // Continue execution even if this fails
-          }
-        } else {
-          console.warn("Old partner not found in Redux store, might have been deleted");
+      await updateSupervisorAndSync(dispatch, staff.id, updateData);
+      
+      // Handle partner changes
+      if (oldLinkedStaffId !== newLinkedStaffId) {
+        if (oldLinkedStaffId) {
+          await updateHelperAndSync(dispatch, oldLinkedStaffId, {
+            linkedSupervisorId: ""
+          });
+        }
+        if (newLinkedStaffId) {
+          await updateHelperAndSync(dispatch, newLinkedStaffId, {
+            linkedSupervisorId: staff.id,
+            teamNumber: staff.teamNumber
+          });
         }
       }
+    } else {
+      // Helper update
+      const updateData = {
+        email: form.email,
+        phone: form.phone,
+        linkedSupervisorId: newLinkedStaffId,
+      };
       
-      // Link new partner and update their team number to match current staff
-      if (newLinkedStaffId) {
-        const newPartner = staffList.find(s => s.id === newLinkedStaffId);
-        console.log("New partner found:", newPartner);
-        
-        if (!newPartner) {
-          throw new Error(`Partner with ID ${newLinkedStaffId} not found`);
+      await updateHelperAndSync(dispatch, staff.id, updateData);
+      
+      // Handle partner changes
+      if (oldLinkedStaffId !== newLinkedStaffId) {
+        if (oldLinkedStaffId) {
+          await updateSupervisorAndSync(dispatch, oldLinkedStaffId, {
+            linkedHelperId: ""
+          });
         }
-        
-        // If new partner had a different team, unlink their old partner
-        if (newPartner.linkedStaffId && newPartner.linkedStaffId !== staff.id) {
-          const oldPartnerOfNew = staffList.find(s => s.id === newPartner.linkedStaffId);
-          
-          if (oldPartnerOfNew) {
-            console.log("Unlinking new partner's previous connection:", newPartner.linkedStaffId);
-            try {
-              await updateStaffAndSync(dispatch, newPartner.linkedStaffId, {
-                linkedStaffId: ""
-              });
-            } catch (err) {
-              console.warn("Failed to unlink partner's old connection, continuing anyway:", err);
-            }
-          }
+        if (newLinkedStaffId) {
+          await updateSupervisorAndSync(dispatch, newLinkedStaffId, {
+            linkedHelperId: staff.id,
+            teamNumber: staff.teamNumber
+          });
         }
-        
-        // Update new partner with current staff's team number and link
-        console.log("Updating new partner with team:", staff.teamNumber);
-        await updateStaffAndSync(dispatch, newLinkedStaffId, { 
-          linkedStaffId: staff.id,
-          teamNumber: staff.teamNumber // Assign same team number
-        });
       }
     }
-    
-    // Only update the fields we actually want to change
-    const updateData: Partial<Staff> = {
-      email: form.email,
-      phone: form.phone,
-      password: form.password,
-      userType: form.userType,
-      linkedStaffId: newLinkedStaffId,
-    };
-    
-    console.log("Updating staff member with:", updateData);
-    await updateStaffAndSync(dispatch, staff.id, updateData);
     
     toast.success("Staff member updated successfully");
     onOpenChange(false);
   } catch (error) {
     console.error("Error updating staff:", error);
-    toast.error(`Failed to update staff member: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    toast.error(`Failed to update staff member`);
   } finally {
     setLoading(false);
   }
@@ -349,34 +329,35 @@ const getLinkedOptions = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="pr-10"
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
+          {staff.userType === 'Supervisor' && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-
+          )}
           <div className="space-y-2 ">
             <Label htmlFor="userType">User Type</Label>
             <Select

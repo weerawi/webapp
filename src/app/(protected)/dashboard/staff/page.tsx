@@ -10,7 +10,7 @@ import StaffTable from "@/components/dashboard/staff/staffTable";
 import AttendanceTable from "@/components/dashboard/staff/AttendanceTable";
 import { AppDispatch } from "@/lib/store/store";
 import { Separator } from "@/components/ui/separator";
-import { fetchAttendanceFromFirestore, fetchStaffFromFirestore } from "@/lib/services/staffService";
+import { fetchAllStaffFromFirestore, fetchAttendanceFromFirestore } from "@/lib/services/staffService";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { fetchAreasFromFirestore } from "@/lib/services/areaService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
@@ -25,7 +25,7 @@ export default function StaffPage() {
 useEffect(() => {
   dispatch(hideLoader());
   // Fetch staff data on component mount
-  fetchStaffFromFirestore(dispatch);
+  fetchAllStaffFromFirestore(dispatch);
   fetchAreasFromFirestore(dispatch);
   
   // Fetch attendance data (using mock data)

@@ -3,11 +3,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { AppDispatch, RootState } from "@/lib/store/store";
-import { addStaff } from "@/lib/store/slices/staffSlice";
-import {
-  saveStaffToFirestore,
-  updateLinkedStaff,
-} from "@/lib/services/staffService";
+// import { addStaff } from "@/lib/store/slices/staffSlice";
+// import {
+//   saveStaffToFirestore,
+//   updateLinkedStaff,
+// } from "@/lib/services/staffService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,11 +39,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { computeTeamHints } from "@/lib/utils/team";
+import { computeTeamHints } from "@/lib/utils/team";    
+import { Staff, combineStaffLists } from "@/types/staff";
+import { addSupervisor } from "@/lib/store/slices/supervisorSlice";
+import { addHelper } from "@/lib/store/slices/helperSlice";
+import { saveSupervisorToFirestore, updateSupervisorAndSync, createSupervisorAuthUser } from "@/lib/services/supervisorService";
+import { saveHelperToFirestore, updateHelperAndSync } from "@/lib/services/helperService";
 
 export default function AddStaffForm() {
   const dispatch = useDispatch<AppDispatch>();
-  const staffList = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+  const helpers = useSelector((state: RootState) => state.helper.helpers);
+  const staffList = combineStaffLists(supervisors, helpers);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -320,11 +327,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 
   setLoading(true);
-  try {
+   try {
     let uid: string | undefined;
     let finalPassword = "";
 
-    // Only Supervisors get their own auth account
     if (form.userType === "Supervisor") {
       if (!form.password || form.password.trim().length === 0) {
         toast.error("Please set a password for the supervisor.");
@@ -335,61 +341,63 @@ const handleSubmit = async (e: React.FormEvent) => {
       finalPassword = form.password;
       
       try {
-        const { createStaffAuthUser } = await import("@/lib/services/staffService");
-        uid = await createStaffAuthUser(form.email, finalPassword);
+        uid = await createSupervisorAuthUser(form.email, finalPassword);
       } catch (error: any) {
         toast.error(error.message || "Failed to create authentication");
         setLoading(false);
         return;
       }
-    }else {
-    // Helper - DON'T share UIDs, only inherit password
-    if (form.linkedStaffId && form.linkedStaffId !== "none") {
-      const linkedSupervisor = staffList.find(
-        s => s.id === form.linkedStaffId && s.userType === "Supervisor"
-      );
-      if (linkedSupervisor) {
-        finalPassword = linkedSupervisor.password;
-        // Remove this line: uid = linkedSupervisor.uid;
-        // Helpers should NOT share supervisor's UID
+
+      const supervisorData: any = {
+        username: form.username,
+        email: form.email,
+        phone: form.phone,
+        password: finalPassword,
+        uid,
+        area: form.area,
+        teamNumber: form.teamNumber,
+        empNumber: form.empNumber,
+        linkedHelperId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+        joinDate: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        isActive: true,
+      };
+
+      const id = await saveSupervisorToFirestore(supervisorData);
+      dispatch(addSupervisor({ id, ...supervisorData }));
+
+      // Update linked helper if exists
+      if (form.linkedStaffId && form.linkedStaffId !== "none") {
+        await updateHelperAndSync(dispatch, form.linkedStaffId, {
+          linkedSupervisorId: id,
+          teamNumber: form.teamNumber
+        });
       }
-    }
-  }
+    } else {
+      // Helper
+      const helperData: any = {
+        username: form.username,
+        email: form.email,
+        phone: form.phone,
+        area: form.area,
+        teamNumber: form.teamNumber,
+        empNumber: form.empNumber,
+        linkedSupervisorId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+        joinDate: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        isActive: true,
+      };
 
-    const partner = form.linkedStaffId && form.linkedStaffId !== "none"
-      ? staffList.find(s => s.id === form.linkedStaffId)
-      : undefined;
+      const id = await saveHelperToFirestore(helperData);
+      dispatch(addHelper({ id, ...helperData }));
 
-    const targetTeam = mergedTeamForPair(partner, form.teamNumber, form.area);
-
-    // const staffData = {
-    //   ...form,
-    //   uid, // Will be undefined for helpers without supervisors
-    //   teamNumber: targetTeam,
-    //   password: finalPassword,
-    //   linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
-    //   joinDate: new Date().toISOString(),
-    //   createdAt: new Date().toISOString(),
-    //   isActive: true,
-    // };
-    const staffData: any = {
-      ...form,
-      teamNumber: targetTeam,
-      password: finalPassword,
-      linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
-      joinDate: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      isActive: true,
-    };
-    if (uid) {
-      staffData.uid = uid;
-    }
-
-    const id = await saveStaffToFirestore(staffData);
-    dispatch(addStaff({ id, ...staffData }));
-
-    if (partner) {
-      await updateLinkedStaff(dispatch, id, partner.id, targetTeam);
+      // Update linked supervisor if exists
+      if (form.linkedStaffId && form.linkedStaffId !== "none") {
+        await updateSupervisorAndSync(dispatch, form.linkedStaffId, {
+          linkedHelperId: id,
+          teamNumber: form.teamNumber
+        });
+      }
     }
 
     toast.success("Staff member added successfully");
