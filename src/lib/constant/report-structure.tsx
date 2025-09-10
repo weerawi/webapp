@@ -18,11 +18,11 @@ export const TEMPLATE_WATERBOARD_COLUMNS: string[] = [
 // Aliases so existing Firestore option names still map to template slots
 // Add / edit based on what you actually have stored.
 const ALIASES: Record<string, string[]> = {
-  "100%": ["payment100", "100% payment"],
-  "99-75%": ["(99-75)%", "99-75 %", "payment80"],
-  "74-50%": ["(74-50)%", "74-50 %", "payment50"],
-  "P": ["house closed p", "house closed - p"],
-  "T": ["house closed t", "house closed - t"],
+  "100%": ["payment100", "100% payment", "payment 100%", "100%" ],
+  "99-75%": ["(99-75)%", "99-75 %", "payment80","80%"],
+  "74-50%": ["(74-50)%", "74-50 %", "payment50" , "50%"],
+  "P": ["house closed p", "permanently gate closed"],
+  "T": ["house closed t", "temporarlly gate closed"],
   "Already DC": ["already dc", "already disconnected"],
   "Not.Att": ["not.att", "not attempted", "not att"],
 };

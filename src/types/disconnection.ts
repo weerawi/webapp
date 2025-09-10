@@ -23,6 +23,13 @@ export interface DisconnectionRecord {
   objections: boolean
   stoppedByNWSDB: boolean
   photo?: string
+  meterNo?: string;
+  reading?: string; 
+  type?: string  // The actual type from Firebase
+  imageUrl?: string  // From Firebase imageUrl field
+  jobId?: string
+  status?: string
+  timestamp?: number
 }
 
 export interface DisconnectionFilters {

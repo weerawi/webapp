@@ -55,7 +55,8 @@ export default function AdminManagement() {
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
   const [waterboardOptions, setWaterboardOptions] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
-  const [showPassword, setShowPassword] = useState(false); // Add this state
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
@@ -118,6 +119,10 @@ export default function AdminManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isSubmitting) return;
+
+    setIsSubmitting(true); 
+
     try {
       // Validation for waterboard users
       if (formData.role === "Waterboard") {
@@ -210,6 +215,8 @@ export default function AdminManagement() {
       await loadWaterboardData();
     } catch (error: any) {
       toast.error(error.message || (editingAdmin ? "Failed to update user" : "Failed to add user"));
+    }finally {
+      setIsSubmitting(false); // ADD THIS LINE
     }
   };
 
@@ -273,7 +280,8 @@ export default function AdminManagement() {
       options: [],
     });
     setEditingAdmin(null);
-    setShowPassword(false); // Reset password visibility
+    setShowPassword(false); 
+    setIsSubmitting(false);
   };
 
   return (
@@ -281,9 +289,11 @@ export default function AdminManagement() {
       <div className="space-y-4">
         <div className="flex justify-end">
           <Dialog open={open} onOpenChange={(newOpen) => {
-            setOpen(newOpen);
-            if (!newOpen) {
-              resetForm();
+            if (!isSubmitting) {  
+              setOpen(newOpen);
+              if (!newOpen) {
+                resetForm();
+              }
             }
           }}>
             <DialogTrigger asChild>
@@ -403,8 +413,8 @@ export default function AdminManagement() {
                   }}>
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    {editingAdmin ? "Update" : "Add"} User
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Processing..." : (editingAdmin ? "Update" : "Add")} User
                   </Button>
                 </div>
               </form>
