@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Helper } from "./helperSlice";
 
 export interface Supervisor {
   id: string;
@@ -15,6 +16,7 @@ export interface Supervisor {
   joinDate: string;
   isActive: boolean;
   status?: 'Active' | 'Inactive' | 'Incomplete';
+  userType: 'Supervisor';
 }
 
 interface SupervisorState {
@@ -64,8 +66,11 @@ const supervisorSlice = createSlice({
     deleteSupervisor(state, action: PayloadAction<string>) {
       state.supervisors = state.supervisors.filter(s => s.id !== action.payload);
     },
+    resetSupervisorState() {
+      return initialState;
+    },
   },
 });
 
-export const { setSupervisors, addSupervisor, updateSupervisor, deleteSupervisor } = supervisorSlice.actions;
+export const { setSupervisors, addSupervisor, updateSupervisor, deleteSupervisor, resetSupervisorState } = supervisorSlice.actions;
 export default supervisorSlice.reducer;

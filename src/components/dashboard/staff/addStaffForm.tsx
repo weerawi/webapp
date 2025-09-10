@@ -361,6 +361,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         joinDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         isActive: true,
+        userType: 'Supervisor',
       };
 
       const id = await saveSupervisorToFirestore(supervisorData);
@@ -386,6 +387,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         joinDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         isActive: true,
+        userType: 'Helper',
       };
 
       const id = await saveHelperToFirestore(helperData);
