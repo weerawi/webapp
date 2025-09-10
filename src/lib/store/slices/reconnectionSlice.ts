@@ -45,9 +45,12 @@ const reconnectionSlice = createSlice({
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
-    }
+    },
+    resetReconnectionState() {
+      return initialState;
+    },
   }
 });
 
-export const { setTasks, addTask, updateTask, setLoading, setError } = reconnectionSlice.actions;
+export const { setTasks, addTask, updateTask, setLoading, setError, resetReconnectionState } = reconnectionSlice.actions;
 export default reconnectionSlice.reducer;

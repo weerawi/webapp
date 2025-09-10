@@ -19,7 +19,7 @@ const persistConfig = {
   storage,
 };
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   auth: authReducer,
   report: reportReducer,
   loader: loaderReducer,
@@ -33,8 +33,14 @@ const rootReducer = combineReducers({
   area: areaReducer,
   attendance: attendanceReducer,
 });
-
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const rootReducer = (state: any, action: any) => {
+  if (action.type === 'RESET_APP') {
+    storage.removeItem('persist:root');
+    state = undefined;
+  }
+  return appReducer(state, action);
+};
+const persistedReducer = persistReducer(persistConfig, rootReducer); 
 
 export const store = configureStore({
   reducer: persistedReducer,

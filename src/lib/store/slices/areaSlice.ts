@@ -21,8 +21,11 @@ const areaSlice = createSlice({
     setAreas(state, action: PayloadAction<Area[]>) {
       state.areas = action.payload;
     },
+    resetAreaState() {
+      return initialState;
+    },
   },
 });
 
-export const { setAreas } = areaSlice.actions;
+export const { setAreas, resetAreaState } = areaSlice.actions;
 export default areaSlice.reducer;

@@ -387,6 +387,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import hegraLogo from "@/assets/hegra.jpg";
 import { motion } from "framer-motion";
+import { resetApp } from "@/lib/store/actions/resetActions";
 
 // Animated Water Drop Component
 const WaterDrop = ({ 
@@ -514,6 +515,7 @@ export default function DashboardHome() {
     try {
       await signOut(auth);
       dispatch(logout());
+      dispatch(resetApp());
     } catch (error) {
       console.error("Logout failed:", error);
       dispatch(hideLoader());

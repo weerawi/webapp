@@ -83,6 +83,9 @@ const adminSlice = createSlice({
     },
     setSessionTimeout(state, action: PayloadAction<number>) {
       state.sessionTimeout = action.payload;
+    },
+    resetAdminState() {
+      return initialState;
     }
   },
 });
@@ -98,7 +101,8 @@ export const {
   deleteAdmin, 
   setAuditLogs, 
   addAuditLog,
-  setSessionTimeout
+  setSessionTimeout,
+  resetAdminState
 } = adminSlice.actions;
 
 export default adminSlice.reducer;

@@ -145,6 +145,7 @@ const reportSlice = createSlice({
     setDynamicColumnsAll: (state, action: PayloadAction<string[]>) => {
       state.dynamicColumns = action.payload;
     },
+    resetReportState: () => initialState,
   },
 });
 
@@ -157,6 +158,7 @@ export const {
   resetFilters,
   setCurrentDate,
   setDynamicColumnsAll,
+  resetReportState
 } = reportSlice.actions;
 
 export default reportSlice.reducer;

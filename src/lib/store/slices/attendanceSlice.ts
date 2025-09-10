@@ -46,8 +46,11 @@ const attendanceSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
+    resetAttendanceState() {
+      return initialState;
+    }
   },
 });
 
-export const { setAttendance, addAttendance, updateAttendance, setLoading } = attendanceSlice.actions;
+export const { setAttendance, addAttendance, updateAttendance, setLoading, resetAttendanceState } = attendanceSlice.actions;
 export default attendanceSlice.reducer;
