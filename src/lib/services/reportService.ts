@@ -90,7 +90,7 @@ export async function fetchAndStoreReports(
             billingError: false,
             cantFind: false,
             objections: false,
-            stoppedByNWSDB: false,
+            stoppedByBoard: false,
           };
           
           allRecords.push(record);

@@ -249,7 +249,7 @@ export function ReportFilters() {
             <SelectItem value="billingError">Billing Error</SelectItem>
             <SelectItem value="cantFind">Can&apos;t Find</SelectItem>
             <SelectItem value="objections">Objections</SelectItem>
-            <SelectItem value="stoppedByNWSDB">Stopped By NWSDB</SelectItem>
+            <SelectItem value="stoppedByBoard">Stopped By Board</SelectItem>
           </SelectContent>
         </Select>
       </div> */}

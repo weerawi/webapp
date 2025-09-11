@@ -21,7 +21,7 @@ export interface DisconnectionRecord {
   billingError: boolean
   cantFind: boolean
   objections: boolean
-  stoppedByNWSDB: boolean
+  stoppedByBoard: boolean
   photo?: string
   meterNo?: string;
   reading?: string; 

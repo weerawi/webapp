@@ -27,7 +27,7 @@ export const generateSupervisorWiseExcel = (
     "100%", "80%", "50%", "Already Paid",
     "Un Solved Cus Comp", "Gate Closed", "Meter Removed", 
     "Already Disconnected", "Wrong Meter", "Billing Error", 
-    "Can't Find", "Objections", "Stopped By NWSDB", "Unable To Attend"
+    "Can't Find", "Objections", "Stopped By Board", "Unable To Attend"
   ]);
   
   let rowIndex = 4; // Starting after headers
@@ -46,7 +46,7 @@ export const generateSupervisorWiseExcel = (
         item.payment100, item.payment80, item.payment50, item.alreadyPaid,
         item.unSolvedCusComp, item.gateClosed, item.meterRemoved,
         item.alreadyDisconnected, item.wrongMeter, item.billingError,
-        item.cantFind, item.objections, item.stoppedByNWSDB, item.unableToAttend
+        item.cantFind, item.objections, item.stoppedByBoard, item.unableToAttend
       ]);
       rowIndex++;
     });
@@ -61,7 +61,7 @@ export const generateSupervisorWiseExcel = (
       areaTotals.payment100, areaTotals.payment80, areaTotals.payment50, areaTotals.alreadyPaid,
       areaTotals.unSolvedCusComp, areaTotals.gateClosed, areaTotals.meterRemoved,
       areaTotals.alreadyDisconnected, areaTotals.wrongMeter, areaTotals.billingError,
-      areaTotals.cantFind, areaTotals.objections, areaTotals.stoppedByNWSDB, areaTotals.unableToAttend
+      areaTotals.cantFind, areaTotals.objections, areaTotals.stoppedByBoard, areaTotals.unableToAttend
     ]);
     totalRowIndices.push(rowIndex);
     rowIndex++;
@@ -91,7 +91,7 @@ export const generateSupervisorWiseExcel = (
       billingError: grand.billingError + areaTotals.billingError,
       cantFind: grand.cantFind + areaTotals.cantFind,
       objections: grand.objections + areaTotals.objections,
-      stoppedByNWSDB: grand.stoppedByNWSDB + areaTotals.stoppedByNWSDB,
+      stoppedByBoard: grand.stoppedByBoard + areaTotals.stoppedByBoard,
       unableToAttend: grand.unableToAttend + areaTotals.unableToAttend,
     };
   }, {
@@ -99,7 +99,7 @@ export const generateSupervisorWiseExcel = (
     totalJobs: 0, waiting: 0, ocDone: 0, rcDone: 0, payment100: 0,
     payment80: 0, payment50: 0, alreadyPaid: 0, unSolvedCusComp: 0,
     gateClosed: 0, meterRemoved: 0, alreadyDisconnected: 0, wrongMeter: 0,
-    billingError: 0, cantFind: 0, objections: 0, stoppedByNWSDB: 0, unableToAttend: 0,
+    billingError: 0, cantFind: 0, objections: 0, stoppedByBoard: 0, unableToAttend: 0,
   });
   
   data.push([
@@ -110,7 +110,7 @@ export const generateSupervisorWiseExcel = (
     grandTotal.payment100, grandTotal.payment80, grandTotal.payment50, grandTotal.alreadyPaid,
     grandTotal.unSolvedCusComp, grandTotal.gateClosed, grandTotal.meterRemoved,
     grandTotal.alreadyDisconnected, grandTotal.wrongMeter, grandTotal.billingError,
-    grandTotal.cantFind, grandTotal.objections, grandTotal.stoppedByNWSDB, grandTotal.unableToAttend
+    grandTotal.cantFind, grandTotal.objections, grandTotal.stoppedByBoard, grandTotal.unableToAttend
   ]);
   grandTotalRowIndex = rowIndex;
   

@@ -63,6 +63,7 @@ export function ReportView() {
   useEffect(() => {
     fetchDynamicColumns();
   }, []);
+  
 
   // In your ReportPage or wherever you call fetchAndStoreReports
   useEffect(() => {

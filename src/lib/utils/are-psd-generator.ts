@@ -45,7 +45,7 @@ export const generateAreaWisePDF = (
       billingError: acc.billingError + area.billingError,
       cantFind: acc.cantFind + area.cantFind,
       objections: acc.objections + area.objections,
-      stoppedByNWSDB: acc.stoppedByNWSDB + area.stoppedByNWSDB,
+      stoppedByBoard: acc.stoppedByBoard + area.stoppedByBoard,
       unableToAttend: acc.unableToAttend + area.unableToAttend,
     }),
     {
@@ -54,7 +54,7 @@ export const generateAreaWisePDF = (
       payment100: 0, payment80: 0, payment50: 0, alreadyPaid: 0,
       unSolvedCusComp: 0, gateClosed: 0, meterRemoved: 0,
       alreadyDisconnected: 0, wrongMeter: 0, billingError: 0,
-      cantFind: 0, objections: 0, stoppedByNWSDB: 0, unableToAttend: 0,
+      cantFind: 0, objections: 0, stoppedByBoard: 0, unableToAttend: 0,
     }
   );
   
@@ -84,7 +84,7 @@ export const generateAreaWisePDF = (
     { label: "Billing Error", key: "billingError" },
     { label: "Can't Find", key: "cantFind" },
     { label: "Objections", key: "objections" },
-    { label: "Stopped By NWSDB", key: "stoppedByNWSDB" },
+    { label: "Stopped By Board", key: "stoppedByBoard" },
     { label: "Unable To Attend", key: "unableToAttend" },
   ];
   

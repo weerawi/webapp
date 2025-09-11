@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/select";
 import { generateSupervisorWiseExcel } from "@/lib/utils/sup-excel-generator";
 import { generateSupervisorWisePDF } from "@/lib/utils/sup-pdf-generator";
+import { checkRecordType } from "@/lib/utils/record-type-checker";
+import { saveMonthlySummariesFromRedux } from "@/lib/services/summaryService";
 
 // Update the SupervisorWiseData interface:
 interface SupervisorWiseData {
@@ -60,7 +62,7 @@ interface SupervisorWiseData {
   billingError: number;
   cantFind: number;
   objections: number;
-  stoppedByNWSDB: number;
+  stoppedByBoard: number;
   unableToAttend: number;
   helpers: string[];
 }
@@ -85,6 +87,13 @@ export function SupervisorWiseReport() {
   useEffect(() => {
     calculateSupervisorWiseData();
   }, [records, dateRange, selectedArea]);
+
+  useEffect(() => {
+    if (records.length > 0) {
+      saveMonthlySummariesFromRedux(records);
+    }
+  }, [records]);
+
 
   const calculateSupervisorWiseData = () => {
     const teamMap = new Map<string, SupervisorWiseData>();
@@ -147,7 +156,7 @@ export function SupervisorWiseReport() {
           billingError: 0,
           cantFind: 0,
           objections: 0,
-          stoppedByNWSDB: 0,
+          stoppedByBoard: 0,
           unableToAttend: 0,
           helpers: [],
         });
@@ -158,22 +167,22 @@ export function SupervisorWiseReport() {
       // Count jobs received
       data.jobsReceived++;
 
-      // Update counts based on record fields
-      if (record.dc) data.ocDone++;
-      if (record.rc) data.rcDone++;
-      if (record.payment100) data.payment100++;
-      if (record.payment80) data.payment80++;
-      if (record.payment50) data.payment50++;
-      if (record.alreadyPaid) data.alreadyPaid++;
-      if (record.unSolvedCusComp) data.unSolvedCusComp++;
-      if (record.gateClosed) data.gateClosed++;
-      if (record.meterRemoved) data.meterRemoved++;
-      if (record.alreadyDisconnected) data.alreadyDisconnected++;
-      if (record.wrongMeter) data.wrongMeter++;
-      if (record.billingError) data.billingError++;
-      if (record.cantFind) data.cantFind++;
-      if (record.objections) data.objections++;
-      if (record.stoppedByNWSDB) data.stoppedByNWSDB++;
+      // Update counts based on record fields 
+      if (checkRecordType(record, 'dc')) data.ocDone++;
+      if (checkRecordType(record, 'rc')) data.rcDone++;
+      if (checkRecordType(record, 'payment100')) data.payment100++;
+      if (checkRecordType(record, 'payment80')) data.payment80++;
+      if (checkRecordType(record, 'payment50')) data.payment50++;
+      if (checkRecordType(record, 'alreadyPaid')) data.alreadyPaid++;
+      if (checkRecordType(record, 'unSolvedCusComp')) data.unSolvedCusComp++;
+      if (checkRecordType(record, 'gateClosed')) data.gateClosed++;
+      if (checkRecordType(record, 'meterRemoved')) data.meterRemoved++;
+      if (checkRecordType(record, 'alreadyDisconnected')) data.alreadyDisconnected++;
+      if (checkRecordType(record, 'wrongMeter')) data.wrongMeter++;
+      if (checkRecordType(record, 'billingError')) data.billingError++;
+      if (checkRecordType(record, 'cantFind')) data.cantFind++;
+      if (checkRecordType(record, 'objections')) data.objections++;
+      if (checkRecordType(record, 'stoppedByBoard')) data.stoppedByBoard++;
 
       // Add unique helpers
       if (record.helper && !data.helpers.includes(record.helper)) {
@@ -241,7 +250,7 @@ export function SupervisorWiseReport() {
         billingError: totals.billingError + data.billingError,
         cantFind: totals.cantFind + data.cantFind,
         objections: totals.objections + data.objections,
-        stoppedByNWSDB: totals.stoppedByNWSDB + data.stoppedByNWSDB,
+        stoppedByBoard: totals.stoppedByBoard + data.stoppedByBoard,
         unableToAttend: totals.unableToAttend + data.unableToAttend,
       }),
       {
@@ -265,7 +274,7 @@ export function SupervisorWiseReport() {
         billingError: 0,
         cantFind: 0,
         objections: 0,
-        stoppedByNWSDB: 0,
+        stoppedByBoard: 0,
         unableToAttend: 0,
       }
     );
@@ -390,7 +399,7 @@ export function SupervisorWiseReport() {
                 </TableHead>
                 <TableHead
                   colSpan={4}
-                  className="text-center border bg-green-50"
+                  className="text-center border "
                 >
                   Paid
                 </TableHead>
@@ -406,16 +415,16 @@ export function SupervisorWiseReport() {
                 </TableHead>
                 <TableHead className="text-center border">Returned</TableHead>
                 <TableHead className="text-center border">B/F</TableHead>
-                <TableHead className="text-center border bg-green-50">
+                <TableHead className="text-center border ">
                   100%
                 </TableHead>
-                <TableHead className="text-center border bg-green-50">
+                <TableHead className="text-center border ">
                   80%
                 </TableHead>
-                <TableHead className="text-center border bg-green-50">
+                <TableHead className="text-center border ">
                   50%
                 </TableHead>
-                <TableHead className="text-center border bg-green-50">
+                <TableHead className="text-center border ">
                   Already
                   <br />
                   Paid
@@ -455,7 +464,7 @@ export function SupervisorWiseReport() {
                 <TableHead className="text-center border">
                   Stopped By
                   <br />
-                  NWSDB
+                  Board
                 </TableHead>
                 <TableHead className="text-center border">
                   Unable To
@@ -509,16 +518,16 @@ export function SupervisorWiseReport() {
                         <TableCell className="text-center">
                           {data.rcDone}
                         </TableCell>
-                        <TableCell className="text-center bg-green-50">
+                        <TableCell className="text-center ">
                           {data.payment100}
                         </TableCell>
-                        <TableCell className="text-center bg-green-50">
+                        <TableCell className="text-center ">
                           {data.payment80}
                         </TableCell>
-                        <TableCell className="text-center bg-green-50">
+                        <TableCell className="text-center ">
                           {data.payment50}
                         </TableCell>
-                        <TableCell className="text-center bg-green-50">
+                        <TableCell className="text-center ">
                           {data.alreadyPaid}
                         </TableCell>
                         <TableCell className="text-center">
@@ -546,7 +555,7 @@ export function SupervisorWiseReport() {
                           {data.objections}
                         </TableCell>
                         <TableCell className="text-center">
-                          {data.stoppedByNWSDB}
+                          {data.stoppedByBoard}
                         </TableCell>
                         <TableCell className="text-center">
                           {data.unableToAttend}
@@ -583,16 +592,16 @@ export function SupervisorWiseReport() {
                       <TableCell className="text-center">
                         {areaTotals.rcDone}
                       </TableCell>
-                      <TableCell className="text-center bg-green-50">
+                      <TableCell className="text-center ">
                         {areaTotals.payment100}
                       </TableCell>
-                      <TableCell className="text-center bg-green-50">
+                      <TableCell className="text-center ">
                         {areaTotals.payment80}
                       </TableCell>
-                      <TableCell className="text-center bg-green-50">
+                      <TableCell className="text-center ">
                         {areaTotals.payment50}
                       </TableCell>
-                      <TableCell className="text-center bg-green-50">
+                      <TableCell className="text-center ">
                         {areaTotals.alreadyPaid}
                       </TableCell>
                       <TableCell className="text-center">
@@ -620,7 +629,7 @@ export function SupervisorWiseReport() {
                         {areaTotals.objections}
                       </TableCell>
                       <TableCell className="text-center">
-                        {areaTotals.stoppedByNWSDB}
+                        {areaTotals.stoppedByBoard}
                       </TableCell>
                       <TableCell className="text-center">
                         {areaTotals.unableToAttend}
@@ -665,8 +674,8 @@ export function SupervisorWiseReport() {
                         grand.billingError + areaTotals.billingError,
                       cantFind: grand.cantFind + areaTotals.cantFind,
                       objections: grand.objections + areaTotals.objections,
-                      stoppedByNWSDB:
-                        grand.stoppedByNWSDB + areaTotals.stoppedByNWSDB,
+                      stoppedByBoard:
+                        grand.stoppedByBoard + areaTotals.stoppedByBoard,
                       unableToAttend:
                         grand.unableToAttend + areaTotals.unableToAttend,
                     };
@@ -692,7 +701,7 @@ export function SupervisorWiseReport() {
                     billingError: 0,
                     cantFind: 0,
                     objections: 0,
-                    stoppedByNWSDB: 0,
+                    stoppedByBoard: 0,
                     unableToAttend: 0,
                   }
                 );
@@ -727,16 +736,16 @@ export function SupervisorWiseReport() {
                     <TableCell className="text-center">
                       {grandTotal.rcDone}
                     </TableCell>
-                    <TableCell className="text-center bg-green-50">
+                    <TableCell className="text-center ">
                       {grandTotal.payment100}
                     </TableCell>
-                    <TableCell className="text-center bg-green-50">
+                    <TableCell className="text-center ">
                       {grandTotal.payment80}
                     </TableCell>
-                    <TableCell className="text-center bg-green-50">
+                    <TableCell className="text-center ">
                       {grandTotal.payment50}
                     </TableCell>
-                    <TableCell className="text-center bg-green-50">
+                    <TableCell className="text-center ">
                       {grandTotal.alreadyPaid}
                     </TableCell>
                     <TableCell className="text-center">
@@ -764,7 +773,7 @@ export function SupervisorWiseReport() {
                       {grandTotal.objections}
                     </TableCell>
                     <TableCell className="text-center">
-                      {grandTotal.stoppedByNWSDB}
+                      {grandTotal.stoppedByBoard}
                     </TableCell>
                     <TableCell className="text-center">
                       {grandTotal.unableToAttend}
