@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,9 @@ import { hideLoader, showLoader } from '@/lib/store/slices/loaderSlice';
 import { addTask } from '@/lib/store/slices/reconnectionSlice';
 import { reconnectionService } from '@/lib/services/reconnectionService';
 import { toast } from 'sonner';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store/store';
+import { combineStaffLists } from '@/types/staff';
 
 interface TaskFormProps {
   onTaskAdded: () => void;
@@ -22,7 +25,56 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   
-  const teams = ['Team A', 'Team B', 'Team C', 'Team D'];
+  // const teams = ['Team A', 'Team B', 'Team C', 'Team D'];
+  // const staff = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+    const helpers = useSelector((state: RootState) => state.helper.helpers);
+    const staff = combineStaffLists(supervisors, helpers);
+  const [selectedArea, setSelectedArea] = useState('');
+  const [selectedTeamNumber, setSelectedTeamNumber] = useState<number | ''>('');
+
+  const completedTeamsMap = useMemo(() => {
+    const map = new Map<string, Set<number>>();
+    // A team is "completed" if there is an Active Supervisor and Active Helper
+    const groups = new Map<string, { sup?: any; help?: any }>();
+    staff.forEach(s => {
+      if (s.status === 'Inactive') return;
+      const key = `${s.area}|${s.teamNumber}`;
+      if (!groups.has(key)) groups.set(key, {});
+      const g = groups.get(key)!;
+      if (s.userType === 'Supervisor' && s.status === 'Active') g.sup = s;
+      if (s.userType === 'Helper' && s.status === 'Active') g.help = s;
+    });
+    groups.forEach((g, key) => {
+      if (g.sup && g.help) {
+        const [area, tnStr] = key.split('|');
+        const tn = Number(tnStr);
+        if (!map.has(area)) map.set(area, new Set());
+        map.get(area)!.add(tn);
+      }
+    });
+    return map;
+  }, [staff]);
+
+  // Get auth state for user info
+  const { user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = user?.role === 'Admin';
+  useEffect(() => {
+    if (user && !isAdmin && user.area) {
+      setSelectedArea(user.area);
+    }
+  }, [user, isAdmin]);
+
+  const areaOptions = useMemo(
+    () => Array.from(completedTeamsMap.keys()).sort(),
+    [completedTeamsMap]
+  );
+
+  const teamOptions = useMemo(() => {
+    if (!selectedArea) return [];
+    return Array.from(completedTeamsMap.get(selectedArea) || []).sort((a,b)=>a-b);
+  }, [selectedArea, completedTeamsMap]);
+  
 
   const getSriLankanTime = () => {
     const now = new Date();
@@ -32,8 +84,7 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!accountNumber || !selectedTeam) {
+    if (!accountNumber || !selectedArea || selectedTeamNumber === '') {
       toast.error('Please fill all required fields');
       return;
     }
@@ -48,7 +99,8 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
       const sriLankanTime = getSriLankanTime();
       const newTask = {
         accountNumber,
-        team: selectedTeam,
+        team: `Team ${selectedTeamNumber}`, // stored label
+        area: selectedArea,                // OPTIONAL: add area to task
         imageUrl,
         allocatedTime: sriLankanTime.toISOString(),
         status: 'pending' as const,
@@ -60,7 +112,8 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
       
       // Reset form
       setAccountNumber('');
-      setSelectedTeam('');
+      setSelectedArea('');
+      setSelectedTeamNumber('');
       setImageFile(null);
       
       toast.success('Task added successfully');
@@ -98,16 +151,40 @@ export default function TaskForm({ onTaskAdded }: TaskFormProps) {
                 required
               />
             </div>
-            
+
+            {/* Area Select */}
             <div className="flex-1 space-y-2">
-              <Label htmlFor="team">Team</Label>
-              <Select value={selectedTeam} onValueChange={setSelectedTeam} required>
+              <Label htmlFor="area">Area</Label>
+              <Select value={selectedArea} onValueChange={(v) => { setSelectedArea(v); setSelectedTeamNumber(''); }}
+                disabled={!isAdmin}
+                >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a team" />
+                  <SelectValue placeholder="Select area" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teams.map(team => (
-                    <SelectItem key={team} value={team}>{team}</SelectItem>
+                  {areaOptions.map(a => (
+                    <SelectItem key={a} value={a}>{a}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Team Number Select (only after area chosen) */}
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="teamNumber">Team</Label>
+              <Select
+                value={selectedTeamNumber === '' ? '' : String(selectedTeamNumber)}
+                onValueChange={(v) => setSelectedTeamNumber(Number(v))}
+                disabled={!selectedArea}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedArea ? "Select team" : "Select area first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamOptions.map(num => (
+                    <SelectItem key={num} value={String(num)}>
+                      Team {num}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

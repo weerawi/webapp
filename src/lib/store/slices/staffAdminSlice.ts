@@ -55,9 +55,12 @@ const staffAdminSlice = createSlice({
       state.staffList = state.staffList.filter(staff => staff.id !== action.payload);
       state.supervisors = state.staffList.filter(s => s.userType === "Supervisor");
       state.helpers = state.staffList.filter(s => s.userType === "Helper");
+    },
+    resetStaffAdminState() {
+      return initialState;
     }
   },
 });
 
-export const { setStaff, addStaff, updateStaff, deleteStaff } = staffAdminSlice.actions;
+export const { setStaff, addStaff, updateStaff, deleteStaff, resetStaffAdminState } = staffAdminSlice.actions;
 export default staffAdminSlice.reducer;

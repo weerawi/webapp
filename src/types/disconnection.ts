@@ -21,8 +21,15 @@ export interface DisconnectionRecord {
   billingError: boolean
   cantFind: boolean
   objections: boolean
-  stoppedByNWSDB: boolean
+  stoppedByBoard: boolean
   photo?: string
+  meterNo?: string;
+  reading?: string; 
+  type?: string  // The actual type from Firebase
+  imageUrl?: string  // From Firebase imageUrl field
+  jobId?: string
+  status?: string
+  timestamp?: number
 }
 
 export interface DisconnectionFilters {

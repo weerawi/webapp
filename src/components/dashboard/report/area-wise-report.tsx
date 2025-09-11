@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { addDays } from "date-fns";
+import { checkDCBeforeNoon, checkRecordType } from "@/lib/utils/record-type-checker";
 
 
 interface AreaWiseData {
@@ -61,7 +62,7 @@ interface AreaWiseData {
   billingError: number;
   cantFind: number;
   objections: number;
-  stoppedByNWSDB: number;
+  stoppedByBoard: number;
   unableToAttend: number;
 }
 
@@ -145,7 +146,7 @@ export function AreaWiseReport() {
           billingError: 0,
           cantFind: 0,
           objections: 0,
-          stoppedByNWSDB: 0,
+          stoppedByBoard: 0,
           unableToAttend: unableToAttend,
         });
       }
@@ -155,29 +156,27 @@ export function AreaWiseReport() {
       // Count jobs received
       data.jobsReceived++;
       
-      // Update counts based on record fields
-      if (record.dc) {
+      // Update counts based on record type field
+      if (checkRecordType(record, 'dc')) {
         data.totalDcDone++;
-        const recordTime = record.time.split(":");
-        const recordHour = parseInt(recordTime[0]);
-        if (recordHour < 12) {
+        if (checkDCBeforeNoon(record)) {
           data.dcDone++;
         }
       }
-      if (record.rc) data.rcDone++;
-      if (record.payment100) data.payment100++;
-      if (record.payment80) data.payment80++;
-      if (record.payment50) data.payment50++;
-      if (record.alreadyPaid) data.alreadyPaid++;
-      if (record.unSolvedCusComp) data.unSolvedCusComp++;
-      if (record.gateClosed) data.gateClosed++;
-      if (record.meterRemoved) data.meterRemoved++;
-      if (record.alreadyDisconnected) data.alreadyDisconnected++;
-      if (record.wrongMeter) data.wrongMeter++;
-      if (record.billingError) data.billingError++;
-      if (record.cantFind) data.cantFind++;
-      if (record.objections) data.objections++;
-      if (record.stoppedByNWSDB) data.stoppedByNWSDB++;
+      if (checkRecordType(record, 'rc')) data.rcDone++;
+      if (checkRecordType(record, 'payment100')) data.payment100++;
+      if (checkRecordType(record, 'payment80')) data.payment80++;
+      if (checkRecordType(record, 'payment50')) data.payment50++;
+      if (checkRecordType(record, 'alreadyPaid')) data.alreadyPaid++;
+      if (checkRecordType(record, 'unSolvedCusComp')) data.unSolvedCusComp++;
+      if (checkRecordType(record, 'gateClosed')) data.gateClosed++;
+      if (checkRecordType(record, 'meterRemoved')) data.meterRemoved++;
+      if (checkRecordType(record, 'alreadyDisconnected')) data.alreadyDisconnected++;
+      if (checkRecordType(record, 'wrongMeter')) data.wrongMeter++;
+      if (checkRecordType(record, 'billingError')) data.billingError++;
+      if (checkRecordType(record, 'cantFind')) data.cantFind++;
+      if (checkRecordType(record, 'objections')) data.objections++;
+      if (checkRecordType(record, 'stoppedByBoard')) data.stoppedByBoard++;
     });
   
     // Calculate totals and percentages
@@ -210,11 +209,11 @@ export function AreaWiseReport() {
   };
 
   const handleDownloadExcel = () => {
-    generateAreaWiseExcel(areaData);
+    generateAreaWiseExcel(areaData, dateRange, selectedArea);
   };
 
   const handleDownloadPDF = () => {
-    generateAreaWisePDF(areaData);
+    generateAreaWisePDF(areaData, dateRange, selectedArea);
   };
 
   const calculateTotals = () => {
@@ -242,7 +241,7 @@ export function AreaWiseReport() {
         billingError: totals.billingError + area.billingError,
         cantFind: totals.cantFind + area.cantFind,
         objections: totals.objections + area.objections,
-        stoppedByNWSDB: totals.stoppedByNWSDB + area.stoppedByNWSDB,
+        stoppedByBoard: totals.stoppedByBoard + area.stoppedByBoard,
         unableToAttend: totals.unableToAttend + area.unableToAttend,
       }),
       {
@@ -267,7 +266,7 @@ export function AreaWiseReport() {
         billingError: 0,
         cantFind: 0,
         objections: 0,
-        stoppedByNWSDB: 0,
+        stoppedByBoard: 0,
         unableToAttend: 0,
       }
     );
@@ -434,7 +433,7 @@ export function AreaWiseReport() {
                   <TableHead className="text-center border">
                     Stopped By
                     <br />
-                    NWSDB
+                    Board
                   </TableHead>
                   <TableHead className="text-center border">
                     Unable To
@@ -514,7 +513,7 @@ export function AreaWiseReport() {
                       {area.objections}
                     </TableCell>
                     <TableCell className="text-center">
-                      {area.stoppedByNWSDB}
+                      {area.stoppedByBoard}
                     </TableCell>
                     <TableCell className="text-center">
                       {area.unableToAttend}
@@ -598,7 +597,7 @@ export function AreaWiseReport() {
                     {totals.objections}
                   </TableCell>
                   <TableCell className="text-center">
-                    {totals.stoppedByNWSDB}
+                    {totals.stoppedByBoard}
                   </TableCell>
                   <TableCell className="text-center">
                     {totals.unableToAttend}
@@ -635,13 +634,13 @@ export function AreaWiseReport() {
           { label: "Total Jobs", key: "totalJobs", bold: true },
           { label: "Teams", key: "teams" },
           { label: "Waiting", key: "waiting" },
-          { label: "12:00:00 PM DC", key: "dcDone", showPercentage: "dcDonePercentage" },
-          { label: "Total DC Done", key: "totalDcDone", showPercentage: "totalDcPercentage", bgColor: "bg-blue-50" },
-          { label: "Total RC Done", key: "rcDone", showPercentage: "rcDonePercentage", bgColor: "bg-green-50" },
-          { label: "100%", key: "payment100", percentage: true, bgColor: "bg-red-50" },
-          { label: "80%", key: "payment80", percentage: true, bgColor: "bg-red-50" },
-          { label: "50%", key: "payment50", percentage: true, bgColor: "bg-red-50" },
-          { label: "Already Paid", key: "alreadyPaid", percentage: true, bgColor: "bg-red-50" },
+          // { label: "12:00:00 PM DC", key: "dcDone", showPercentage: "dcDonePercentage" },
+          { label: "Total DC Done", key: "totalDcDone", showPercentage: "totalDcPercentage" },
+          { label: "Total RC Done", key: "rcDone", showPercentage: "rcDonePercentage"},
+          { label: "100%", key: "payment100", percentage: true, },
+          { label: "80%", key: "payment80", percentage: true, },
+          { label: "50%", key: "payment50", percentage: true, },
+          { label: "Already Paid", key: "alreadyPaid", percentage: true, },
           { label: "Un Solved Cus Comp.", key: "unSolvedCusComp", percentage: true },
           { label: "Gate Closed", key: "gateClosed", percentage: true },
           { label: "Meter Removed", key: "meterRemoved", percentage: true },
@@ -650,14 +649,14 @@ export function AreaWiseReport() {
           { label: "Billing Error", key: "billingError", percentage: true },
           { label: "Can't Find", key: "cantFind", percentage: true },
           { label: "Objections", key: "objections", percentage: true },
-          { label: "Stopped By NWSDB", key: "stoppedByNWSDB", percentage: true },
+          { label: "Stopped By Board", key: "stoppedByBoard", percentage: true },
           { label: "Unable To Attend", key: "unableToAttend", percentage: true },
         ].map((row) => {
           const totals = calculateTotals();
           const totalValue = totals[row.key as keyof typeof totals];
           
           return (
-            <TableRow key={row.key}>
+            <TableRow className=" [&>td]:py-1 [&>td]:px-2" key={row.key}>
               <TableCell className={`sticky left-0 z-10 bg-background w-[200px] min-w-[200px] ${row.bold ? 'font-bold' : ''}`}>
                 {row.label}
               </TableCell>

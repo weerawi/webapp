@@ -41,12 +41,14 @@ export function ReportFilters() {
     from: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
     to: filters.dateTo ? new Date(filters.dateTo) : undefined,
   });
+  const accountNumbers = useSelector(
+    (state: RootState) => state.report.accountNumbers
+  );
 
   useEffect(() => {
     setDateRange({ from: undefined, to: undefined });
     dispatch(resetFilters());
-  },[]);
-
+  }, []);
 
   const handleDateRangeChange = (range: {
     from: Date | undefined;
@@ -104,7 +106,7 @@ export function ReportFilters() {
           value={filters.area}
           onValueChange={(val) => dispatch(setFilters({ area: val }))}
         >
-          <SelectTrigger className="cursor-pointer">
+          <SelectTrigger className="cursor-pointer w-full max-w-2xs">
             <SelectValue placeholder="Select area" />
           </SelectTrigger>
           <SelectContent>
@@ -118,27 +120,6 @@ export function ReportFilters() {
         </Select>
       </div>
 
-      {/* Supervisor */}
-      <div className="space-y-1">
-        <Label>Supervisor</Label>
-        <Select
-          value={filters.supervisor}
-          onValueChange={(val) => dispatch(setFilters({ supervisor: val }))}
-        >
-          <SelectTrigger className="cursor-pointer">
-            <SelectValue placeholder="Select supervisor"  defaultValue="none"  />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Supervisors</SelectItem>
-            {(supervisors || []).map((s: string) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Team Number */}
       <div className="space-y-1">
         <Label>Team Number</Label>
@@ -146,7 +127,7 @@ export function ReportFilters() {
           value={filters.teamNo}
           onValueChange={(val) => dispatch(setFilters({ teamNo: val }))}
         >
-          <SelectTrigger className="cursor-pointer">
+          <SelectTrigger className="cursor-pointer w-full max-w-2xs">
             <SelectValue placeholder="Select team number" />
           </SelectTrigger>
           <SelectContent>
@@ -160,6 +141,27 @@ export function ReportFilters() {
         </Select>
       </div>
 
+      {/* Supervisor */}
+      <div className="space-y-1">
+        <Label>Supervisor</Label>
+        <Select
+          value={filters.supervisor}
+          onValueChange={(val) => dispatch(setFilters({ supervisor: val }))}
+        >
+          <SelectTrigger className="cursor-pointer w-full max-w-2xs">
+            <SelectValue placeholder="Select supervisor" defaultValue="none" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Supervisors</SelectItem>
+            {(supervisors || []).map((s: string) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Helper */}
       <div className="space-y-1">
         <Label>Helper</Label>
@@ -167,14 +169,35 @@ export function ReportFilters() {
           value={filters.helper}
           onValueChange={(val) => dispatch(setFilters({ helper: val }))}
         >
-          <SelectTrigger className="cursor-pointer">
-            <SelectValue placeholder="Select helper"  defaultValue="none"  />
+          <SelectTrigger className="cursor-pointer w-full max-w-2xs">
+            <SelectValue placeholder="Select helper" defaultValue="none" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Helpers</SelectItem>
             {(helpers || []).map((h: string) => (
               <SelectItem key={h} value={h}>
                 {h}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Account Number */}
+      <div className="space-y-1">
+        <Label>Account Number</Label>
+        <Select
+          value={filters.accountNo}
+          onValueChange={(val) => dispatch(setFilters({ accountNo: val }))}
+        >
+          <SelectTrigger className="cursor-pointer w-full">
+            <SelectValue placeholder="Select account number" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Accounts</SelectItem>
+            {(accountNumbers || []).map((acc: string) => (
+              <SelectItem key={acc} value={acc}>
+                {acc}
               </SelectItem>
             ))}
           </SelectContent>
@@ -188,7 +211,7 @@ export function ReportFilters() {
           value={filters.paymentStatus}
           onValueChange={(val) => dispatch(setFilters({ paymentStatus: val }))}
         >
-          <SelectTrigger className="cursor-pointer">
+          <SelectTrigger className="cursor-pointer w-full max-w-2xs">
             <SelectValue placeholder="Select payment status" />
           </SelectTrigger>
           <SelectContent>
@@ -210,7 +233,7 @@ export function ReportFilters() {
             dispatch(setFilters({ disconnectionStatus: val }))
           }
         >
-          <SelectTrigger className="cursor-pointer">
+          <SelectTrigger className="cursor-pointer w-full max-w-2xs">
             <SelectValue placeholder="Select disconnection status" />
           </SelectTrigger>
           <SelectContent>
@@ -226,7 +249,7 @@ export function ReportFilters() {
             <SelectItem value="billingError">Billing Error</SelectItem>
             <SelectItem value="cantFind">Can&apos;t Find</SelectItem>
             <SelectItem value="objections">Objections</SelectItem>
-            <SelectItem value="stoppedByNWSDB">Stopped By NWSDB</SelectItem>
+            <SelectItem value="stoppedByBoard">Stopped By Board</SelectItem>
           </SelectContent>
         </Select>
       </div> */}
@@ -289,6 +312,19 @@ export function ReportFilters() {
               </Button>
             </div>
           )}
+          {filters.accountNo !== "all" && (
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
+              Account: {filters.accountNo}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 cursor-pointer"
+                onClick={() => handleRemoveFilter("accountNo")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
           {/* {filters.paymentStatus !== "all" && (
             <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm">
               Payment: {filters.paymentStatus}
@@ -339,7 +375,7 @@ export function ReportFilters() {
         <Button onClick={handleApplyFilters} className="w-full cursor-pointer">
           Apply Filters
         </Button>
-        <Button onClick={handleReset}  className="w-full cursor-pointer">
+        <Button onClick={handleReset} className="w-full cursor-pointer">
           Clear All
         </Button>
       </div>

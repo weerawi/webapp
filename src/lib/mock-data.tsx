@@ -25,7 +25,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -51,7 +51,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -77,7 +77,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -103,7 +103,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -129,7 +129,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -155,7 +155,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -181,7 +181,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -207,7 +207,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -233,7 +233,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -259,7 +259,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -285,7 +285,7 @@
 //     billingError: true,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -311,7 +311,7 @@
 //     billingError: false,
 //     cantFind: true,
 //     objections: false,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -337,7 +337,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: true,
-//     stoppedByNWSDB: false,
+//     stoppedByBoard: false,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 //   {
@@ -363,7 +363,7 @@
 //     billingError: false,
 //     cantFind: false,
 //     objections: false,
-//     stoppedByNWSDB: true,
+//     stoppedByBoard: true,
 //     photo: "/placeholder.svg?height=100&width=100",
 //   },
 // ]
@@ -392,7 +392,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -418,7 +418,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": true,
     "objections": true,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -444,7 +444,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -470,7 +470,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": false,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -496,7 +496,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": false,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -522,7 +522,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": true,
     "objections": true,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -548,7 +548,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -574,7 +574,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -600,7 +600,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": true,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -626,7 +626,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -652,7 +652,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -678,7 +678,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -704,7 +704,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -730,7 +730,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -756,7 +756,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -782,7 +782,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -808,7 +808,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -834,7 +834,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -860,7 +860,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -886,7 +886,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -912,7 +912,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -938,7 +938,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -964,7 +964,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -990,7 +990,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -1016,7 +1016,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -1042,7 +1042,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": false,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -1068,7 +1068,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": false,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -1094,7 +1094,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": false,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -1120,7 +1120,7 @@ export const mockDisconnectionData = [
     "billingError": false,
     "cantFind": true,
     "objections": true,
-    "stoppedByNWSDB": false,
+    "stoppedByBoard": false,
     "photo": "/placeholder.svg?height=100&width=100"
   },
   {
@@ -1146,7 +1146,7 @@ export const mockDisconnectionData = [
     "billingError": true,
     "cantFind": true,
     "objections": true,
-    "stoppedByNWSDB": true,
+    "stoppedByBoard": true,
     "photo": "/placeholder.svg?height=100&width=100"
   }
 ];

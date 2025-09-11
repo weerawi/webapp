@@ -454,7 +454,9 @@ export default function ReconnectionManagement() {
 return (
   <>
     <Breadcrumb />
-    <ProtectedRoute allowedRoles={["Admin"]}>
+    <ProtectedRoute 
+    // allowedRoles={["Admin"]}
+    >
       <div className="space-y-6 mx-5">
         <Card className="px-5">
           <TaskForm onTaskAdded={loadTasks} />

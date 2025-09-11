@@ -16,6 +16,8 @@ interface PDFPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   records: any[];
+  dynamicColumns: string[];  
+  getFieldValue: (record: any, column: string) => boolean;
   onDownload: () => void;
 }
 
@@ -23,14 +25,16 @@ export function PDFPreviewDialog({
   open,
   onOpenChange,
   records,
+  dynamicColumns, 
+  getFieldValue, 
   onDownload,
 }: PDFPreviewDialogProps) {
   const [pdfUrl, setPdfUrl] = useState<string>("");
 
   useEffect(() => {
     if (open && records.length > 0) {
-      // Generate PDF
-      const doc = generatePDFContent(records, true);
+      // Generate PDF with dynamic columns
+      const doc = generatePDFContent(records, dynamicColumns,getFieldValue, true);  // Pass dynamicColumns
       
       // Create blob with proper MIME type
       const pdfBlob = doc.output("blob");
@@ -46,11 +50,11 @@ export function PDFPreviewDialog({
         }
       };
     }
-  }, [open, records]);
+  }, [open, records, dynamicColumns]);  // Add dynamicColumns to dependencies
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0">
+      <DialogContent className="max-w-5xl h-[85vh] p-0 gap-0">  {/* Increased width for landscape */}
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>PDF Preview</DialogTitle>
         </DialogHeader>

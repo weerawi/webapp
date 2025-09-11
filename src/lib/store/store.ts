@@ -5,30 +5,42 @@ import authReducer from "./slices/authSlice";
 import reportReducer from "./slices/reportSlice";
 import loaderReducer from "./slices/loaderSlice";
 import userLocationReducer from "./slices/userLocationsSlice";
-import staffReducer from "./slices/staffSlice";
+// import staffReducer from "./slices/staffSlice";
 import staffAdminReducer from "./slices/staffAdminSlice";
 import adminReducer from "./slices/adminSlice";
 import reconnectionReducer from "./slices/reconnectionSlice"
 import areaReducer from "./slices/areaSlice"
+import attendanceReducer from './slices/attendanceSlice';
+import supervisorReducer from "./slices/supervisorSlice"; 
+import helperReducer from "./slices/helperSlice"; 
 
 const persistConfig = {
   key: "root",
   storage,
 };
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   auth: authReducer,
   report: reportReducer,
   loader: loaderReducer,
   userLocations: userLocationReducer,
-  staff:staffReducer,
+  // staff:staffReducer,
+  supervisor: supervisorReducer,
+  helper: helperReducer,
   staffAdmin: staffAdminReducer,
   admin: adminReducer,
   reconnection: reconnectionReducer,
   area: areaReducer,
+  attendance: attendanceReducer,
 });
-
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const rootReducer = (state: any, action: any) => {
+  if (action.type === 'RESET_APP') {
+    storage.removeItem('persist:root');
+    state = undefined;
+  }
+  return appReducer(state, action);
+};
+const persistedReducer = persistReducer(persistConfig, rootReducer); 
 
 export const store = configureStore({
   reducer: persistedReducer,

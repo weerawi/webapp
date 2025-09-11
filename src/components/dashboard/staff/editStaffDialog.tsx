@@ -21,8 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { Staff } from "@/lib/store/slices/staffSlice";
-import { updateStaffAndSync } from "@/lib/services/staffService";
+// import { Staff } from "@/lib/store/slices/staffSlice";
+// import { updateStaffAndSync } from "@/lib/services/staffService";
+import { Staff, combineStaffLists } from "@/types/staff";
+import { updateSupervisorAndSync } from "@/lib/services/supervisorService";
+import { updateHelperAndSync } from "@/lib/services/helperService";
 
 interface EditStaffDialogProps {
   staff: Staff;
@@ -36,7 +39,9 @@ export default function EditStaffDialog({
   onOpenChange,
 }: EditStaffDialogProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const staffList = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+  const helpers = useSelector((state: RootState) => state.helper.helpers);
+  const staffList = combineStaffLists(supervisors, helpers);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -116,60 +121,76 @@ export default function EditStaffDialog({
 
 
 
-  // Get available partners based on current form userType
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const oldLinkedStaffId = staff.linkedStaffId;
-      const newLinkedStaffId = form.linkedStaffId === "none" ? "" : form.linkedStaffId;
+
+
+// Replace the handleSubmit function with this version:
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const oldLinkedStaffId = staff.linkedStaffId;
+    const newLinkedStaffId = form.linkedStaffId === "none" ? "" : form.linkedStaffId;
+    
+    if (staff.userType === "Supervisor") {
+      const updateData = {
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        linkedHelperId: newLinkedStaffId,
+      };
       
-      // If changing partner
+      await updateSupervisorAndSync(dispatch, staff.id, updateData);
+      
+      // Handle partner changes
       if (oldLinkedStaffId !== newLinkedStaffId) {
-        // Unlink old partner but keep their team number
         if (oldLinkedStaffId) {
-          await updateStaffAndSync(dispatch, oldLinkedStaffId, { 
-            linkedStaffId: ""
-            // Don't reset team number - they stay in same team waiting for new partner
+          await updateHelperAndSync(dispatch, oldLinkedStaffId, {
+            linkedSupervisorId: ""
           });
         }
-        
-        // Link new partner and update their team number to match current staff
         if (newLinkedStaffId) {
-          const newPartner = staffList.find(s => s.id === newLinkedStaffId);
-          
-          // If new partner had a different team, unlink their old partner
-          if (newPartner?.linkedStaffId) {
-            await updateStaffAndSync(dispatch, newPartner.linkedStaffId, {
-              linkedStaffId: ""
-            });
-          }
-          
-          // Update new partner with current staff's team number and link
-          await updateStaffAndSync(dispatch, newLinkedStaffId, { 
-            linkedStaffId: staff.id,
-            teamNumber: staff.teamNumber // Assign same team number
+          await updateHelperAndSync(dispatch, newLinkedStaffId, {
+            linkedSupervisorId: staff.id,
+            teamNumber: staff.teamNumber
           });
         }
       }
-      
-      // Update current staff
+    } else {
+      // Helper update
       const updateData = {
-        ...form,
-        linkedStaffId: newLinkedStaffId,
+        email: form.email,
+        phone: form.phone,
+        linkedSupervisorId: newLinkedStaffId,
       };
-      await updateStaffAndSync(dispatch, staff.id, updateData);
       
-      toast.success("Staff member updated successfully");
-      onOpenChange(false);
-    } catch (error) {
-      toast.error("Failed to update staff member");
-    } finally {
-      setLoading(false);
+      await updateHelperAndSync(dispatch, staff.id, updateData);
+      
+      // Handle partner changes
+      if (oldLinkedStaffId !== newLinkedStaffId) {
+        if (oldLinkedStaffId) {
+          await updateSupervisorAndSync(dispatch, oldLinkedStaffId, {
+            linkedHelperId: ""
+          });
+        }
+        if (newLinkedStaffId) {
+          await updateSupervisorAndSync(dispatch, newLinkedStaffId, {
+            linkedHelperId: staff.id,
+            teamNumber: staff.teamNumber
+          });
+        }
+      }
     }
-  };
-
+    
+    toast.success("Staff member updated successfully");
+    onOpenChange(false);
+  } catch (error) {
+    console.error("Error updating staff:", error);
+    toast.error(`Failed to update staff member`);
+  } finally {
+    setLoading(false);
+  }
+};
   // const getLinkedOptions = () => {
   //   return staffList.filter((s) => {
   //     // Same area and active
@@ -191,48 +212,87 @@ export default function EditStaffDialog({
   // };
 
 
-  const getLinkedOptions = () => {
-    console.log("Current staff area:", staff.area); // Debug line
+  // const getLinkedOptions = () => {
+  //   console.log("Current staff area:", staff.area); // Debug line
   
-    return staffList.filter((s) => {
-      console.log("Checking staff:", s.username, "Area:", s.area); // Debug line
+  //   return staffList.filter((s) => {
+  //     console.log("Checking staff:", s.username, "Area:", s.area); // Debug line
       
-      // Use staff.area directly instead of form.area
-      if (s.area !== staff.area || !s.isActive || s.id === staff.id) {
-        return false;
-      }
+  //     // Use staff.area directly instead of form.area
+  //     if (s.area !== staff.area || !s.isActive || s.id === staff.id) {
+  //       return false;
+  //     }
       
-      // Get the opposite user type based on form.userType
-      const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
+  //     // Get the opposite user type based on form.userType
+  //     const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
       
-      if (s.userType !== targetType) {
-        return false;
-      }
+  //     if (s.userType !== targetType) {
+  //       return false;
+  //     }
       
-      // Include current partner
-      if (s.id === staff.linkedStaffId) {
-        return true;
-      }
+  //     // Include current partner
+  //     if (s.id === staff.linkedStaffId) {
+  //       return true;
+  //     }
       
-      // Include staff without partners
-      if (!s.linkedStaffId || s.linkedStaffId === "") {
-        return true;
-      }
+  //     // Include staff without partners
+  //     if (!s.linkedStaffId || s.linkedStaffId === "") {
+  //       return true;
+  //     }
       
-      // Include staff with team number 0
-      if (s.teamNumber === 0) {
-        return true;
-      }
+  //     // Include staff with team number 0
+  //     if (s.teamNumber === 0) {
+  //       return true;
+  //     }
       
-      // Include staff whose partner is inactive
-      const partner = staffList.find(p => p.id === s.linkedStaffId);
-      if (partner && !partner.isActive) {
-        return true;
-      }
+  //     // Include staff whose partner is inactive
+  //     const partner = staffList.find(p => p.id === s.linkedStaffId);
+  //     if (partner && !partner.isActive) {
+  //       return true;
+  //     }
       
-      return false;
-    });
-  };
+  //     return false;
+  //   });
+  // };
+
+
+const getLinkedOptions = () => {
+  const targetType = form.userType === "Helper" ? "Supervisor" : "Helper";
+
+  // For debugging
+  console.log("Looking for available", targetType, "in area", staff.area);
+  console.log("All staff:", staffList.map(s => ({
+    name: s.username,
+    type: s.userType,
+    area: s.area,
+    team: s.teamNumber,
+    status: s.status,
+    linkedTo: s.linkedStaffId || "none"
+  })));
+
+  return staffList.filter((s) => {
+    // Basic criteria
+    if (s.id === staff.id) return false;
+    if (s.area !== staff.area) return false;
+    if (!s.isActive) return false;
+    if (s.userType !== targetType) return false;
+
+    // Also include staff with "Incomplete" status regardless of linkedStaffId
+    // This is the key fix - show helpers/supervisors waiting for partners
+    if (s.status === 'Incomplete') return true;
+
+    // Original checks
+    const emptyLink = !s.linkedStaffId || s.linkedStaffId === "" || s.linkedStaffId === "none";
+    if (emptyLink) return true;
+    if (s.linkedStaffId === staff.id) return true;
+
+    // Partner inactive?
+    const partner = staffList.find(p => p.id === s.linkedStaffId);
+    if (partner && !partner.isActive) return true;
+
+    return false;
+  });
+};
 
   const linkedOptions = getLinkedOptions();
 
@@ -269,34 +329,35 @@ export default function EditStaffDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="pr-10"
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
+          {staff.userType === 'Supervisor' && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-
+          )}
           <div className="space-y-2 ">
             <Label htmlFor="userType">User Type</Label>
             <Select

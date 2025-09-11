@@ -3,11 +3,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { AppDispatch, RootState } from "@/lib/store/store";
-import { addStaff } from "@/lib/store/slices/staffSlice";
-import {
-  saveStaffToFirestore,
-  updateLinkedStaff,
-} from "@/lib/services/staffService";
+// import { addStaff } from "@/lib/store/slices/staffSlice";
+// import {
+//   saveStaffToFirestore,
+//   updateLinkedStaff,
+// } from "@/lib/services/staffService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,10 +39,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { computeTeamHints } from "@/lib/utils/team";    
+import { Staff, combineStaffLists } from "@/types/staff";
+import { addSupervisor } from "@/lib/store/slices/supervisorSlice";
+import { addHelper } from "@/lib/store/slices/helperSlice";
+import { saveSupervisorToFirestore, updateSupervisorAndSync, createSupervisorAuthUser } from "@/lib/services/supervisorService";
+import { saveHelperToFirestore, updateHelperAndSync } from "@/lib/services/helperService";
 
 export default function AddStaffForm() {
   const dispatch = useDispatch<AppDispatch>();
-  const staffList = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+  const helpers = useSelector((state: RootState) => state.helper.helpers);
+  const staffList = combineStaffLists(supervisors, helpers);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -86,34 +94,86 @@ export default function AddStaffForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const staffData = {
-        ...form,
-        linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
-        joinDate: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        isActive: true,
-      };
-      const id = await saveStaffToFirestore(staffData);
-      dispatch(addStaff({ id, ...staffData }));
-      
-      // If this staff is linked to another, update the other staff member
-      if (form.linkedStaffId && form.linkedStaffId !== "none") {
-        await updateLinkedStaff(dispatch, id, form.linkedStaffId);
-      }
-      
-      toast.success("Staff member added successfully");
-      resetForm(); // Use resetForm instead of manual reset
-      setOpen(false);
-    } catch (error) {
-      toast.error("Failed to add staff member");
-    } finally {
-      setLoading(false);
-    }
-  };
+const mergedTeamForPair = (partner: Staff | undefined, currentTeam: number, area: string) => {
+  if (!partner) return currentTeam;
+  // prefer the lowest valid team number (>0) between the two;
+  const candidates = [partner.teamNumber, currentTeam].filter(n => n && n > 0);
+  if (candidates.length) return Math.min(...candidates);
+
+  // if neither has a valid team yet, reuse the lowest free number for THIS role
+  const { suggestedNewTeam } = computeTeamHints(staffList, area, form.userType);
+  return suggestedNewTeam;
+};
+
+// const handleSubmit = async (e: React.FormEvent) => {
+//   e.preventDefault();
+
+//   // Existing validation checks...
+//   const dup = staffList.some(
+//     s => s.empNumber.trim().toLowerCase() === form.empNumber.trim().toLowerCase()
+//   );
+//   if (dup) {
+//     toast.error("Employee number must be unique.");
+//     return;
+//   }
+
+//   const password = form.userType === "Supervisor" ? form.password : "";
+//   if (form.userType === "Supervisor" && password.trim().length === 0) {
+//     toast.error("Please set a password for the supervisor.");
+//     return;
+//   }
+
+//   setLoading(true);
+//   try {
+//     // Create Firebase Auth user for Supervisor
+//     let uid: string | undefined;
+//     if (form.userType === "Supervisor" && password) {
+//       try {
+//         const { createStaffAuthUser } = await import("@/lib/services/staffService");
+//         uid = await createStaffAuthUser(form.email, password);
+//       } catch (error: any) {
+//         toast.error(error.message || "Failed to create authentication for supervisor");
+//         setLoading(false);
+//         return;
+//       }
+//     }
+
+//     // Rest of your existing logic for partner and team...
+//     const partner = form.linkedStaffId && form.linkedStaffId !== "none"
+//       ? staffList.find(s => s.id === form.linkedStaffId)
+//       : undefined;
+
+//     const targetTeam = mergedTeamForPair(partner, form.teamNumber, form.area);
+
+//     const staffData = {
+//       ...form,
+//       uid, // Add the UID if created
+//       teamNumber: targetTeam,
+//       password,
+//       linkedStaffId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+//       joinDate: new Date().toISOString(),
+//       createdAt: new Date().toISOString(),
+//       isActive: true,
+//     };
+
+//     const id = await saveStaffToFirestore(staffData);
+//     dispatch(addStaff({ id, ...staffData }));
+
+//     if (partner) {
+//       await updateLinkedStaff(dispatch, id, partner.id, targetTeam);
+//     }
+
+//     toast.success("Staff member added successfully");
+//     resetForm();
+//     setOpen(false);
+//   } catch (error) {
+//     toast.error("Failed to add staff member");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
 
   // In StaffForm.tsx, update the getAvailableTeamNumbers function:
   // const getAvailableTeamNumbers = (selectedArea: string) => {
@@ -149,56 +209,221 @@ export default function AddStaffForm() {
   // };
 
 
-  const getAvailableTeamNumbers = (selectedArea: string) => {
-    // Get all staff in the selected area (including inactive)
-    const areaStaff = staffList.filter((staff) => staff.area === selectedArea);
+  // const getAvailableTeamNumbers = (selectedArea: string) => {
+  //   // Get all staff in the selected area (including inactive)
+  //   const areaStaff = staffList.filter((staff) => staff.area === selectedArea);
   
-    // Group by team number, counting only active members
-    const teamGroups = areaStaff.reduce((acc, staff) => {
-      if (staff.teamNumber > 0) { // Ignore staff with team number 0
-        if (!acc[staff.teamNumber]) {
-          acc[staff.teamNumber] = { 
-            supervisors: 0, 
-            helpers: 0, 
-            activeSupervisors: 0,
-            activeHelpers: 0,
-            members: [] 
-          };
-        }
+  //   // Group by team number, counting only active members
+  //   const teamGroups = areaStaff.reduce((acc, staff) => {
+  //     if (staff.teamNumber > 0) { // Ignore staff with team number 0
+  //       if (!acc[staff.teamNumber]) {
+  //         acc[staff.teamNumber] = { 
+  //           supervisors: 0, 
+  //           helpers: 0, 
+  //           activeSupervisors: 0,
+  //           activeHelpers: 0,
+  //           members: [] 
+  //         };
+  //       }
         
-        acc[staff.teamNumber].members.push(staff);
+  //       acc[staff.teamNumber].members.push(staff);
         
-        if (staff.userType === "Supervisor") {
-          acc[staff.teamNumber].supervisors++;
-          if (staff.isActive) acc[staff.teamNumber].activeSupervisors++;
-        } else {
-          acc[staff.teamNumber].helpers++;
-          if (staff.isActive) acc[staff.teamNumber].activeHelpers++;
-        }
+  //       if (staff.userType === "Supervisor") {
+  //         acc[staff.teamNumber].supervisors++;
+  //         if (staff.isActive) acc[staff.teamNumber].activeSupervisors++;
+  //       } else {
+  //         acc[staff.teamNumber].helpers++;
+  //         if (staff.isActive) acc[staff.teamNumber].activeHelpers++;
+  //       }
+  //     }
+  //     return acc;
+  //   }, {} as Record<number, { 
+  //     supervisors: number; 
+  //     helpers: number; 
+  //     activeSupervisors: number;
+  //     activeHelpers: number;
+  //     members: Staff[] 
+  //   }>);
+  
+  //   // Find incomplete teams (teams with only one active member)
+  //   const incompleteTeams = Object.entries(teamGroups)
+  //     .filter(([_, team]) => {
+  //       const totalActive = team.activeSupervisors + team.activeHelpers;
+  //       return totalActive === 1; // Only one active member
+  //     })
+  //     .map(([teamNum, _]) => parseInt(teamNum));
+  
+  //   // Find the highest team number
+  //   const maxTeamNumber = Math.max(0, ...Object.keys(teamGroups).map(Number));
+  
+  //   // Return incomplete teams and option for new team
+  //   return [...incompleteTeams.sort((a, b) => a - b), maxTeamNumber + 1];
+  // }; 
+
+// const getAvailableTeamNumbers = (selectedArea: string) => {
+//   // Get all staff in the selected area (both active and inactive)
+//   const areaStaff = staffList.filter((staff) => 
+//     staff.area === selectedArea && 
+//     staff.teamNumber > 0 // Only consider valid team numbers
+//   );
+
+//   // Group by team number, counting active and total members separately
+//   const teamGroups = areaStaff.reduce((acc, staff) => {
+//     if (!acc[staff.teamNumber]) {
+//       acc[staff.teamNumber] = { 
+//         supervisors: 0, 
+//         helpers: 0,
+//         activeSupervisors: 0,  // NEED THIS - only active supervisors
+//         activeHelpers: 0,      // NEED THIS - only active helpers
+//         members: [] 
+//       };
+//     }
+    
+//     acc[staff.teamNumber].members.push(staff);
+    
+//     if (staff.userType === "Supervisor") {
+//       acc[staff.teamNumber].supervisors++;
+//       if (staff.isActive) acc[staff.teamNumber].activeSupervisors++; // Track active separately
+//     } else {
+//       acc[staff.teamNumber].helpers++;
+//       if (staff.isActive) acc[staff.teamNumber].activeHelpers++; // Track active separately
+//     }
+    
+//     return acc;
+//   }, {} as Record<number, { 
+//     supervisors: number; 
+//     helpers: number; 
+//     activeSupervisors: number;  // RESTORED
+//     activeHelpers: number;      // RESTORED
+//     members: Staff[] 
+//   }>);
+
+//   // Find incomplete teams (teams with only one ACTIVE member)
+//   const incompleteTeams = Object.entries(teamGroups)
+//     .filter(([_, team]) => {
+//       const totalActive = team.activeSupervisors + team.activeHelpers; // Use ACTIVE counts
+//       return totalActive === 1; // Only one active member = incomplete
+//     })
+//     .map(([teamNum, _]) => parseInt(teamNum));
+
+//   // Find the highest valid team number (> 0)
+//   const validTeamNumbers = Object.keys(teamGroups).map(Number).filter(n => n > 0);
+//   const maxTeamNumber = validTeamNumbers.length > 0 ? Math.max(...validTeamNumbers) : 0;
+
+//   // Return incomplete teams and option for new team
+//   return [...incompleteTeams.sort((a, b) => a - b), maxTeamNumber + 1];
+// };
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // Validation
+  const dup = staffList.some(
+    s => s.empNumber.trim().toLowerCase() === form.empNumber.trim().toLowerCase()
+  );
+  if (dup) {
+    toast.error("Employee number must be unique.");
+    return;
+  }
+
+  setLoading(true);
+   try {
+    let uid: string | undefined;
+    let finalPassword = "";
+
+    if (form.userType === "Supervisor") {
+      if (!form.password || form.password.trim().length === 0) {
+        toast.error("Please set a password for the supervisor.");
+        setLoading(false);
+        return;
       }
-      return acc;
-    }, {} as Record<number, { 
-      supervisors: number; 
-      helpers: number; 
-      activeSupervisors: number;
-      activeHelpers: number;
-      members: Staff[] 
-    }>);
-  
-    // Find incomplete teams (teams with only one active member)
-    const incompleteTeams = Object.entries(teamGroups)
-      .filter(([_, team]) => {
-        const totalActive = team.activeSupervisors + team.activeHelpers;
-        return totalActive === 1; // Only one active member
-      })
-      .map(([teamNum, _]) => parseInt(teamNum));
-  
-    // Find the highest team number
-    const maxTeamNumber = Math.max(0, ...Object.keys(teamGroups).map(Number));
-  
-    // Return incomplete teams and option for new team
-    return [...incompleteTeams.sort((a, b) => a - b), maxTeamNumber + 1];
-  };
+      
+      finalPassword = form.password;
+      
+      try {
+        uid = await createSupervisorAuthUser(form.email, finalPassword);
+      } catch (error: any) {
+        toast.error(error.message || "Failed to create authentication");
+        setLoading(false);
+        return;
+      }
+
+      const supervisorData: any = {
+        username: form.username,
+        email: form.email,
+        phone: form.phone,
+        password: finalPassword,
+        uid,
+        area: form.area,
+        teamNumber: form.teamNumber,
+        empNumber: form.empNumber,
+        linkedHelperId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+        joinDate: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        isActive: true,
+        userType: 'Supervisor',
+      };
+
+      const id = await saveSupervisorToFirestore(supervisorData);
+      dispatch(addSupervisor({ id, ...supervisorData }));
+
+      // Update linked helper if exists
+      if (form.linkedStaffId && form.linkedStaffId !== "none") {
+        await updateHelperAndSync(dispatch, form.linkedStaffId, {
+          linkedSupervisorId: id,
+          teamNumber: form.teamNumber
+        });
+      }
+    } else {
+      // Helper
+      const helperData: any = {
+        username: form.username,
+        email: form.email,
+        phone: form.phone,
+        area: form.area,
+        teamNumber: form.teamNumber,
+        empNumber: form.empNumber,
+        linkedSupervisorId: form.linkedStaffId === "none" ? "" : form.linkedStaffId,
+        joinDate: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        isActive: true,
+        userType: 'Helper',
+      };
+
+      const id = await saveHelperToFirestore(helperData);
+      dispatch(addHelper({ id, ...helperData }));
+
+      // Update linked supervisor if exists
+      if (form.linkedStaffId && form.linkedStaffId !== "none") {
+        await updateSupervisorAndSync(dispatch, form.linkedStaffId, {
+          linkedHelperId: id,
+          teamNumber: form.teamNumber
+        });
+      }
+    }
+
+    toast.success("Staff member added successfully");
+    resetForm();
+    setOpen(false);
+  } catch (error) {
+    console.error("Error adding staff:", error);
+    toast.error("Failed to add staff member");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+const getAvailableTeamNumbers = (selectedArea: string) => {
+  // For the form we don't yet know the final role (user can pick),
+  // so expose both kinds — but we’ll still show the "new team"
+  // based on Supervisor by default; the list will refresh once userType changes.
+  const { incompleteTeamsNeedingThisRole, suggestedNewTeam } =
+    computeTeamHints(staffList, selectedArea, form.userType);
+
+  // Return: incomplete teams first (ascending), then one "new" slot
+  return [...incompleteTeamsNeedingThisRole, suggestedNewTeam];
+};
 
 
 
@@ -338,7 +563,7 @@ export default function AddStaffForm() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="password" className="flex items-center gap-2">
                 <Lock className="h-4 w-4 text-muted-foreground" />
                 Password
@@ -368,6 +593,43 @@ export default function AddStaffForm() {
                   )}
                 </Button>
               </div>
+            </div> */}
+            <div className="space-y-2">
+              <Label htmlFor="userType" className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                User Type
+              </Label>
+              <Select
+                value={form.userType}
+                onValueChange={(val) =>
+                  setForm({
+                    ...form,
+                    userType: val as any,
+                    linkedStaffId: "none",
+                    // if switching to Helper, clear password
+                    password: val === "Helper" ? "" : form.password,
+                  })
+                }
+                disabled={existingTeamMember !== null}
+              >
+                <SelectTrigger id="userType" className="w-full">
+                  <SelectValue placeholder="Select user type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Helper">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Helper
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Supervisor">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Supervisor
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="area">Area</Label>
@@ -375,7 +637,7 @@ export default function AddStaffForm() {
                 value={form.area}
                 onValueChange={(val) => setForm({ ...form, area: val })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select area" />
                 </SelectTrigger>
                 <SelectContent>
@@ -396,7 +658,7 @@ export default function AddStaffForm() {
                     handleTeamNumberSelection(parseInt(val))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select team number" />
                   </SelectTrigger>
                   <SelectContent>
@@ -438,7 +700,7 @@ export default function AddStaffForm() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="userType" className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
                 User Type
@@ -454,7 +716,7 @@ export default function AddStaffForm() {
                 }
                 disabled={existingTeamMember !== null} // Disable if auto-selected
               >
-                <SelectTrigger id="userType">
+                <SelectTrigger className="w-full" id="userType">
                   <SelectValue placeholder="Select user type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -472,7 +734,40 @@ export default function AddStaffForm() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
+            {form.userType === "Supervisor" && (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className="pr-10 w-full"
+                    required={form.userType === "Supervisor"}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label htmlFor="linkedStaff" className="flex items-center gap-2">
@@ -481,12 +776,18 @@ export default function AddStaffForm() {
               </Label>
               <Select
                 value={form.linkedStaffId || "none"}
-                onValueChange={(val) =>
-                  setForm({ ...form, linkedStaffId: val })
-                }
-                disabled={existingTeamMember !== null} // Disable if auto-selected
+                onValueChange={(val) => {
+                  if (val === "none") {
+                    setForm(prev => ({ ...prev, linkedStaffId: "none" }));
+                    return;
+                  }
+                  const partner = staffList.find(s => s.id === val);
+                  const newTeam = mergedTeamForPair(partner, form.teamNumber, form.area);
+                  setForm(prev => ({ ...prev, linkedStaffId: val, teamNumber: newTeam }));
+                }}
+                disabled={existingTeamMember !== null}
               >
-                <SelectTrigger id="linkedStaff">
+                <SelectTrigger className="w-full" id="linkedStaff">
                   <SelectValue placeholder="Select team partner">
                     {form.linkedStaffId && form.linkedStaffId !== "none"
                       ? linkedOptions.find((s) => s.id === form.linkedStaffId)

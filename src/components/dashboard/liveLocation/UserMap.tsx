@@ -91,7 +91,7 @@ export default function UserMap() {
       center={[7.2906, 80.6337]}
       zoom={14}
       scrollWheelZoom
-      style={{ height: "600px", width: "100%" }}
+      style={{ height: "calc(100vh - 20px)", width: "100%" }}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <FlyToUser userId={selectedUserId} />

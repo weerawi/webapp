@@ -47,6 +47,7 @@ import {
   fetchAreas,
   deleteAreaByUserId,
   createAuthUser,
+  saveAreaOptions,
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -57,7 +58,10 @@ export default function AdminManagement() {
   const { adminList } = useSelector((state: RootState) => state.admin);
   const [open, setOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
-  const [showPassword, setShowPassword] = useState(false); // Add this state
+  const [waterboardOptions, setWaterboardOptions] = useState<string[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
@@ -81,6 +85,10 @@ export default function AdminManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+
+    setIsSubmitting(true); 
 
     try {
       const adminData = {
@@ -101,6 +109,11 @@ export default function AdminManagement() {
 
         await updateAdminInFirestore(editingAdmin.id, updateData);
         dispatch(updateAdmin({ id: editingAdmin.id, updates: updateData }));
+        
+        // Update area options if it's a Waterboard user
+        if (formData.role === "Waterboard" && formData.area) {
+          await saveAreaOptions(formData.area, formData.options);
+        }
 
         await saveAuditLogToFirestore({
           userId: currentUser?.uid || "unknown",
@@ -121,7 +134,23 @@ export default function AdminManagement() {
 
         const id = await saveAdminToFirestore(adminData, uid);
         dispatch(addAdmin({ id, ...adminData, uid }));
+        
+        // Save area and area-specific options
+        if (formData.role === "Waterboard") {
+          if (!areas.includes(formData.area)) {
+            await saveArea(formData.area, id);
+          }
+          // Save to areaOptions collection
+          if (formData.options.length > 0) {
+            await saveAreaOptions(formData.area, formData.options);
+          }
+        }
 
+        // Save area if it's new and user is Waterboard
+        if (formData.role === "Waterboard" && !areas.includes(formData.area)) {
+          await saveArea(formData.area, id);
+        }
+        
         await saveAuditLogToFirestore({
           userId: currentUser?.uid || "unknown",
           userName: currentUser?.email || "Unknown Admin",
@@ -135,10 +164,9 @@ export default function AdminManagement() {
       resetForm();
       setOpen(false);
     } catch (error: any) {
-      toast.error(
-        error.message ||
-          (editingAdmin ? "Failed to update admin" : "Failed to add admin")
-      );
+      toast.error(error.message || (editingAdmin ? "Failed to update user" : "Failed to add user"));
+    }finally {
+      setIsSubmitting(false); // ADD THIS LINE
     }
   };
 
@@ -197,22 +225,22 @@ export default function AdminManagement() {
       role: "Admin",
     });
     setEditingAdmin(null);
-    setShowPassword(false);
+    setShowPassword(false); 
+    setIsSubmitting(false);
   };
 
   return (
     <Card>
       <div className="space-y-4">
         <div className="flex justify-end">
-          <Dialog
-            open={open}
-            onOpenChange={(newOpen) => {
+          <Dialog open={open} onOpenChange={(newOpen) => {
+            if (!isSubmitting) {  
               setOpen(newOpen);
               if (!newOpen) {
                 resetForm();
               }
-            }}
-          >
+            }
+          }}>
             <DialogTrigger asChild>
               <Button onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -315,8 +343,8 @@ export default function AdminManagement() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    {editingAdmin ? "Update" : "Add"} User
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Processing..." : (editingAdmin ? "Update" : "Add")} User
                   </Button>
                 </div>
               </form>

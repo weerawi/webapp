@@ -2,7 +2,6 @@
 "use client";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/lib/store/store";
-import { deleteStaffAndSync } from "@/lib/services/staffService";
 import { toast } from "sonner";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,13 +33,17 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import EditStaffDialog from "./EditStaffDialog";
-import { Staff } from "@/lib/store/slices/staffSlice"; 
-import { updateStaffAndSync } from "@/lib/services/staffService";
+import EditStaffDialog from "./editStaffDialog"; 
+import ActivateStaffDialog from "./ActivateStaffDialog";
+import { Staff, combineStaffLists } from "@/types/staff";
+import { updateSupervisorAndSync, deleteSupervisorAndSync } from "@/lib/services/supervisorService";
+import { updateHelperAndSync, deleteHelperAndSync } from "@/lib/services/helperService";
 
 
 export default function StaffTable() {
-  const staffList = useSelector((state: RootState) => state.staff.staffList);
+  const supervisors = useSelector((state: RootState) => state.supervisor.supervisors);
+  const helpers = useSelector((state: RootState) => state.helper.helpers);
+  const staffList = combineStaffLists(supervisors, helpers);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
@@ -50,24 +53,42 @@ export default function StaffTable() {
   const [deletingStaff, setDeletingStaff] = useState<Staff | null>(null); // Add this state
 
   const handleDelete = async () => {
-    if (!deletingStaff) return;
-
-    try {
-      await deleteStaffAndSync(dispatch, deletingStaff.id);
-      toast.success(`${deletingStaff.username} has been deleted successfully`);
-      setDeletingStaff(null);
-    } catch (error) {
-      toast.error("Failed to delete staff member");
-      console.error("Delete error:", error);
+  if (!deletingStaff) return;
+  try {
+    if (deletingStaff.userType === 'Supervisor') {
+      await deleteSupervisorAndSync(dispatch, deletingStaff.id);
+    } else {
+      await deleteHelperAndSync(dispatch, deletingStaff.id);
     }
-  };
+    toast.success(`${deletingStaff.username} has been deleted successfully`);
+    setDeletingStaff(null);
+  } catch (error) {
+    toast.error("Failed to delete staff member");
+    console.error("Delete error:", error);
+  }
+};
 
+  // const filteredStaff = staffList.filter(
+  //   (staff) =>
+  //     // staff.isActive && 
+  //     (staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       staff.phone.includes(searchQuery))
+  // );
   const filteredStaff = staffList.filter(
-    (staff) =>
-      // staff.isActive && 
-      (staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (staff) => {
+      // Add safety checks
+      if (!staff || !staff.username || !staff.email || !staff.phone) {
+        console.warn('Incomplete staff object:', staff);
+        return false;
+      }
+      
+      return (
+        staff.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        staff.phone.includes(searchQuery))
+        staff.phone.includes(searchQuery)
+      );
+    }
   );
 
   const getLinkedStaffName = (linkedId: string) => {
@@ -120,10 +141,53 @@ export default function StaffTable() {
   // Calculate trend based on last month's data
   
   
+  // const handleStatusToggle = async (staff: Staff) => {
+  //   const newStatus = !staff.isActive;
+  //   const action = newStatus ? "activate" : "deactivate";
+  
+  //   const confirmed = await new Promise((resolve) => {
+  //     const result = window.confirm(
+  //       `Are you sure you want to ${action} ${staff.username}? ` +
+  //         (!newStatus && staff.linkedStaffId
+  //           ? "Their partner will remain in the team waiting for a new partner."
+  //           : "")
+  //     );
+  //     resolve(result);
+  //   });
+  
+  //   if (!confirmed) return;
+  
+  //   try {
+  //     // If deactivating, also reset team number
+  //     const updates: Partial<Staff> = { isActive: newStatus };
+  //     if (!newStatus) {
+  //       updates.teamNumber = 0; // Reset team number when deactivating
+  //       updates.linkedStaffId = "";
+  //     }
+      
+  //     // Update the staff member
+  //     await updateStaffAndSync(dispatch, staff.id, updates);
+  
+  //     // If deactivating and has a linked partner, only unlink (don't reset partner's team)
+  //     if (!newStatus && staff.linkedStaffId) {
+  //       await updateStaffAndSync(dispatch, staff.linkedStaffId, {
+  //         linkedStaffId: "" // Only unlink, keep their team number
+  //       });
+  //     }
+  
+  //     toast.success(`${staff.username} has been ${action}d successfully`);
+  //   } catch (error) {
+  //     toast.error(`Failed to ${action} staff member`);
+  //   }
+  // };
+  // Replace the entire handleStatusToggle function with this:
+
+  const [activatingStaff, setActivatingStaff] = useState<Staff | null>(null);
+
   const handleStatusToggle = async (staff: Staff) => {
     const newStatus = !staff.isActive;
     const action = newStatus ? "activate" : "deactivate";
-  
+
     const confirmed = await new Promise((resolve) => {
       const result = window.confirm(
         `Are you sure you want to ${action} ${staff.username}? ` +
@@ -133,33 +197,42 @@ export default function StaffTable() {
       );
       resolve(result);
     });
-  
+
     if (!confirmed) return;
-  
+
     try {
-      // If deactivating, also reset team number
-      const updates: Partial<Staff> = { isActive: newStatus };
-      if (!newStatus) {
-        updates.teamNumber = 0; // Reset team number when deactivating
-        updates.linkedStaffId = "";
+      if (newStatus) {
+        setActivatingStaff(staff);
+      } else {
+        const updates = {
+          isActive: false,
+          teamNumber: 0,
+          linkedHelperId: "",
+          linkedSupervisorId: "",
+        };
+        
+        if (staff.userType === "Supervisor") {
+          await updateSupervisorAndSync(dispatch, staff.id, updates);
+          if (staff.linkedStaffId) {
+            await updateHelperAndSync(dispatch, staff.linkedStaffId, {
+              linkedSupervisorId: "",
+            });
+          }
+        } else {
+          await updateHelperAndSync(dispatch, staff.id, updates);
+          if (staff.linkedStaffId) {
+            await updateSupervisorAndSync(dispatch, staff.linkedStaffId, {
+              linkedHelperId: "",
+            });
+          }
+        }
+        toast.success(`${staff.username} has been deactivated`);
       }
-      
-      // Update the staff member
-      await updateStaffAndSync(dispatch, staff.id, updates);
-  
-      // If deactivating and has a linked partner, only unlink (don't reset partner's team)
-      if (!newStatus && staff.linkedStaffId) {
-        await updateStaffAndSync(dispatch, staff.linkedStaffId, {
-          linkedStaffId: "" // Only unlink, keep their team number
-        });
-      }
-  
-      toast.success(`${staff.username} has been ${action}d successfully`);
     } catch (error) {
+      console.error("Status toggle error:", error);
       toast.error(`Failed to ${action} staff member`);
     }
   };
-  
   
   const calculateTrend = () => {
     const now = new Date();
@@ -389,11 +462,25 @@ export default function StaffTable() {
                         </span>
                       </td>
                       <td className="px-4 py-2">
-                        <Badge
+                        {/* <Badge
                           variant={staff.isActive ? "default" : "secondary"}
                           className="text-xs"
                         >
                           {staff.isActive ? "Active" : "Inactive"}
+                        </Badge> */}
+                        <Badge
+                          variant={
+                            staff.status === 'Active' ? "default" : 
+                            staff.status === 'Incomplete' ? "outline" : 
+                            "secondary"
+                          }
+                          className={`text-xs ${
+                            staff.status === 'Active' ? 'text-xs' : 
+                            staff.status === 'Incomplete' ? 'text-xs' : 
+                            'bg-gray-500 text-white'
+                          }`}
+                        >
+                          {staff.status || (staff.isActive ? 'Active' : 'Inactive')}
                         </Badge>
                       </td>
                       <td className="px-4 py-2">
@@ -495,6 +582,17 @@ export default function StaffTable() {
           staff={editingStaff}
           open={!!editingStaff}
           onOpenChange={(open) => !open && setEditingStaff(null)}
+        />
+      )}
+
+      
+      {activatingStaff && (
+        <ActivateStaffDialog
+          open={!!activatingStaff}
+          staff={activatingStaff}
+          onOpenChange={(open) => {
+            if (!open) setActivatingStaff(null);
+          }}
         />
       )}
 

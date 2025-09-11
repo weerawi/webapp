@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from '@/lib/hooks/useAuth';
-import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation'; 
+import Footer from './footer';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -14,5 +15,12 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     redirect('/login');
   }
 
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {children}
+      </div>
+      <Footer />
+    </div>
+  );
 }

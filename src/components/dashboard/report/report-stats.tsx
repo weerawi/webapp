@@ -24,7 +24,7 @@ export function ReportStats() {
 
   const customerIssuesCount = filteredRecords.filter(
     (record) =>
-      record.unSolvedCusComp || record.billingError || record.cantFind || record.objections || record.stoppedByNWSDB,
+      record.unSolvedCusComp || record.billingError || record.cantFind || record.objections || record.stoppedByBoard,
   ).length
 
   return (

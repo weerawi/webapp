@@ -10,8 +10,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Staff } from "@/lib/store/slices/staffSlice";
-
+// import { Staff } from "@/lib/store/slices/staffSlice";
+import { Staff } from "@/types/staff";
 interface DeleteConfirmDialogProps {
   staff: Staff | null;
   open: boolean;

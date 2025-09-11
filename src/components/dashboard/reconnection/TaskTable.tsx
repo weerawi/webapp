@@ -370,7 +370,7 @@ export default function TaskTable({
         {accountNumbers.map((accountNumber, index) => (
           <>
             {/* Account header row */}
-            <TableRow key={`header-${accountNumber}`} className="bg-muted/50">
+            <TableRow key={index} className="bg-muted/50">
               <TableCell colSpan={5} className="font-semibold">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />

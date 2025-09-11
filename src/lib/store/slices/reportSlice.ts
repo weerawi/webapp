@@ -11,6 +11,7 @@ interface ReportState {
     helper: string;
     paymentStatus: string;
     disconnectionStatus: string;
+    accountNo: string;
     dateFrom: string | null;
     dateTo: string | null;
   };
@@ -21,6 +22,7 @@ interface ReportState {
   teamNumbers: string[],
   helpers: string[],
   currentDate: string; 
+  dynamicColumns: string[];
 }
 
 const initialState: ReportState = {
@@ -32,6 +34,7 @@ const initialState: ReportState = {
     teamNo: "all",
     helper: "all",
     paymentStatus: "all",
+    accountNo: "all",
     disconnectionStatus: "all",
     dateFrom: null,
     dateTo: null,
@@ -43,6 +46,7 @@ const initialState: ReportState = {
   teamNumbers: [],
   helpers: [],
   currentDate: new Date().toISOString().split('T')[0],
+  dynamicColumns: [],
 };
 
 
@@ -70,6 +74,7 @@ const reportSlice = createSlice({
       state.supervisors = unique("supervisor");
       state.teamNumbers = unique("teamNo");
       state.helpers = unique("helper");
+      state.accountNumbers = unique("accountNo")
     },    
     fetchReportsFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
@@ -84,6 +89,7 @@ const reportSlice = createSlice({
         supervisor,
         teamNo,
         helper,
+        accountNo,
         // paymentStatus,
         // disconnectionStatus,
         dateFrom,
@@ -95,6 +101,7 @@ const reportSlice = createSlice({
         const matchesSupervisor = supervisor === "all" || record.supervisor === supervisor;
         const matchesTeam = teamNo === "all" || record.teamNo === teamNo;
         const matchesHelper = helper === "all" || record.helper === helper;
+        const matchesAccountNo = accountNo === "all" || record.accountNo === accountNo;
         // const matchesPayment =
         //   paymentStatus === "all" ||
         //   (paymentStatus === "paid" && record.alreadyPaid) ||
@@ -121,6 +128,7 @@ const reportSlice = createSlice({
           matchesSupervisor &&
           matchesTeam &&
           matchesHelper &&
+          matchesAccountNo && 
           // matchesPayment &&
           // matchesStatus &&
           withinDateRange
@@ -134,6 +142,10 @@ const reportSlice = createSlice({
     setCurrentDate: (state, action: PayloadAction<string>) => {
       state.currentDate = action.payload;
     },
+    setDynamicColumnsAll: (state, action: PayloadAction<string[]>) => {
+      state.dynamicColumns = action.payload;
+    },
+    resetReportState: () => initialState,
   },
 });
 
@@ -144,7 +156,9 @@ export const {
   setFilters,
   applyFilters,
   resetFilters,
-  setCurrentDate
+  setCurrentDate,
+  setDynamicColumnsAll,
+  resetReportState
 } = reportSlice.actions;
 
 export default reportSlice.reducer;

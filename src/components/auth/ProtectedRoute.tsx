@@ -28,7 +28,7 @@ export function ProtectedRoute({
 
       if (allowedRoles.length > 0 && user) {
         if (!allowedRoles.includes(user.role as any)) {
-          toast.error("You don't have permission to access this page");
+          toast.error("You don't have permission to access this page",{ closeButton: true });
           router.push("/dashboard");
         }
       }

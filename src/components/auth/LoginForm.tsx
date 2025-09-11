@@ -60,52 +60,124 @@ export default function LoginForm() {
   // }
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   setLoading(true)
+  //   setError("")
   
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      const firebaseUser = userCredential.user;
+  //   try {
+  //     const userCredential = await signInWithEmailAndPassword(auth, email, password)
+  //     const firebaseUser = userCredential.user;
   
-      // Fetch the admin data from Firestore
-      const adminData = await getAdminByUid(firebaseUser.uid);
+  //     // Fetch the admin data from Firestore
+  //     const adminData = await getAdminByUid(firebaseUser.uid);
       
-      // Determine the area based on role
-      let userArea = "";
-      if (adminData) {
-        if (adminData.role === "Admin") {
-          userArea = "all";
-        } else if (adminData.role === "Waterboard") {
-          userArea = adminData.area || "";
-        }
-      }
+  //     // Determine the area based on role
+  //     let userArea = "";
+  //     if (adminData) {
+  //       if (adminData.role === "Admin") {
+  //         userArea = "all";
+  //       } else if (adminData.role === "Waterboard") {
+  //         userArea = adminData.area || "";
+  //       }
+  //     }
   
-      // Dispatch Redux action with user data including area
-      dispatch(loginSuccess({
-        user: {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          role: adminData?.role,
-          username: adminData?.username,
-          area: userArea,  
-          options: adminData?.options || []
-        },
-        token: await firebaseUser.getIdToken()
-      }));
+  //     // Dispatch Redux action with user data including area
+  //     dispatch(loginSuccess({
+  //       user: {
+  //         uid: firebaseUser.uid,
+  //         email: firebaseUser.email,
+  //         role: adminData?.role,
+  //         username: adminData?.username,
+  //         area: userArea,  
+  //         options: adminData?.options || []
+  //       },
+  //       token: await firebaseUser.getIdToken()
+  //     }));
       
-      dispatch(showLoader("Signing in..."));
-      await updateLastLogin(firebaseUser.uid);
-      router.push("/dashboard")
-      setTimeout(() => dispatch(hideLoader()), 1000);
+  //     dispatch(showLoader("Signing in..."));
+  //     await updateLastLogin(firebaseUser.uid);
+  //     router.push("/dashboard")
+  //     setTimeout(() => dispatch(hideLoader()), 1000);
   
-    } catch (err) {
-      setError("Invalid credentials. Please check your email and password.")
-    } finally {
-      setLoading(false)
+  //   } catch (err) {
+  //     setError("Invalid credentials. Please check your email and password.")
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+  setError("")
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password)
+    const firebaseUser = userCredential.user;
+
+    // First, check if this user is a staff member (Supervisor)
+    const { doc, getDoc } = await import("firebase/firestore");
+    const { db } = await import("@/lib/firebase/config");
+    
+    const staffDoc = await getDoc(doc(db, "staff", firebaseUser.uid));
+    if (staffDoc.exists()) {
+      // This is a Supervisor trying to login - block them
+      await auth.signOut();
+      setError("Staff members cannot access the admin panel. Please use the mobile app.");
+      return;
     }
+
+    // Now check if user is Admin or Waterboard (allowed users)
+    const adminData = await getAdminByUid(firebaseUser.uid);
+    
+    if (!adminData) {
+      // User exists in Firebase Auth but not in admins collection - unauthorized
+      await auth.signOut();
+      setError("Unauthorized access. Please contact your administrator.");
+      return;
+    } 
+
+    // Determine the area based on role
+    let userArea = "";
+    if (adminData.role === "Admin") {
+      userArea = "all";
+    } else if (adminData.role === "Waterboard") {
+      userArea = adminData.area || "";
+    }
+
+    // Dispatch Redux action with user data including area
+    dispatch(loginSuccess({
+      user: {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        role: adminData.role,
+        username: adminData.username,
+        area: userArea,  
+        options: adminData.options || []
+      },
+      token: await firebaseUser.getIdToken()
+    }));
+    
+    dispatch(showLoader("Signing in..."));
+    await updateLastLogin(firebaseUser.uid);
+    router.push("/dashboard")
+    setTimeout(() => dispatch(hideLoader()), 1000);
+
+  } catch (err: any) {
+    // Check for specific Firebase auth errors
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      setError("Invalid credentials. Please check your email and password.");
+    } else if (err.code === 'auth/too-many-requests') {
+      setError("Too many failed login attempts. Please try again later.");
+    } else {
+      setError("An error occurred during login. Please try again.");
+    }
+  } finally {
+    setLoading(false)
   }
+}
   return (
     <div className={`min-h-screen flex items-center justify-center p-4`}> 
       <div className="w-full max-w-sm">
