@@ -3,7 +3,7 @@
 import './globals.css';
 import { Providers } from '@/components/providers/Providers';
 import { Toaster } from "sonner";
-import Footer from './footer';
+// import Footer from './footer';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Toaster richColors position="top-right" />
         </Providers>
-        <Footer />
+        {/* <Footer /> */}
       </body>
     </html>
   );

@@ -398,7 +398,7 @@ const WaterDrop = ({
   position 
 }: any) => (
   <motion.div
-    className="absolute opacity-10"
+    className="absolute opacity-10 pointer-events-none"
     style={{
       left: position.x,
       top: position.y,
@@ -455,7 +455,7 @@ const NavigationCard = ({ title, href, gradient, icon, index }: any) => {
       className="relative group cursor-pointer h-full"
     >
       <div 
-        className="h-full min-h-[140px] rounded-xl p-5 flex flex-col justify-between overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+        className="h-full min-h-[120px] lg:min-h-[140px] rounded-xl p-4 lg:p-5 flex flex-col justify-between overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
         style={{ background: gradient }}
       >
         <div className="relative z-10">
@@ -545,41 +545,10 @@ export default function DashboardHome() {
     }
   ];
 
-  const waterDropPositions = [
-    { x: "10%", y: "20%" },
-    { x: "85%", y: "15%" },
-    { x: "70%", y: "60%" },
-    { x: "25%", y: "70%" },
-    { x: "90%", y: "45%" },
-    { x: "15%", y: "50%" },
-  ];
-
-  const colors = [
-    "#60A5FA",
-    "#34D399", 
-    "#A78BFA",
-    "#FBBF24",
-    "#FB923C",
-    "#F472B6",
-  ];
-
   if (!mounted) return null;
 
   return (
-    <div className="h-[80vh] flex flex-col ">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 pointer-events-none">
-        {waterDropPositions.map((position, index) => (
-          <WaterDrop
-            key={index}
-            position={position}
-            delay={index * 3}
-            duration={20 + (index * 3)}
-            color={colors[index]}
-            size={80 + (index * 15)}
-          />
-        ))}
-      </div>
+    <div className="min-h-[calc(100vh-60px)] flex flex-col">
 
       {/* Header */}
       <header className="relative z-50 bg-white/80 backdrop-blur-sm border-b border-slate-200">
@@ -624,19 +593,19 @@ export default function DashboardHome() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col justify-center relative z-40 px-6 py-8">
+      <main className="flex-1 flex flex-col justify-center relative z-40 px-6 py-4 min-h-[calc(100vh-120px)]">
         <div className="max-w-7xl w-full mx-auto">
           {/* Hero Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-10"
+            className="text-center mb-6 lg:mb-10"
           >
             <p className="text-sm font-medium text-blue-600 mb-2">
               Streamlining Water Services Management
             </p>
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-3">
+            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-slate-900 mb-3">
               Water Board Operations Hub
             </h1>
             <p className="text-slate-600 max-w-2xl mx-auto">
@@ -645,7 +614,7 @@ export default function DashboardHome() {
           </motion.div>
 
           {/* Navigation Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-2xl lg:max-w-6xl mx-auto">
             {navigationItems.map((item, index) => (
               <NavigationCard
                 key={item.href}
