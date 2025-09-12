@@ -2,7 +2,7 @@
 import { queryClient } from '../query/queryClient';
 
 export const SESSION_KEY = 'auth_storage';
-const SESSION_TIMEOUT = 10 * 60 * 60 * 1000; // Time out time setup
+const SESSION_TIMEOUT = 60 * 60 * 1000 ;
 
 export const sessionManager = {
   setSession: (token: string) => {
