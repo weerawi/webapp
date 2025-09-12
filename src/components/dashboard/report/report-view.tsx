@@ -43,6 +43,7 @@ import { buildOrderedColumns } from "@/lib/constant/report-structure";
 import { useDispatch, useSelector } from "react-redux";
 import { setDynamicColumnsAll } from "@/lib/store/slices/reportSlice";
 import { fetchAndStoreReports } from "@/lib/services/reportService";
+import { hideLoader, showLoader } from "@/lib/store/slices/loaderSlice";
 
 export function ReportView() {
   const { filteredRecords = [] } = useReports();
@@ -74,6 +75,7 @@ export function ReportView() {
   }, [dispatch, currentUser]);
 
   const fetchDynamicColumns = async () => {
+    dispatch(showLoader("Loading report columns..."));
     try {
       const options = await fetchWaterboardOptions();
       const names = options.map(o => o.name);
@@ -84,6 +86,8 @@ export function ReportView() {
       dispatch(setDynamicColumnsAll(ordered));
     } catch (error) {
       console.error("Failed to fetch columns:", error);
+    }finally {
+      dispatch(hideLoader());
     }
   };
 

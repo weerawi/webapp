@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/store/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { addDays } from "date-fns";
 import { checkDCBeforeNoon, checkRecordType } from "@/lib/utils/record-type-checker";
+import { hideLoader, showLoader } from "@/lib/store/slices/loaderSlice";
 
 
 interface AreaWiseData {
@@ -84,12 +85,14 @@ export function AreaWiseReport() {
   });
   
   const [selectedArea, setSelectedArea] = useState<string>("all");
+  const dispatch = useDispatch();
 
   useEffect(() => {
     calculateAreaWiseData();
   }, [records, dateRange, selectedArea]);
 
   const calculateAreaWiseData = () => {
+    dispatch(showLoader("Processing area wise data..."));
     const areaMap = new Map<string, AreaWiseData>();
   
     // Filter records based on date range
@@ -206,6 +209,7 @@ export function AreaWiseReport() {
     } else {
       setAreaData(finalData);
     }
+    dispatch(hideLoader());
   };
 
   const handleDownloadExcel = () => {

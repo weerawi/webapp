@@ -61,7 +61,7 @@ import { ReportView } from "@/components/dashboard/report/report-view";
 import { ReportFilters } from "@/components/dashboard/report/report-filters";
 import { AreaWiseReport } from "@/components/dashboard/report/area-wise-report";
 import { SupervisorWiseReport } from "@/components/dashboard/report/supervisor-wise-report";
-import { hideLoader } from "@/lib/store/slices/loaderSlice";
+import { hideLoader, showLoader } from "@/lib/store/slices/loaderSlice";
 import { BarChart3, FileText, MapPin, Users } from "lucide-react";
 
 export default function ReportPage() {
@@ -70,9 +70,20 @@ export default function ReportPage() {
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
-    dispatch(hideLoader());
-    fetchAndStoreReports(dispatch, currentUser);
+    loadReport();
   }, [dispatch, currentUser]);
+
+const loadReport = async () => {
+  dispatch(showLoader("Loading reports..."));
+  try {
+    await fetchAndStoreReports(dispatch, currentUser);
+  } catch (error) {
+    console.error('Failed to load tasks', error);
+  } finally {
+    dispatch(hideLoader());
+  }
+};
+
 
   return (
     <>
