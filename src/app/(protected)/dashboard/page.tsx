@@ -610,7 +610,7 @@ export default function DashboardHome() {
           </motion.div>
 
           {/* Navigation Cards Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-2xl lg:max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
             {navigationItems.map((item, index) => (
               <NavigationCard
                 key={item.href}
