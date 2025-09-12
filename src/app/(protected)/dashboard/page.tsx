@@ -377,7 +377,7 @@
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
-import { LogOut, Settings, ArrowRight } from "lucide-react";
+import { LogOut, Settings, ArrowRight, Users, FileText, RefreshCw, MapPin} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/lib/store/store";
@@ -437,7 +437,7 @@ const WaterDrop = ({
 );
 
 // Navigation Card Component
-const NavigationCard = ({ title, href, gradient, icon, index }: any) => {
+const NavigationCard = ({ title, href, gradient, icon: Icon, index }: any) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   
@@ -455,21 +455,13 @@ const NavigationCard = ({ title, href, gradient, icon, index }: any) => {
       className="relative group cursor-pointer h-full"
     >
       <div 
-        className="h-full min-h-[120px] lg:min-h-[140px] rounded-xl p-4 lg:p-5 flex flex-col justify-between overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+        className="h-full min-h-[120px] lg:min-h-[140px] rounded-xl p-4 lg:p-5 flex flex-col justify-center items-center overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
         style={{ background: gradient }}
       >
-        <div className="relative z-10">
-          <div className="text-white/80 text-xs font-medium mb-1">0{index + 1}</div>
-          <h3 className="text-white text-xl font-bold">{title}</h3>
-        </div>
+        <Icon className="text-white/90 w-10 h-10 mb-3" />
+        <h3 className="text-white text-xl font-bold">{title}</h3>
         
-        <div className="flex justify-end">
-          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-all">
-            <ArrowRight className="text-white w-5 h-5" />
-          </div>
-        </div>
-        
-        {/* Subtle water drop decoration */}
+        {/* Keep the water drop decoration */}
         <motion.div
           className="absolute -bottom-8 -right-8 opacity-10"
           animate={{ 
@@ -527,21 +519,25 @@ export default function DashboardHome() {
       title: "Staff",
       href: "/dashboard/staff",
       gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      icon: Users,
     },
     {
       title: "Report",
       href: "/dashboard/report",
       gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+      icon: FileText,
     },
     {
       title: "Reconnection",
       href: "/dashboard/reconnection-management",
       gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+      icon: RefreshCw,
     },
     {
       title: "Live Location",
       href: "/dashboard/live-location",
       gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+      icon: MapPin,
     }
   ];
 
@@ -614,7 +610,7 @@ export default function DashboardHome() {
           </motion.div>
 
           {/* Navigation Cards Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-2xl lg:max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
             {navigationItems.map((item, index) => (
               <NavigationCard
                 key={item.href}
