@@ -18,7 +18,7 @@ export default function LiveLocationPage() {
 useEffect(() => {
   dispatch(hideLoader());
   // fetchAreasFromFirestore(dispatch);
-  fetchAndStoreUserLocations(dispatch, currentUser);
+  // fetchAndStoreUserLocations(dispatch, currentUser);
   dispatch(setResetLocations());
 }, [dispatch, currentUser]);
 
