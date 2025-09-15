@@ -81,7 +81,13 @@ const reportSlice = createSlice({
       state.error = action.payload;
     },
     setFilters: (state, action: PayloadAction<Partial<ReportState["filters"]>>) => {
-      state.filters = { ...state.filters, ...action.payload };
+      // state.filters = { ...state.filters, ...action.payload };
+      const updates = { ...action.payload }; 
+      
+      state.filters = { ...state.filters, ...updates };
+      
+      // Auto-apply filters
+      reportSlice.caseReducers.applyFilters(state);
     },
     applyFilters: (state) => {
       const {

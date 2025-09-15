@@ -8,7 +8,7 @@ import {
 // import { mockDisconnectionData } from "@/lib/mock-data";
 import { AuthUser } from "../store/slices/authSlice";
 import { DisconnectionRecord } from "@/types/disconnection";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, } from "firebase/firestore";
 import { db } from "@/lib/firebase/config"; 
 
 // Call this function in ReportPage
@@ -23,9 +23,17 @@ export async function fetchAndStoreReports(
 
     const allRecords: DisconnectionRecord[] = [];
 
+    const helpersSnapshot = await getDocs(collection(db, "helpers"));
+    const helpersMap = new Map();
+    helpersSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      helpersMap.set(doc.id, data.username || data.userName || "");
+    });
+
     // First fetch all supervisors to get their IDs
     const supervisorsSnapshot = await getDocs(collection(db, "supervisors"));
     console.log(`Found ${supervisorsSnapshot.size} supervisors`);
+    console.log(`Found ${helpersSnapshot.size} helpers`);
 
     for (const supervisorDoc of supervisorsSnapshot.docs) {
       const supervisorId = supervisorDoc.id;
@@ -66,7 +74,7 @@ export async function fetchAndStoreReports(
             area: supervisorData.area || "",
             supervisor: supervisorData.username || supervisorData.userName || "",
             teamNo: supervisorData.teamNumber?.toString() || "",
-            helper: supervisorData.linkedHelperId || "",
+            helper: jobData.helperId ? (helpersMap.get(jobData.helperId) || jobData.helperId) : "",
             meterNo: "",
             reading: "",
             

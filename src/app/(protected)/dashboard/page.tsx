@@ -602,7 +602,7 @@ export default function DashboardHome() {
               Streamlining Water Services Management
             </p>
             <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-slate-900 mb-3">
-              Water Board Operations Hub
+              {` ${user?.role === "Waterboard" ? user?.area : ""} Water Board Operations Hub`}
             </h1>
             <p className="text-slate-600 max-w-2xl mx-auto">
               Access all management tools from a single, unified dashboard
