@@ -79,8 +79,8 @@ export function AreaWiseReport() {
     from: Date;
     to: Date | undefined;
   }>({
-    from: new Date(),  
-    to: new Date(),     
+    from: new Date(new Date().setHours(0, 0, 0, 0)),  
+    to: new Date(new Date().setHours(23, 59, 59, 999)),       
   });
   
   const [selectedArea, setSelectedArea] = useState<string>("all");
@@ -95,9 +95,17 @@ export function AreaWiseReport() {
     // Filter records based on date range
     const filteredRecords = records.filter((record) => {
       const recordDate = new Date(record.date);
+      recordDate.setHours(0, 0, 0, 0);
+      
+      const fromDate = new Date(dateRange.from);
+      fromDate.setHours(0, 0, 0, 0);
+      
+      const toDate = dateRange.to ? new Date(dateRange.to) : null;
+      if (toDate) toDate.setHours(23, 59, 59, 999);
+      
       const isInDateRange = 
-        recordDate >= dateRange.from && 
-        (!dateRange.to || recordDate <= dateRange.to);
+        recordDate >= fromDate && 
+        (!toDate || recordDate <= toDate);
       return isInDateRange;
     });
   
