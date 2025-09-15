@@ -44,6 +44,7 @@ interface UserLocation {
     id: string; // Changed from number to string
     name: string;
     avatar: string;
+    area: string;  
     lat: number;
     lng: number;
   }

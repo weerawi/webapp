@@ -10,6 +10,7 @@ import { AuthUser } from "../store/slices/authSlice";
 import { DisconnectionRecord } from "@/types/disconnection";
 import { collection, getDocs, doc, } from "firebase/firestore";
 import { db } from "@/lib/firebase/config"; 
+import { setLocations } from "../store/slices/userLocationsSlice";
 
 // Call this function in ReportPage
 // Update the function signature to accept currentUser
@@ -35,6 +36,8 @@ export async function fetchAndStoreReports(
     console.log(`Found ${supervisorsSnapshot.size} supervisors`);
     console.log(`Found ${helpersSnapshot.size} helpers`);
 
+    const userLocationsMap = new Map();
+
     for (const supervisorDoc of supervisorsSnapshot.docs) {
       const supervisorId = supervisorDoc.id;
       const supervisorData = supervisorDoc.data();
@@ -56,6 +59,43 @@ export async function fetchAndStoreReports(
           const jobData = jobDoc.data();
           console.log(`Processing job ${jobDoc.id}:`, jobData);
           
+          // Extract location for supervisor (get latest job's location)
+          if (jobData.latitude && jobData.longitude && jobData.timestamp) {
+            const existingLocation = userLocationsMap.get(supervisorId);
+            if (!existingLocation || jobData.timestamp > existingLocation.timestamp) {
+              userLocationsMap.set(supervisorId, {
+                id: supervisorId,
+                name: supervisorData.username || supervisorData.userName || "",
+                avatar: supervisorData.avatar || `https://i.pravatar.cc/150?u=${supervisorId}`,
+                area: supervisorData.area || "",
+                lat: jobData.latitude,
+                lng: jobData.longitude,
+                timestamp: jobData.timestamp,
+                role: 'Supervisor'
+              });
+            }
+          }
+          
+          // Also track helper locations if they have coordinates
+          if (jobData.helperId && jobData.latitude && jobData.longitude) {
+            const helperName = helpersMap.get(jobData.helperId);
+            if (helperName) {
+              const existingHelper = userLocationsMap.get(jobData.helperId);
+              if (!existingHelper || jobData.timestamp > existingHelper.timestamp) {
+                userLocationsMap.set(jobData.helperId, {
+                  id: jobData.helperId,
+                  name: helperName,
+                  avatar: `https://i.pravatar.cc/150?u=${jobData.helperId}`,
+                  area: supervisorData.area || "",
+                  lat: jobData.latitude,
+                  lng: jobData.longitude,
+                  timestamp: jobData.timestamp,
+                  role: 'Helper'
+                });
+              }
+            }
+          }
+
           // Extract date and time
           let date = "";
           let time = "";
@@ -103,10 +143,25 @@ export async function fetchAndStoreReports(
           
           allRecords.push(record);
         }
+        
       } catch (error) {
         console.log(`Error fetching jobs for supervisor ${supervisorId}:`, error);
       }
     }
+
+
+    // Convert map to array and dispatch to locations
+    const userLocations = Array.from(userLocationsMap.values())
+      .map(({ timestamp, ...rest }) => rest); // Remove timestamp from final object
+    
+    // Filter by area if needed
+    let filteredLocations = userLocations;
+    if (currentUser?.role === 'Waterboard' && currentUser.area) {
+      filteredLocations = userLocations.filter(loc => loc.area === currentUser.area);
+    }
+    
+    // Dispatch locations
+    dispatch(setLocations(filteredLocations));
 
     console.log(`Total records fetched: ${allRecords.length}`);
     if (allRecords.length > 0) {
