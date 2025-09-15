@@ -13,7 +13,7 @@ export interface Helper {
   empNumber: string;
   joinDate: string;
   isActive: boolean;
-  status?: 'Active' | 'Inactive' | 'Incomplete';
+  status?: 'Active' | 'Inactive' | 'Incomplete'| 'Deleted';
   userType: 'Helper';
 }
 
@@ -47,7 +47,7 @@ const helperSlice = createSlice({
     setHelpers(state, action: PayloadAction<Helper[]>) {
       state.helpers = action.payload.map(h => ({
         ...h,
-        status: calculateHelperStatus(h)
+        status: h.status === 'Deleted' ? 'Deleted' : calculateHelperStatus(h)
       }));
     },
     updateHelper(state, action: PayloadAction<{ id: string; updates: Partial<Helper> }>) {

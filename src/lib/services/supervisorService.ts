@@ -163,6 +163,7 @@ export const fetchSupervisorsFromFirestore = async (dispatch: AppDispatch) => {
   const supervisorList = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
+    status: doc.data().status || undefined
   })) as Supervisor[];
   dispatch(setSupervisors(supervisorList));
   return supervisorList;
@@ -178,8 +179,68 @@ export const updateSupervisorAndSync = async (
   dispatch(updateSupervisor({ id, updates }));
 };
 
+// export const deleteSupervisorAndSync = async (dispatch: AppDispatch, id: string) => {
+//   const supervisorRef = doc(db, "supervisors", id);
+//   await deleteDoc(supervisorRef);
+//   dispatch(deleteSupervisor(id));
+// };
+
+// Replace deleteSupervisorAndSync function (around line 67)
 export const deleteSupervisorAndSync = async (dispatch: AppDispatch, id: string) => {
-  const supervisorRef = doc(db, "supervisors", id);
-  await deleteDoc(supervisorRef);
-  dispatch(deleteSupervisor(id));
+  try {
+    // Get supervisor data FIRST
+    const supervisorDoc = await getDoc(doc(db, "supervisors", id));
+    if (!supervisorDoc.exists()) {
+      throw new Error("Supervisor not found");
+    }
+    
+    const supervisorData = supervisorDoc.data();
+    const linkedHelperId = supervisorData.linkedHelperId;
+    
+    // NOW update to Deleted status
+    await updateDoc(doc(db, "supervisors", id), {
+      status: "Deleted",
+      isActive: false,
+      deletedAt: new Date().toISOString(),
+      linkedHelperId: "", // Clear the link
+      teamNumber: 0 // Reset team number
+    });
+    
+    // Update Redux state
+    dispatch(updateSupervisor({ 
+      id, 
+      updates: { 
+        status: "Deleted", 
+        isActive: false,
+        linkedHelperId: "",
+        teamNumber: 0
+      } 
+    }));
+    
+    // Update linked helper if exists
+    if (linkedHelperId) {
+      await updateDoc(doc(db, "helpers", linkedHelperId), {
+        linkedSupervisorId: "",
+        status: "Incomplete"
+      });
+      
+      // Import and update helper in Redux
+      const { updateHelper } = await import("../store/slices/helperSlice");
+      dispatch(updateHelper({
+        id: linkedHelperId,
+        updates: {
+          linkedSupervisorId: "",
+          status: "Incomplete"
+        }
+      }));
+    }
+    
+    // Note about Auth deletion
+    console.log("Note: Firebase Auth deletion requires backend Admin SDK");
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting supervisor:", error);
+    throw error;
+  }
 };

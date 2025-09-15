@@ -91,6 +91,8 @@ export default function StaffTable() {
     }
   );
 
+  console.log("Filtered Staff:", filteredStaff);
+
   const getLinkedStaffName = (linkedId: string) => {
     if (!linkedId || linkedId === "") return "None"; // Handle empty strings
     const linkedStaff = staffList.find((s) => s.id === linkedId);
@@ -418,17 +420,22 @@ export default function StaffTable() {
                   filteredStaff.map((staff) => (
                     <tr
                       key={staff.id}
-                      className="hover:bg-muted/30 transition-colors"
+                      // className="hover:bg-muted/30 transition-colors"
+                      className={`transition-colors ${
+                        staff.status === 'Deleted' 
+                          ? 'opacity-40 bg-gray-100 cursor-not-allowed' 
+                          : 'hover:bg-muted/30 transition-colors'
+                      }`}
                     >
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                          <Avatar  className={`h-8 w-8 ${staff.status === 'Deleted' ? 'grayscale' : ''}`}>
                             <AvatarFallback className="bg-primary/10 text-primary text-xs">
                               {staff.username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-sm">
+                            <p className={`font-medium text-sm ${staff.status === 'Deleted' ? 'line-through text-gray-500' : ''}`}>
                               {staff.username}
                             </p>
                             <p className="text-xs text-muted-foreground">
@@ -470,11 +477,13 @@ export default function StaffTable() {
                         </Badge> */}
                         <Badge
                           variant={
+                            staff.status === 'Deleted' ? "destructive" :
                             staff.status === 'Active' ? "default" : 
                             staff.status === 'Incomplete' ? "outline" : 
                             "secondary"
                           }
                           className={`text-xs ${
+                            staff.status === 'Deleted' ? 'bg-red-500/20 text-xs  border-red-300' :
                             staff.status === 'Active' ? 'text-xs' : 
                             staff.status === 'Incomplete' ? 'text-xs' : 
                             'bg-gray-500 text-white'
@@ -524,49 +533,49 @@ export default function StaffTable() {
                         </span>
                       </td>
                       <td className="px-4 py-2 text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {setEditingStaff(staff); console.log("EDit cllicj")}}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleStatusToggle(staff)}
-                            >
-                              {staff.isActive ? (
-                                <>
-                                  <XCircle className="mr-2 h-4 w-4" />
-                                  Deactivate
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  Activate
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => setDeletingStaff(staff)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {staff.status === 'Deleted' ? (
+                          <span className="text-xs text-gray-400">Deleted</span>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => setEditingStaff(staff)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusToggle(staff)}>
+                                {staff.isActive ? (
+                                  <>
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Deactivate
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Activate
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => setDeletingStaff(staff)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </td>
                     </tr>
                   ))

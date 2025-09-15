@@ -15,7 +15,7 @@ export interface Supervisor {
   empNumber: string;
   joinDate: string;
   isActive: boolean;
-  status?: 'Active' | 'Inactive' | 'Incomplete';
+  status?: 'Active' | 'Inactive' | 'Incomplete'| 'Deleted';
   userType: 'Supervisor';
 }
 
@@ -49,7 +49,7 @@ const supervisorSlice = createSlice({
     setSupervisors(state, action: PayloadAction<Supervisor[]>) {
       state.supervisors = action.payload.map(s => ({
         ...s,
-        status: calculateSupervisorStatus(s)
+        status: s.status === 'Deleted' ? 'Deleted' : calculateSupervisorStatus(s)
       }));
     },
     updateSupervisor(state, action: PayloadAction<{ id: string; updates: Partial<Supervisor> }>) {

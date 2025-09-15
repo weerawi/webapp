@@ -7,6 +7,9 @@ export async function saveMonthlySummariesFromRedux(records: DisconnectionRecord
   try {
     // Group records by supervisor and year-month
     const summaryMap = new Map<string, Map<string, number>>();
+    const todayCountMap = new Map<string, number>(); // For today's count
+    
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
     
     records.forEach(record => {
       // Get supervisor ID (you might need to fetch this mapping)
@@ -25,6 +28,11 @@ export async function saveMonthlySummariesFromRedux(records: DisconnectionRecord
       // Count DC only
       if (checkRecordType(record, 'dc')) {
         monthMap.set(yearMonth, monthMap.get(yearMonth)! + 1);
+        
+        // Count today's DC
+        if (record.date === today) {
+          todayCountMap.set(supervisorKey, (todayCountMap.get(supervisorKey) || 0) + 1);
+        }
       }
     });
     
@@ -40,9 +48,14 @@ export async function saveMonthlySummariesFromRedux(records: DisconnectionRecord
         const supervisorUID = supervisorDoc.id;
         
         for (const [yearMonth, dcCount] of months.entries()) {
+          const currentYearMonth = new Date().toISOString().substring(0, 7);
+          const todayCount = yearMonth === currentYearMonth ? (todayCountMap.get(supervisorKey) || 0) : 0;
+          
+          // Changed: Remove '/data' from the path - save directly under yearMonth
           const summaryRef = doc(db, "summarydc", supervisorUID, yearMonth, "data");
           await setDoc(summaryRef, { 
             dcCount: dcCount,
+            todayCount: todayCount,
             updatedAt: new Date().toISOString()
           });
         }

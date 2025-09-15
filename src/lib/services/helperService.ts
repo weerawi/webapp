@@ -108,7 +108,7 @@
 //   }));
 // };
 
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Helper } from "../store/slices/helperSlice";
 import { AppDispatch } from "../store/store";
@@ -124,6 +124,7 @@ export const fetchHelpersFromFirestore = async (dispatch: AppDispatch) => {
   const helperList = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
+    status: doc.data().status || undefined
   })) as Helper[];
   dispatch(setHelpers(helperList));
   return helperList;
@@ -139,8 +140,64 @@ export const updateHelperAndSync = async (
   dispatch(updateHelper({ id, updates }));
 };
 
+// export const deleteHelperAndSync = async (dispatch: AppDispatch, id: string) => {
+//   const helperRef = doc(db, "helpers", id);
+//   await deleteDoc(helperRef);
+//   dispatch(deleteHelper(id));
+// };
+// Replace deleteHelperAndSync function (around line 38)
 export const deleteHelperAndSync = async (dispatch: AppDispatch, id: string) => {
-  const helperRef = doc(db, "helpers", id);
-  await deleteDoc(helperRef);
-  dispatch(deleteHelper(id));
+  try {
+    // Get helper data FIRST (before updating)
+    const helperDoc = await getDoc(doc(db, "helpers", id));
+    if (!helperDoc.exists()) {
+      throw new Error("Helper not found");
+    }
+    
+    const helperData = helperDoc.data();
+    const linkedSupervisorId = helperData.linkedSupervisorId;
+    
+    // NOW update to Deleted status
+    await updateDoc(doc(db, "helpers", id), {
+      status: "Deleted",
+      isActive: false,
+      deletedAt: new Date().toISOString(),
+      linkedSupervisorId: "", // Clear the link
+      teamNumber: 0 // Reset team number
+    });
+    
+    // Update Redux state
+    dispatch(updateHelper({ 
+      id, 
+      updates: { 
+        status: "Deleted", 
+        isActive: false,
+        linkedSupervisorId: "",
+        teamNumber: 0
+      } 
+    }));
+    
+    // Update linked supervisor if exists
+    if (linkedSupervisorId) {
+      await updateDoc(doc(db, "supervisors", linkedSupervisorId), {
+        linkedHelperId: "",
+        status: "Incomplete"
+      });
+      
+      // Import and update supervisor in Redux
+      const { updateSupervisor } = await import("../store/slices/supervisorSlice");
+      dispatch(updateSupervisor({
+        id: linkedSupervisorId,
+        updates: {
+          linkedHelperId: "",
+          status: "Incomplete"
+        }
+      }));
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting helper:", error);
+    throw error;
+  }
 };

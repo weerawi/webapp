@@ -436,6 +436,10 @@ const getAvailableTeamNumbers = (selectedArea: string) => {
     if (!s.isActive || s.id === form.linkedStaffId || s.area !== form.area) {
       return false;
     }
+    // Exclude deleted staff
+    if (s.status === 'Deleted') {
+      return false;
+    }
     
     // Must be opposite userType
     const oppositeType = form.userType === "Helper" ? "Supervisor" : "Helper";

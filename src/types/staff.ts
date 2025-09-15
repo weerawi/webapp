@@ -14,11 +14,14 @@ export function combineStaffLists(supervisors: Supervisor[] | undefined, helpers
   const supervisorList = supervisors || [];
   const helperList = helpers || [];
   
-  return [
+  const combined = [
     ...supervisorList.map(s => {
-      let status: 'Active' | 'Inactive' | 'Incomplete' = s.status || 'Incomplete';
+      let status: 'Active' | 'Inactive' | 'Incomplete' | 'Deleted' = s.status || 'Incomplete';
       
-      if (!s.isActive) {
+      // Check for Deleted status first
+      if (s.status === 'Deleted') {
+        status = 'Deleted';
+      } else if (!s.isActive) {
         status = 'Inactive';
       } else if (s.linkedHelperId && s.teamNumber > 0) {
         const linkedHelper = helperList.find(h => h.id === s.linkedHelperId);
@@ -36,9 +39,12 @@ export function combineStaffLists(supervisors: Supervisor[] | undefined, helpers
       };
     }),
     ...helperList.map(h => {
-      let status: 'Active' | 'Inactive' | 'Incomplete' = h.status || 'Incomplete';
+      let status: 'Active' | 'Inactive' | 'Incomplete' | 'Deleted' = h.status || 'Incomplete';
       
-      if (!h.isActive) {
+      // Check for Deleted status first
+      if (h.status === 'Deleted') {
+        status = 'Deleted';
+      } else if (!h.isActive) {
         status = 'Inactive';
       } else if (h.linkedSupervisorId && h.teamNumber > 0) {
         const linkedSupervisor = supervisorList.find(s => s.id === h.linkedSupervisorId);
@@ -56,4 +62,11 @@ export function combineStaffLists(supervisors: Supervisor[] | undefined, helpers
       };
     })
   ];
+  
+  // Sort to put deleted users at the bottom
+  return combined.sort((a, b) => {
+    if (a.status === 'Deleted' && b.status !== 'Deleted') return 1;
+    if (a.status !== 'Deleted' && b.status === 'Deleted') return -1;
+    return 0;
+  });
 }
