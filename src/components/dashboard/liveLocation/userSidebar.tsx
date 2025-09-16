@@ -125,7 +125,7 @@ const filteredUsers = users.filter((user) => {
         onChange={(e) => dispatch(setSearchTerm(e.target.value))}
       />
 
-      <ScrollArea className="h-[500px] pr-2">
+      <ScrollArea className="h-[400px] pr-2">
         <div className="space-y-2 mt-2">
           {filteredUsers.map((user) => (
             <Card
