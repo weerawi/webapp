@@ -446,18 +446,23 @@ const NavigationCard = ({ title, href, gradient, icon: Icon, index }: any) => {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      const state = store.getState();
-      const lastFetch = state.report.lastYearlyFetch;
-      // Only fetch yearly data if not fetched today
-      if (!lastFetch || !isSameDay(new Date(lastFetch), new Date())) {
+    const state = store.getState();
+    const lastFetch = state.report.lastYearlyFetch;
+    
+    if (!lastFetch || !isSameDay(new Date(lastFetch), new Date())) {
+      dispatch(showLoader("Loading dashboard data...")); 
+      try {
         await fetchTodayReports(dispatch, currentUser);
         await fetchCurrentMonthReports(dispatch, currentUser);
         await fetchTodayLocations(dispatch, currentUser);
         await fetchYearlyReportsExceptCurrentMonth(dispatch, currentUser);
+      } finally {
+        dispatch(hideLoader()); // Add this
       }
-    };
-    
-    loadInitialData();
+    }
+  };
+  
+  loadInitialData();
   }, [dispatch,currentUser]);
 
 

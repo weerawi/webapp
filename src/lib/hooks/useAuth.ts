@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/lib/store/store';
 import { loginSuccess, logout } from '@/lib/store/slices/authSlice';
 import { getAdminByUid } from '@/lib/services/adminService';
+import { resetApp } from '../store/actions/resetActions';
 
 export function useAuth() {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,6 +17,7 @@ export function useAuth() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      dispatch(resetApp());
       dispatch(logout());
       sessionManager.clearSession();
       console.log('User logged out');

@@ -22,11 +22,14 @@ useEffect(() => {
   // fetchAndStoreUserLocations(dispatch, currentUser);
   dispatch(setResetLocations());
   const loadLocations = async () => {
-    await fetchTodayLocations(dispatch, currentUser);
+    try {
+      await fetchTodayLocations(dispatch, currentUser);
+    } finally {
+      dispatch(hideLoader()); // Move hideLoader here after data loads
+    }
   };
   
   loadLocations();
-  dispatch(hideLoader());
 }, []);
 
   return (
