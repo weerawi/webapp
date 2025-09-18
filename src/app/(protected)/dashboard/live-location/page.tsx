@@ -9,6 +9,7 @@ import { fetchAndStoreUserLocations } from "@/lib/services/userLocationService";
 import UserSidebar from "@/components/dashboard/liveLocation/userSidebar";
 import { setResetLocations } from "@/lib/store/slices/userLocationsSlice";
 import { RootState } from "@/lib/store/store";
+import { fetchTodayLocations } from "@/lib/services/reportService";
 // import { fetchAreasFromFirestore } from "@/lib/services/areaService";
 
 export default function LiveLocationPage() {
@@ -16,11 +17,17 @@ export default function LiveLocationPage() {
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
 useEffect(() => {
-  dispatch(hideLoader());
+  
   // fetchAreasFromFirestore(dispatch);
   // fetchAndStoreUserLocations(dispatch, currentUser);
   dispatch(setResetLocations());
-}, [dispatch, currentUser]);
+  const loadLocations = async () => {
+    await fetchTodayLocations(dispatch, currentUser);
+  };
+  
+  loadLocations();
+  dispatch(hideLoader());
+}, []);
 
   return (
     <>

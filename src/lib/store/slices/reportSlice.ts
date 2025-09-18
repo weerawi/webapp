@@ -2,7 +2,11 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DisconnectionRecord } from "@/types/disconnection";
 
 interface ReportState {
+  yearlyRecords: DisconnectionRecord[];   
+  currentMonthRecords: DisconnectionRecord[];
+  todayRecords: DisconnectionRecord[];
   records: DisconnectionRecord[];
+  lastYearlyFetch: string | null;
   filteredRecords: DisconnectionRecord[];
   filters: {
     area: string;
@@ -26,7 +30,11 @@ interface ReportState {
 }
 
 const initialState: ReportState = {
+  yearlyRecords: [],
+  currentMonthRecords: [],
+  todayRecords: [],
   records: [],
+  lastYearlyFetch: null,
   filteredRecords: [],
   filters: {
     area: "all",
@@ -151,6 +159,37 @@ const reportSlice = createSlice({
     setDynamicColumnsAll: (state, action: PayloadAction<string[]>) => {
       state.dynamicColumns = action.payload;
     },
+    setYearlyRecords: (state, action: PayloadAction<DisconnectionRecord[]>) => {
+      state.yearlyRecords = action.payload;
+      state.lastYearlyFetch = new Date().toISOString();
+    },
+    // setCurrentMonthRecords: (state, action: PayloadAction<DisconnectionRecord[]>) => {
+    //   state.currentMonthRecords = action.payload;
+    //   // Combine both for complete records
+    //   state.records = [...state.yearlyRecords, ...state.currentMonthRecords];
+    //   state.filteredRecords = state.records;
+    // },
+    setCurrentMonthRecords: (state, action: PayloadAction<DisconnectionRecord[]>) => {
+      state.currentMonthRecords = action.payload;
+    },
+    setTodayRecords: (state, action: PayloadAction<DisconnectionRecord[]>) => {
+      state.todayRecords = action.payload;
+      // Now combine all three
+      state.records = [...state.yearlyRecords, ...state.currentMonthRecords, ...state.todayRecords];
+      
+      // Extract unique values
+      const unique = <K extends keyof DisconnectionRecord>(key: K) =>
+        [...new Set(state.records.map((r) => r[key]))].filter(Boolean) as string[];
+
+      state.areas = unique("area");
+      state.supervisors = unique("supervisor");
+      state.teamNumbers = unique("teamNo");
+      state.helpers = unique("helper");
+      state.accountNumbers = unique("accountNo");
+      
+      // Apply existing filters
+      reportSlice.caseReducers.applyFilters(state);
+    },
     resetReportState: () => initialState,
   },
 });
@@ -164,6 +203,9 @@ export const {
   resetFilters,
   setCurrentDate,
   setDynamicColumnsAll,
+  setYearlyRecords,
+  setCurrentMonthRecords,
+  setTodayRecords,
   resetReportState
 } = reportSlice.actions;
 

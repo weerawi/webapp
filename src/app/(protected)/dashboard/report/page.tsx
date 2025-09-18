@@ -53,7 +53,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/lib/store/store";
-import { fetchAndStoreReports } from "@/lib/services/reportService";
+import { fetchAndStoreReports, fetchCurrentMonthReports, fetchTodayReports } from "@/lib/services/reportService";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Breadcrumb from "@/components/navigation/Breadcrumb";
@@ -71,12 +71,13 @@ export default function ReportPage() {
 
   useEffect(() => {
     loadReport();
-  }, [dispatch, currentUser]);
+  }, []);
 
 const loadReport = async () => {
   dispatch(showLoader("Loading reports..."));
   try {
-    await fetchAndStoreReports(dispatch, currentUser);
+    // await fetchAndStoreReports(dispatch, currentUser);
+    await fetchTodayReports(dispatch, currentUser);
   } catch (error) {
     console.error('Failed to load tasks', error);
   } finally {

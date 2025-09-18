@@ -380,7 +380,7 @@ import { auth } from "@/lib/firebase/config";
 import { LogOut, Settings, ArrowRight, Users, FileText, RefreshCw, MapPin} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "@/lib/store/store";
+import { RootState, AppDispatch, store } from "@/lib/store/store";
 import { logout } from "@/lib/store/slices/authSlice";
 import { showLoader, hideLoader } from "@/lib/store/slices/loaderSlice";
 import { useRouter } from "next/navigation";
@@ -388,6 +388,8 @@ import Image from "next/image";
 import hegraLogo from "@/assets/hegra.jpg";
 import { motion } from "framer-motion";
 import { resetApp } from "@/lib/store/actions/resetActions";
+import { isSameDay } from "date-fns";
+import { fetchCurrentMonthReports, fetchTodayLocations, fetchTodayReports, fetchYearlyReportsExceptCurrentMonth } from "@/lib/services/reportService";
 
 // Animated Water Drop Component
 const WaterDrop = ({ 
@@ -440,7 +442,25 @@ const WaterDrop = ({
 const NavigationCard = ({ title, href, gradient, icon: Icon, index }: any) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const state = store.getState();
+      const lastFetch = state.report.lastYearlyFetch;
+      // Only fetch yearly data if not fetched today
+      if (!lastFetch || !isSameDay(new Date(lastFetch), new Date())) {
+        await fetchTodayReports(dispatch, currentUser);
+        await fetchCurrentMonthReports(dispatch, currentUser);
+        await fetchTodayLocations(dispatch, currentUser);
+        await fetchYearlyReportsExceptCurrentMonth(dispatch, currentUser);
+      }
+    };
+    
+    loadInitialData();
+  }, [dispatch,currentUser]);
+
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}

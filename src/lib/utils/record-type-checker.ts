@@ -10,9 +10,9 @@ export function checkRecordType(record: any, fieldName: string): boolean {
     "rc": ["reconnected", "rc"],
     
     // Payment Status - exact from mobile app
-    "payment100": ["payment 100%"],
-    "payment80": ["payment 80%"],
-    "payment50": ["payment 50%"],
+    "payment100": ["payment 100%", "100%"],
+    "payment80": ["payment 80%", "80%"],
+    "payment50": ["payment 50%", "50%"],
     "alreadyPaid": ["already paid"],
     
     // Access Issues - exact from mobile app

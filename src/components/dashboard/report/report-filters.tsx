@@ -45,10 +45,29 @@ export function ReportFilters() {
     (state: RootState) => state.report.accountNumbers
   );
 
+  // useEffect(() => {
+  //   setDateRange({ from: undefined, to: undefined });
+  //   dispatch(resetFilters());
+  // }, []);
+
   useEffect(() => {
-    setDateRange({ from: undefined, to: undefined });
-    dispatch(resetFilters());
-  }, []);
+    // Set current month as default
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    setDateRange({ 
+      from: monthStart, 
+      to: monthEnd 
+    });
+    
+    dispatch(
+      setFilters({
+        dateFrom: monthStart.toISOString(),
+        dateTo: monthEnd.toISOString(),
+      })
+    );
+  }, [dispatch]);
 
   const handleDateRangeChange = (range: {
     from: Date | undefined;
