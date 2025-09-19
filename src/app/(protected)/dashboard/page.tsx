@@ -452,8 +452,8 @@ const NavigationCard = ({ title, href, gradient, icon: Icon, index }: any) => {
     if (!lastFetch || !isSameDay(new Date(lastFetch), new Date())) {
       dispatch(showLoader("Loading dashboard data...")); 
       try {
-        await fetchTodayReports(dispatch, currentUser);
         await fetchCurrentMonthReports(dispatch, currentUser);
+        await fetchTodayReports(dispatch, currentUser);
         await fetchTodayLocations(dispatch, currentUser);
         await fetchYearlyReportsExceptCurrentMonth(dispatch, currentUser);
       } finally {
