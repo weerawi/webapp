@@ -1,4 +1,3 @@
-// app/dashboard/staff/page.tsx
 "use client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Breadcrumb from "@/components/navigation/Breadcrumb";
@@ -10,27 +9,35 @@ import StaffTable from "@/components/dashboard/staff/staffTable";
 import AttendanceTable from "@/components/dashboard/staff/AttendanceTable";
 import { AppDispatch } from "@/lib/store/store";
 import { Separator } from "@/components/ui/separator";
-import { fetchAllStaffFromFirestore, fetchAttendanceFromFirestore } from "@/lib/services/staffService";
+import { fetchAllStaffFromFirestore } from "@/lib/services/staffService";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { fetchAreasFromFirestore } from "@/lib/services/areaService";
+import { fetchAreasFromFirestore } from "@/lib/services/areaService"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
 import { Users, Clock } from "lucide-react";
+import { fetchMonthlyAttendance, fetchTodayAttendance } from "@/lib/services/attendaceService";
 
 export default function StaffPage() {
   const dispatch = useDispatch<AppDispatch>();
   const [activeTab, setActiveTab] = useState("user-roles");
- 
 
-  // In app/dashboard/staff/page.tsx, update the useEffect:
-useEffect(() => {
-  dispatch(hideLoader());
-  // Fetch staff data on component mount
-  fetchAllStaffFromFirestore(dispatch);
-  fetchAreasFromFirestore(dispatch);
-  
-  // Fetch attendance data (using mock data)
-  fetchAttendanceFromFirestore(dispatch);
-}, [dispatch]);
+  useEffect(() => {
+    dispatch(hideLoader());
+    
+    // Fetch staff data
+    fetchAllStaffFromFirestore(dispatch);
+    fetchAreasFromFirestore(dispatch);
+    
+    // Initial load: fetch monthly + today's attendance
+    // fetchMonthlyAttendance(dispatch);
+    fetchTodayAttendance(dispatch);
+  }, [dispatch]);
+
+  // When switching to attendance tab, refresh today's data
+  useEffect(() => {
+    if (activeTab === "attendance") {
+      fetchTodayAttendance(dispatch);
+    }
+  }, [activeTab, dispatch]);
 
   return (
     <div>
